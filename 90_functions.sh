@@ -261,7 +261,7 @@ export INDENT=""
             AI_MGR_PWD=$(oc -n $WAIOPS_NAMESPACE get secret admin-user-details -o jsonpath='{.data.initial_admin_password}' | base64 -d || true )     
             while  ([[ $AI_MGR_PWD == "" ]]); do 
                 AI_MGR_PWD=$(oc -n $WAIOPS_NAMESPACE get secret admin-user-details -o jsonpath='{.data.initial_admin_password}' | base64 -d || true )     
-                __output "      ⭕ Common Services not ready. Waiting for 10 seconds...." && sleep 10; 
+                __output "      ⭕ AI Manager not ready. Waiting for 10 seconds...." && sleep 10; 
 
                 if [[ $VERBOSE_INSTALL == "true" ]]; 
                 then
