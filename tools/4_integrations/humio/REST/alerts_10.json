@@ -1,0 +1,18 @@
+{
+  "description": "resource.name=\\\"mongodb\\\" severity=Critical resource.hostname=mongodb type.eventType=\\\"robotshop\\\"",
+  "id": "ZZIJVYVSiD5LHi90m7CgNzdZVqynpmlo",
+  "labels": [],
+  "lastAlarm": 1615996837922,
+  "name": "RobotShopMongoProblem",
+  "notifiers": [
+    "<NOTIFIER_ID>"
+  ],
+  "query": {
+    "end": "now",
+    "isLive": true,
+    "queryString": "\"kubernetes.namespace_name\" = \"robot-shop\"\n| @rawstring = /MongoError/i\n| \"kubernetes.container_name\" = catalogue",
+    "start": "15s"
+  },
+  "silenced": false,
+  "throttleTimeMillis": 60000
+}

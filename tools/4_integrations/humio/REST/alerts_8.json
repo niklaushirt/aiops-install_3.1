@@ -1,0 +1,18 @@
+{
+  "description": "resource.name=\\\"web\\\" severity=Minor resource.hostname=web type.eventType=\\\"robotshop\\\"",
+  "id": "81ESnkWBSwvPo5W2o9mIj6giRfjerVKk",
+  "labels": [],
+  "lastAlarm": 1615996907909,
+  "name": "RobotShopWebProblem",
+  "notifiers": [
+    "<NOTIFIER_ID>"
+  ],
+  "query": {
+    "end": "now",
+    "isLive": true,
+    "queryString": "\"kubernetes.namespace_name\" = \"robot-shop\"\n| @rawstring = /MongoError/i\n| \"kubernetes.container_name\" = catalogue",
+    "start": "15s"
+  },
+  "silenced": false,
+  "throttleTimeMillis": 60000
+}

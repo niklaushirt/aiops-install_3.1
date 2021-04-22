@@ -1,0 +1,242 @@
+{
+    "issue": {
+      "id": "VXeozFU8RWm37XSao9h9qw",
+      "type": "issue",
+      "state": "OPEN",
+      "start": 1615971156000,
+      "severity": 5,
+      "text": "System load too high",
+      "suggestion": "Machine is more than 50% of its time at a load higher than 8",
+      "link": "https://ibmdevsandbox-instanaibm.instana.io/#/events;eventId=VXeozFU8RWm37XSao9h9qw?&snapshotId=B1uDXvPY0oYLc48Oj2YnbjVCvXA&timeline.ws=600000&timeline.to=1615971456000&timeline.fm=1615971156000",
+      "entityType": "Host",
+      "customZone": "niks-zone",
+      "availabilityZone": "not available",
+      "zone": "niks-zone",
+      "fqdn": "kube-bu79o6uf0e3b4ggdr5jg-demo215prod-default-000002e9.iks.ibm",
+      "entity": "Host",
+      "entityLabel": "kube-bu79o6uf0e3b4ggdr5jg-demo215prod-default-000002e9.iks.ibm",
+      "tags": "",
+      "container": "not available",
+      "service": "not available",
+      "containerNames": []
+    }
+  }
+
+
+  {
+    "issue": {
+      "id": "kzM-NKu-SsuiFpW960n63w",
+      "type": "issue",
+      "state": "OPEN",
+      "start": 1615972070000,
+      "severity": 5,
+      "text": "Sudden increase in the number of erroneous calls",
+      "suggestion": "This can be a sign of a problem on one side of the connection\n\n\n * Absolute change: **80%** \n * Confidence: **95.00%**",
+      "link": "https://ibmdevsandbox-instanaibm.instana.io/#/events;eventId=kzM-NKu-SsuiFpW960n63w?&snapshotId=bAgXNqPumg3r42Xbl4ny1yeEapU&timeline.ws=600000&timeline.to=1615972370000&timeline.fm=1615972070000",
+      "entityType": "Endpoint",
+      "traceStatistics": {
+        "meanDuration": "6.46ms",
+        "maxDuration": "30ms",
+        "meanErrorRate": "0.27",
+        "callCount": "72"
+      },
+      "customZone": "not available",
+      "availabilityZone": "not available",
+      "zone": "not available",
+      "fqdn": "not available",
+      "entity": "Endpoint",
+      "entityLabel": "POST /login",
+      "tags": "not available",
+      "container": "not available",
+      "service": "user",
+      "containerNames": []
+    }
+  }
+
+
+  {
+    "issue": {
+      "id": "8BF0EH15RLWSk4GPX6YUgg",
+      "type": "issue",
+      "state": "OPEN",
+      "start": 1615972065000,
+      "severity": 5,
+      "text": "Sudden increase in the number of erroneous calls",
+      "suggestion": "This can be a sign of a problem on one side of the connection\n\n\n * Absolute change: **42%** \n * Confidence: **95.00%**",
+      "link": "https://ibmdevsandbox-instanaibm.instana.io/#/events;eventId=8BF0EH15RLWSk4GPX6YUgg?&snapshotId=DugZhI1rJM9JnrYFTstnrOk5H3k&timeline.ws=600000&timeline.to=1615972365000&timeline.fm=1615972065000",
+      "entityType": "Application",
+      "traceStatistics": {
+        "meanDuration": "172.14ms",
+        "maxDuration": "22607ms",
+        "meanErrorRate": "0.12",
+        "callCount": "2356"
+      },
+      "customZone": "not available",
+      "availabilityZone": "not available",
+      "zone": "not available",
+      "fqdn": "not available",
+      "entity": "Application",
+      "entityLabel": "niks-robot",
+      "tags": "not available",
+      "container": "not available",
+      "service": "not available",
+      "containerNames": []
+    }
+  }
+
+  {
+    "issue": {
+      "id": "LeIYiy58S7O8iauCV4eJPg",
+      "type": "issue",
+      "state": "OPEN",
+      "start": 1615972140000,
+      "severity": 5,
+      "text": "Erroneous call rate is too high",
+      "suggestion": "Erroneous call rate stays at a high level for an extended period of time",
+      "link": "https://ibmdevsandbox-instanaibm.instana.io/#/events;eventId=LeIYiy58S7O8iauCV4eJPg?&snapshotId=lY4Xyf-bY3ypfmqXtcNjZ-qQvdE&timeline.ws=600000&timeline.to=1615972440000&timeline.fm=1615972140000",
+      "entityType": "Service",
+      "traceStatistics": {
+        "meanDuration": "1.57ms",
+        "maxDuration": "17ms",
+        "meanErrorRate": "0.55",
+        "callCount": "74"
+      },
+      "customZone": "not available",
+      "availabilityZone": "not available",
+      "zone": "not available",
+      "fqdn": "not available",
+      "entity": "Service",
+      "entityLabel": "users",
+      "tags": "not available",
+      "container": "not available",
+      "service": "not available",
+      "containerNames": []
+    }
+  }
+
+
+
+{
+  "issue": {
+    "id": "j4gKDZpdQXuI8fflW-FoZg",
+    "type": "issue",
+    "state": "OPEN",
+    "start": 1615972120000,
+    "severity": 5,
+    "text": "Sudden increase in the number of erroneous calls",
+    "suggestion": "This can be a sign of a problem on one side of the connection\n\n\n * Absolute change: **100%** \n * Confidence: **95.00%**",
+    "link": "https://ibmdevsandbox-instanaibm.instana.io/#/events;eventId=j4gKDZpdQXuI8fflW-FoZg?&snapshotId=JtqxS3wb5qQR_l1m4Oi_-arc2kU&timeline.ws=600000&timeline.to=1615972420000&timeline.fm=1615972120000",
+    "entityType": "Service",
+    "traceStatistics": {
+      "meanDuration": "43.71ms",
+      "maxDuration": "2009ms",
+      "meanErrorRate": "0.44",
+      "callCount": "166"
+    },
+    "customZone": "not available",
+    "availabilityZone": "not available",
+    "zone": "not available",
+    "fqdn": "not available",
+    "entity": "Service",
+    "entityLabel": "catalogue",
+    "tags": "not available",
+    "container": "not available",
+    "service": "not available",
+    "containerNames": []
+  }
+}
+
+
+
+{
+    "issue": {
+      "id": "ZUfqWZzDT6We_XQRF3Jtmw",
+      "type": "issue",
+      "state": "OPEN",
+      "start": 1615972120000,
+      "severity": 5,
+      "text": "Sudden increase in the number of erroneous calls",
+      "suggestion": "This can be a sign of a problem on one side of the connection\n\n\n * Absolute change: **100%** \n * Confidence: **95.00%**",
+      "link": "https://ibmdevsandbox-instanaibm.instana.io/#/events;eventId=ZUfqWZzDT6We_XQRF3Jtmw?&snapshotId=70ElOTlyzqclK0rvsk3PLwD9q_U&timeline.ws=600000&timeline.to=1615972420000&timeline.fm=1615972120000",
+      "entityType": "Endpoint",
+      "traceStatistics": {
+        "meanDuration": "4.91ms",
+        "maxDuration": "17ms",
+        "meanErrorRate": "0.55",
+        "callCount": "45"
+      },
+      "customZone": "not available",
+      "availabilityZone": "not available",
+      "zone": "not available",
+      "fqdn": "not available",
+      "entity": "Endpoint",
+      "entityLabel": "GET /products",
+      "tags": "not available",
+      "container": "not available",
+      "service": "catalogue",
+      "containerNames": []
+    }
+  }
+
+  {
+    "issue": {
+      "id": "MkG0oxVUSR64qMbCq2B-SA",
+      "type": "issue",
+      "state": "OPEN",
+      "start": 1615972120000,
+      "severity": 5,
+      "text": "Sudden increase in the number of erroneous calls",
+      "suggestion": "This can be a sign of a problem on one side of the connection\n\n\n * Absolute change: **100%** \n * Confidence: **95.00%**",
+      "link": "https://ibmdevsandbox-instanaibm.instana.io/#/events;eventId=MkG0oxVUSR64qMbCq2B-SA?&snapshotId=iBpu15-lPn0_yyiffxWSTXyzn5U&timeline.ws=600000&timeline.to=1615972420000&timeline.fm=1615972120000",
+      "entityType": "Endpoint",
+      "traceStatistics": {
+        "meanDuration": "3.12ms",
+        "maxDuration": "30ms",
+        "meanErrorRate": "0.43",
+        "callCount": "165"
+      },
+      "customZone": "not available",
+      "availabilityZone": "not available",
+      "zone": "not available",
+      "fqdn": "not available",
+      "entity": "Endpoint",
+      "entityLabel": "catalogue.products",
+      "tags": "not available",
+      "container": "not available",
+      "service": "catalogue",
+      "containerNames": []
+    }
+  }
+
+  {
+    "issue": {
+      "id": "19IigWw_R6SWz2vDlMU5tw",
+      "type": "issue",
+      "state": "OPEN",
+      "start": 1615972260000,
+      "severity": 5,
+      "text": "Erroneous call rate is too high",
+      "suggestion": "Erroneous call rate stays at a high level for an extended period of time",
+      "link": "https://ibmdevsandbox-instanaibm.instana.io/#/events;eventId=19IigWw_R6SWz2vDlMU5tw?&snapshotId=DugZhI1rJM9JnrYFTstnrOk5H3k&timeline.ws=600000&timeline.to=1615972560000&timeline.fm=1615972260000",
+      "entityType": "Application",
+      "traceStatistics": {
+        "meanDuration": "5.89ms",
+        "maxDuration": "763ms",
+        "meanErrorRate": "0.45",
+        "callCount": "428"
+      },
+      "customZone": "not available",
+      "availabilityZone": "not available",
+      "zone": "not available",
+      "fqdn": "not available",
+      "entity": "Application",
+      "entityLabel": "niks-robot",
+      "tags": "not available",
+      "container": "not available",
+      "service": "not available",
+      "containerNames": []
+    }
+  }
+
+
+  

@@ -1,0 +1,22 @@
+
+   {
+    "description": "resource.name=\\\"reviews\\\" severity=Major resource.hostname=reviews-v2 type.eventType=\\\"bookinfo\\\"",
+    "id": "WQOh8UhJtSEcGzNSnJbcxhutdY2ZicCq",
+    "labels": [],
+    "lastAlarm": 1612888435036,
+    "name": "BookinfoReviewsProblem",
+    "notifiers": [
+      "<NOTIFIER_ID>"
+    ],
+    "query": {
+      "end": "now",
+      "isLive": true,
+      "queryString": "\"kubernetes.namespace_name\" = bookinfo\n| @rawstring = /Reviews Service: Error: Ratings Service is unavailable/i",
+      "start": "5s"
+    },
+    "silenced": false,
+    "throttleTimeMillis": 60000
+  }
+
+
+

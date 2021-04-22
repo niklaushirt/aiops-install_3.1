@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-balance"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    helm.sh/chart: "{{.Chart.Name}}-{{.Chart.Version}}"
+  annotations:
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      name: "{{.Release.Name}}"
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ .Release.Name }}-post-install
+      initContainers:
+        - name: wait-for-humio
+          image: "{{ default "humio/strix" .Values.strixImage }}"
+          imagePullPolicy: {{ .Values.strixImagePullPolicy }}
+          command:
+          - kubectl
+          - wait
+          - "--for=condition=Ready"
+          - "pod/{{ .Release.Name }}-humio-core-{{ sub .Values.replicas 1 }}"
+          - "-n"
+          - {{ .Release.Namespace }}
+          - "--timeout=1500s"
+        - name: wait-for-single-user-token
+          image: "{{ default "humio/strix" .Values.strixImage }}"
+          imagePullPolicy: {{ .Values.strixImagePullPolicy }}
+          command:
+          - kubectl
+          - wait
+          - "--for=condition=Complete"
+          - "job/{{ .Release.Name }}-create-single-user-token"
+          - "-n"
+          - {{ .Release.Namespace }}
+          - "--timeout=1500s"
+      containers:
+      - name: set-default-partitions
+        image: "{{ default "humio/strix" .Values.strixImage }}"
+        imagePullPolicy: {{ .Values.strixImagePullPolicy }}
+        command: ["/humio-balance.sh"]
+        env:
+          - name: HUMIO_BASE_URL
+          {{- if .Values.baseUrl }}
+            value: "{{ .Values.baseUrl }}"
+          {{- else }}
+            value: "http://{{ .Release.Name }}-humio-core-headless:8080"
+          {{- end}}
+          - name: HUMIO_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: developer-user-token
+                key: token

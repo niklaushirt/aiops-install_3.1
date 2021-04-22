@@ -1,0 +1,47 @@
+---
+es:
+  port: 9200
+  tls: false
+  autodiscovery: true
+
+humioHostname: "cloud.humio.com"
+
+initImage: humio/strix:latest
+initImagePullPolicy: Always
+
+jobImage: humio/strix:latest
+jobImagePullPolicy: Always
+
+strixImage: humio/strix:latest
+strixImagePullPolicy: Always
+
+image: "docker.elastic.co/beats/metricbeat-oss:7.6.2"
+imagePullSecrets: []
+
+publish:
+  enabled: true
+  gcs:
+    bucket: ""
+    directory: results
+    serviceAccountSecretName: google-application-credentials
+
+ttlSecondsAfterFinished: ""
+
+queries: {}
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 200Mi
+  requests:
+    cpu: 100m
+    memory: 100Mi
+
+#customMetricbeatDaemonsetModules:
+#  custom.yml: |-
+#customMetricbeatDeploymentModules:
+#  custom.yml: |-
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "humio-strix.fullname" . }}
+  labels:
+{{ include "humio-strix.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "humio-strix.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "humio-strix.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ .Release.Name }}-strix
+      initContainers:
+        - name: wait-for-humio
+          image: {{ default "humio/strix" .Values.strixImage }}
+          imagePullPolicy: {{ default "Always" .Values.strixImagePullPolicy }}
+          command:
+          - kubectl
+          - wait
+          - "--for=condition=Ready"
+          - "pod/{{ .Release.Name }}-humio-core-0"
+          - "-n"
+          - {{ .Release.Namespace }}
+          - "--timeout=1500s"
+  {{- if .Values.global -}}
+    {{- if .Values.global.sharedTokens }}
+      {{- if .Values.global.sharedTokens.perf }}
+      initContainers:
+        - name: wait-for-shared-tokens
+          image: {{ default "humio/strix" .Values.strixImage }}
+          imagePullPolicy: {{ default "Always" .Values.strixImagePullPolicy }}
+          command:
+          - kubectl
+          - wait
+          - "--for=condition=Complete"
+          - "job/{{ .Release.Name }}-create-shared-tokens"
+          - "-n"
+          - {{ .Release.Namespace }}
+          - "--timeout=1500s"
+      {{- end -}}
+    {{- end -}}
+  {{- end  }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          env:
+            - name: PERF_TIME
+              value: {{ default "" .Values.perfTime | quote }}
+            {{- if .Values.token }}
+            - name: HUMIO_TOKEN
+              value: {{ .Values.token }}
+            {{- else -}}
+              {{- if .Values.global -}}
+                {{- if .Values.global.sharedTokens }}
+                  {{- if .Values.global.sharedTokens.perf }}
+            - name: HUMIO_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: perf-shared-token
+                  key: token
+                  {{- end -}}
+                {{- end -}}
+              {{- end -}}
+            {{- end  }}
+            - name: HUMIO_BASE_URL
+              value: {{ include "humio-strix.humioUrl" . }}
+            - name: PERF_SIMULATION
+              value: {{ default "HECSimulation" .Values.simulation }}
+            {{- if eq .Values.simulation "FixedRateIngestSimulation" }}
+            - name: PERF_TENS_GB_PER_DAY
+              value: {{ default "10" .Values.simulationOptions.fixedRateIngestSimulation.tensGbPerDay | quote }}
+            {{- end }}
+            {{- if eq .Values.simulation "HECSimulation" }}
+            - name: PERF_BULK_SIZE
+              value: {{ default "100" .Values.simulationOptions.hecSimulation.bulkSize | quote }}
+            - name: PERF_DATASPACES
+              value: {{ default "1" .Values.simulationOptions.hecSimulation.dataspaces | quote }}
+            - name: PERF_EVENT_SIZE
+              value: {{ default "500" .Values.simulationOptions.hecSimulation.eventSize | quote }}
+            - name: PERF_DATASOURCES
+              value: {{ default "20" .Values.simulationOptions.hecSimulation.datasources | quote }}
+            - name: PERF_FIELDS
+              value: {{ default "10" .Values.simulationOptions.hecSimulation.fields | quote }}
+            - name: PERF_USERS
+              value: {{ default "3" .Values.simulationOptions.hecSimulation.users | quote }}
+            {{- end }}
+            {{- if eq .Values.simulation "HECRandomnessSimulation" }}
+            - name: RANDOMNESS
+              value: {{ default "3" .Values.simulationOptions.hecRandomnessSimulation.randomness | quote }}
+            - name: PERF_BULK_SIZE
+              value: {{ default "100" .Values.simulationOptions.hecRandomnessSimulation.bulkSize | quote }}
+            - name: PERF_DATASPACES
+              value: {{ default "1" .Values.simulationOptions.hecRandomnessSimulation.dataspaces | quote }}
+            - name: PERF_EVENT_SIZE
+              value: {{ default "500" .Values.simulationOptions.hecRandomnessSimulation.eventSize | quote }}
+            - name: PERF_DATASOURCES
+              value: {{ default "20" .Values.simulationOptions.hecRandomnessSimulation.datasources | quote }}
+            - name: PERF_FIELDS
+              value: {{ default "10" .Values.simulationOptions.hecRandomnessSimulation.fields | quote }}
+            - name: PERF_USERS
+              value: {{ default "3" .Values.simulationOptions.hecRandomnessSimulation.users | quote }}
+            {{- end }}
+            {{- if eq .Values.simulation "FilebeatSimulation" }}
+            - name: PERF_BULK_SIZE
+              value: {{ default "100" .Values.simulationOptions.filebeatSimulation.bulkSize | quote }}
+            - name: PERF_DATASPACES
+              value: {{ default "1" .Values.simulationOptions.filebeatSimulation.dataspaces | quote }}
+            - name: PERF_EVENT_SIZE
+              value: {{ default "500" .Values.simulationOptions.filebeatSimulation.eventSize | quote }}
+            - name: PERF_DATASOURCES
+              value: {{ default "20" .Values.simulationOptions.filebeatSimulation.datasources | quote }}
+            - name: PERF_FIELDS
+              value: {{ default "10" .Values.simulationOptions.filebeatSimulation.fields | quote }}
+            - name: PERF_USERS
+              value: {{ default "3" .Values.simulationOptions.filebeatSimulation.users | quote }}
+            {{- end }}
+            {{- if eq .Values.simulation "QuerySimulation" }}
+            - name: PERF_SEARCH_QUERY
+              value: {{ default "count()" .Values.simulationOptions.querySimulation.searchQuery | quote }}
+            - name: PERF_SEARCH_DURATION
+              value: {{ default "24hours" .Values.simulationOptions.querySimulation.searchDuration | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

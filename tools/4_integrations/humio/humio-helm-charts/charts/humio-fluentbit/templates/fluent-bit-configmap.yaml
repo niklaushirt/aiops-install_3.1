@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-fluent-bit-config
+  namespace: {{ default "default" .Release.Namespace }}
+  labels:
+    k8s-app: {{ .Release.Name }}
+data:
+  fluent-bit-service.conf: {{- toYaml .Values.serviceConfig | indent 2 }}
+
+  fluent-bit-input.conf: {{- toYaml .Values.inputConfig | indent 2 }}
+
+  fluent-bit-filter.conf: {{- toYaml .Values.filterConfig | indent 2 }}
+
+  fluent-bit-output.conf: {{- toYaml .Values.outputConfig | indent 2 }}
+
+  parsers.conf: {{- toYaml .Values.parserConfig | indent 2 }}
+
+  fluent-bit.conf: |-
+    @INCLUDE fluent-bit-service.conf
+    @INCLUDE fluent-bit-input.conf
+    @INCLUDE fluent-bit-filter.conf
+    @INCLUDE fluent-bit-output.conf
+{{ if .Values.customFluentBitConfig -}}
+  {{- range $index, $filename := .Values.customFluentBitConfig }}
+    @INCLUDE {{ $index }}
+  {{- end }}
+{{- end }}
+
+{{ with .Values.customFluentBitConfig}}
+  {{- toYaml . | nindent 2 }}
+{{- end }}

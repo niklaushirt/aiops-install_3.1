@@ -1,0 +1,22 @@
+{
+  "description": "resource.name=\\\"kubetoy-deployment\\\" severity=Major resource.hostname=kubetoy-service type.eventType=\\\"kubetoy\\\"",
+  "id": "3GflNMWiqAh6CxYB5hNtCN4yNxqOmMQo",
+  "labels": [],
+  "lastAlarm": 1612888225058,
+  "name": "KubetoyAvailabilityProblem",
+  "notifiers": [
+    "<NOTIFIER_ID>"
+  ],
+  "query": {
+    "end": "now",
+    "isLive": true,
+    "queryString": "\"kubernetes.namespace_name\" = kubetoy | @rawstring = /I'm not feeling all that well./i\n",
+    "start": "20s"
+  },
+  "silenced": false,
+  "throttleTimeMillis": 60000
+}
+
+
+
+

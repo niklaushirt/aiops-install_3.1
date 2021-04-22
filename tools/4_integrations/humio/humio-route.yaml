@@ -1,0 +1,13 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: humio
+  namespace: humio-logging
+spec:
+  to:
+    kind: Service
+    name: humio-instance-humio-core-http
+    weight: 100
+  port:
+    targetPort: http
+  wildcardPolicy: None

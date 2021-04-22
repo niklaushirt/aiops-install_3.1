@@ -1,0 +1,54 @@
+
+humio-core:
+  enabled: true
+
+  # The number of Humio pods
+  replicas: 1
+
+  # Use a custom version of Humio.
+  image: humio/humio-core:1.13.0
+
+  # Custom partitions
+  ingest:
+    initialPartitionsPerNode: 4
+  storage:
+    initialPartitionsPerNode: 4
+
+  # Custom CPU/Memory resources
+  resources:
+    limits:
+     cpu: 2
+     memory: 8Gi
+    requests:
+     cpu: 1
+     memory: 6Gi
+
+  cp-helm-charts:
+    cp-kafka:
+      persistence:
+        enabled: true
+        size: 50Gi
+
+  # Custom JVM memory settings (these will depend on resources defined)
+  jvm:
+    xss: 2m
+    xms: 4g
+    xmx: 16g
+    maxDirectMemorySize: 16g
+    extraArgs: -XX:+UseParallelOldGC -XX:+UnlockDiagnosticVMOptions -XX:CompileCommand=dontinline,com/humio/util/HotspotUtilsJ.dontInline -Xlog:gc+jni=debug:stdout -Dakka.log-config-on-start=on -Xlog:gc*:stdout:time,tags
+
+  affinity:
+    # Affinity policy to prevent multiple Humio pods per node (recommended)
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - humio-core
+        topologyKey: "kubernetes.io/hostname"
+global:
+  sharedTokens:
+    fluentbit: {kubernetes: in-cluster}
+

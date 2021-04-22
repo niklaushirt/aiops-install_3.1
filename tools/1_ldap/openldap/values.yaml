@@ -1,0 +1,32 @@
+OpenLdap:
+  Image: "docker.io/osixia/openldap"
+  ImagePullPolicy: "Always"
+  Component: "openldap"
+
+  Replicas: 1
+
+  Cpu: "512m"
+  Memory: "200Mi"
+
+  Route: default-route
+
+  Domain: "ibm.com"
+  AdminPassword: "P4ssw0rd!"
+  Https: "false"
+  SeedUsers: 
+    usergroup: "mcm"
+    userlist: "demo"
+    initialPassword: "passw0rd"
+
+PhpLdapAdmin:
+  Image: "docker.io/osixia/phpldapadmin"
+  ImageTag: "0.7.0"
+  ImagePullPolicy: "Always"
+  Component: "phpadmin"
+
+  Replicas: 1
+
+  NodePort: 31080
+
+  Cpu: "512m"
+  Memory: "200Mi"

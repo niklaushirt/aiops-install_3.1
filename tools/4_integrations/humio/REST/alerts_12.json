@@ -1,0 +1,18 @@
+{
+  "description": "resource.name=\\\"catalogue\\\" severity=Critical resource.hostname=catalogue-db type.eventType=\\\"robotshop\\\"",
+  "id": "bnmCBHNz4FIkIY5PfyEdG2jmHqNtqI5t",
+  "labels": [],
+  "lastAlarm": 1615996837917,
+  "name": "RobotShopCatalogueMongoProblem",
+  "notifiers": [
+    "<NOTIFIER_ID>"
+  ],
+  "query": {
+    "end": "now",
+    "isLive": true,
+    "queryString": "\"kubernetes.namespace_name\" = \"robot-shop\"\n| @rawstring = /MongoError/i\n| \"kubernetes.container_name\" = catalogue",
+    "start": "15s"
+  },
+  "silenced": false,
+  "throttleTimeMillis": 60000
+}

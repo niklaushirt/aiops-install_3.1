@@ -1,0 +1,378 @@
+{{- if .Capabilities.APIVersions.Has "apps/v1" }}
+apiVersion: apps/v1
+{{- else }}
+apiVersion: apps/v1beta2
+{{- end }}
+kind: StatefulSet
+metadata:
+  name: {{ include "humio-core.fullname" . }}
+  labels:
+    app: {{ template "humio-core.name" . }}
+    chart: {{ template "humio-core.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  serviceName: {{ template "humio-core.fullname" . }}-headless
+  replicas: {{ .Values.replicas }}
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: {{ include "humio-core.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      {{- if .Values.prometheus.enabled }}
+      annotations:
+        prometheus.io/port: {{ .Values.prometheus.port | quote }}
+        prometheus.io/scrape: "true"
+      {{- end }}
+      labels:
+        app: {{ include "humio-core.name" . }}
+        release: {{ .Release.Name }}
+        humio-parser: {{ default "kv" .Values.humioParser }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ .Release.Name }}
+    {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if or (and .Values.waitFor.kafka.enabled (eq .Values.external.kafkaBrokers "")) (eq .Values.clusterIdentity.type "zookeeper") }}
+      initContainers:
+    {{- end }}
+    {{- if and .Values.waitFor.kafka.enabled (eq .Values.external.kafkaBrokers "") }}
+        - name: wait-for-kafka
+          image: "{{ default "humio/strix" .Values.strixImage }}"
+          imagePullPolicy: {{ .Values.strixImagePullPolicy }}
+          command:
+          - kubectl
+          - wait
+          - "--for=condition=Ready"
+          - "pod/{{ .Release.Name }}-cp-kafka-{{ include "humio-core.kafka.lastBroker" . }}"
+          - "-n"
+          - {{ .Release.Namespace }}
+          - "--timeout=1500s"
+    {{- end }}
+    {{- if eq .Values.clusterIdentity.type "zookeeper" }}
+        - name: zookeeper-prefix
+          image: "{{ default "humio/strix" .Values.strixImage }}"
+          command:
+          - sh
+          - -c
+          - kubectl get node ${NODE_NAME} -o jsonpath={.metadata.labels."failure-domain\.beta\.kubernetes\.io\/zone"} > /shared/zookeeper-prefix
+          env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          volumeMounts:
+          - name: shared
+            mountPath: /shared
+    {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.image }}
+          command: ["/bin/sh"]
+          {{- if eq .Values.clusterIdentity.type "zookeeper" }}
+          args: ["-c", "export ZOOKEEPER_PREFIX_FOR_NODE_UUID=/humio_$(cat /shared/zookeeper-prefix)_ && exec bash /app/humio/run.sh"]
+          {{- else }}
+          args: ["-c", "export BOOTSTRAP_HOST_ID=$((${POD_NAME##*-} + 1)) && exec bash /app/humio/run.sh"]
+          {{- end }}
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: es
+              containerPort: 9200
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /api/v1/status
+              port: http
+            initialDelaySeconds: {{ default 30 .Values.livenessProbe.initialDelaySeconds }}
+            timeoutSeconds: 2
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /api/v1/status
+              port: http
+            initialDelaySeconds: {{ default 30 .Values.readinessProbe.initialDelaySeconds }}
+            timeoutSeconds: 2
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 10
+          volumeMounts:
+        {{- if eq .Values.primaryStorage.type "remote" }}
+          - mountPath: {{ .Values.primaryStorage.mountPath }}
+            name: humio-data-vol
+          {{- if eq .Values.logsStorage.type "primary" }}
+          - mountPath: {{ .Values.primaryStorage.logsMountPath }}
+            name: humio-data-vol
+            subPath: logs
+          {{- else }}
+          - mountPath: {{ .Values.logsStorage.mountPath }}
+            name: humio-logs-vol
+          {{- end }}
+        {{- else if eq .Values.primaryStorage.type "local" }}
+          - mountPath: {{ .Values.primaryStorage.mountPath }}
+            name: local-primary-vol
+          {{- if eq .Values.logsStorage.type "primary" }}
+          - mountPath: {{ .Values.primaryStorage.logsMountPath }}
+            name: local-primary-vol
+            subPath: logs
+          {{- else }}
+          - mountPath: {{ .Values.logsStorage.mountPath }}
+            name: humio-logs-vol
+          {{- end }}
+        {{- else if eq .Values.primaryStorage.type "hostPath" }}
+          - mountPath: {{ .Values.primaryStorage.mountPath }}
+            name: host-vol
+          {{- if eq .Values.logsStorage.type "primary" }}
+          - mountPath: {{ .Values.primaryStorage.logsMountPath }}
+            name: host-vol
+            subPath: logs
+          {{- else }}
+          - mountPath: {{ .Values.logsStorage.mountPath }}
+            name: humio-logs-vol
+          {{- end }}
+        {{- end }}
+        {{- if and .Values.cache.localVolume.enabled (eq .Values.primaryStorage.type "remote") }}
+          - name: local-vol
+            mountPath: /data-local
+        {{- end }}
+        {{- if eq .Values.authenticationMethod "saml" }}
+          - name: idp-cert-volume
+            mountPath: /var/lib/humio/idp-certificate
+            subPath: idp-certificate
+            readOnly: true
+        {{- end }}
+        {{- if eq .Values.clusterIdentity.type "zookeeper" }}
+          - name: shared
+            mountPath: /shared
+            readOnly: true
+        {{- end }}
+        {{- if ne .Values.extraKafkaConfigs "" }}
+          - name: extra-kafka-configs
+            mountPath: /var/lib/humio/extra_kafka_properties.properties
+            subPath: extra_kafka_properties.properties
+            readOnly: true
+        {{- end }}
+        {{- if eq .Values.bucketStorage.backend "gcp" }}
+          - name: gcp-storage-account-json-file
+            mountPath: /var/lib/humio/gcp-storage-account-json-file
+            subPath: gcp-storage-account-json-file
+            readOnly: true
+        {{- end }}
+          env:
+          {{- if and .Values.cache.localVolume.enabled (eq .Values.primaryStorage.type "remote") }}
+            - name: CACHE_STORAGE_DIRECTORY
+              value: "/data-local"
+            - name: CACHE_STORAGE_PERCENTAGE
+              value: "90"
+          {{- end }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: THIS_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: INGEST_QUEUE_INITIAL_PARTITIONS
+              value: {{ mul .Values.replicas .Values.ingest.initialPartitionsPerNode | quote }}
+            - name: DEFAULT_PARTITION_COUNT
+              value: {{ mul .Values.replicas .Values.storage.initialPartitionsPerNode | quote }}
+            - name: COMPRESSION_TYPE
+              value: {{ .Values.compression.type | quote }}
+            - name: COMPRESSION_LEVEL
+              value: {{ .Values.compression.level | quote }}
+            - name: HUMIO_PORT
+              value: "8080"
+            - name: ELASTIC_PORT
+              value: "9200"
+          {{- if ne .Values.extraKafkaConfigs "" }}
+            - name: EXTRA_KAFKA_CONFIGS_FILE
+              value: /var/lib/humio/extra_kafka_properties.properties
+          {{- end }}
+            - name: KAFKA_SERVERS
+              value: {{ include "humio-core.kafka.brokers" . | quote }}
+            - name: HUMIO_JVM_ARGS
+              value: "-Xss{{ default "2m" .Values.jvm.xss }} -Xms{{ default "256m" .Values.jvm.xms }} -Xmx{{ default "1536m" .Values.jvm.xmx }} -server {{ .Values.jvm.extraArgs }}
+              {{- if ne .Values.jvm.maxDirectMemorySize "" -}}
+              {{ " -XX:MaxDirectMemorySize=" }}{{ .Values.jvm.maxDirectMemorySize }}
+              {{- end -}}"
+            - name: ZOOKEEPER_URL
+              value: {{ include "humio-core.zookeeper.servers" . | quote }}
+            - name: KAFKA_MANAGED_BY_HUMIO
+              value: "true"
+            - name: DEFAULT_USER_INPUT_REGEX_ENGINE
+              value: {{ .Values.defaultUserInputRegexEngine | quote }}
+            - name: EXTERNAL_URL
+              value: "http://$(POD_NAME).{{ .Release.Name }}-humio-core-headless.$(POD_NAMESPACE).svc.cluster.local:8080"
+            {{- if ne .Values.authenticationMethod "" }}
+            - name: AUTHENTICATION_METHOD
+              value: {{ default "single-user" .Values.authenticationMethod | quote }}
+            {{- end }}
+            {{- if eq .Values.authenticationMethod "single-user" }}
+            - name: SINGLE_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: developer-user-password
+                  key: password
+            {{- end }}
+            {{- if eq .Values.authenticationMethod "saml" }}
+            - name: PUBLIC_URL
+              value: {{ .Values.samlConfig.publicUrl | quote }}
+            - name: SAML_IDP_SIGN_ON_URL
+              value: {{ .Values.samlConfig.idpSignOnUrl | quote }}
+            - name: SAML_IDP_ENTITY_ID
+              value: {{ .Values.samlConfig.idpEntityId | quote }}
+            - name: SAML_IDP_CERTIFICATE
+              value: "/var/lib/humio/idp-certificate"
+            - name: AUTO_CREATE_USER_ON_SUCCESSFUL_LOGIN
+              value: {{ .Values.samlConfig.autoCreateUserOnSuccessfulLogin | quote }}
+            {{- end }}
+             {{- if eq .Values.authenticationMethod "byproxy" }}
+            - name: AUTH_BY_PROXY_HEADER_NAME
+              value: {{ .Values.authByProxyConfig.headerName | quote }}
+            {{- end }}
+            {{- if .Values.github.enabled }}
+            - name: GITHUB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: github
+                  key: credentials
+            {{- end }}
+            {{- if eq .Values.authenticationMethod "oauth" }}
+            - name: PUBLIC_URL
+              value: {{ .Values.oauthConfig.publicUrl | quote }}
+            - name: AUTO_CREATE_USER_ON_SUCCESSFUL_LOGIN
+              value: {{ .Values.oauthConfig.autoCreateUserOnSuccessfulLogin | quote }}
+            {{- end }}
+            {{- if .Values.prometheus.enabled }}
+            - name: PROMETHEUS_METRICS_PORT
+              value: {{ .Values.prometheus.port | quote }}
+            {{- end }}
+            {{- if eq .Values.bucketStorage.backend "gcp" }}
+            - name: GCP_STORAGE_ACCOUNT_JSON_FILE
+              value: "/var/lib/humio/gcp-storage-account-json-file"
+            {{- end }}
+            {{- if .Values.env }}
+              {{- with .Values.env }}
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+            {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- if or (eq .Values.authenticationMethod "saml") (eq .Values.primaryStorage.type "hostPath") (eq .Values.clusterIdentity.type "zookeeper") (ne .Values.extraKafkaConfigs "") }}
+      volumes:
+    {{- end }}
+    {{- if eq .Values.authenticationMethod "saml" }}
+      - name: idp-cert-volume
+        secret:
+          secretName: idp-certificate
+    {{- end }}
+    {{- if eq .Values.primaryStorage.type "hostPath" }}
+      - name: host-vol
+      {{- with .Values.hostPath }}
+        hostPath: {{- toYaml . | nindent 10 }}
+      {{- end }}
+    {{- end }}
+    {{- if eq .Values.clusterIdentity.type "zookeeper" }}
+      - name: shared
+        emptyDir: {}
+    {{- end }}
+    {{- if eq .Values.bucketStorage.backend "gcp" }}
+      - name: gcp-storage-account-json-file
+        secret:
+          secretName: gcp-storage-account-json-file
+    {{- end }}
+    {{- if ne .Values.extraKafkaConfigs "" }}
+      - name: extra-kafka-configs
+        configMap:
+          name: extra-kafka-configs
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+  volumeClaimTemplates:
+{{- if eq .Values.primaryStorage.type "remote" }}
+  - metadata:
+      name: humio-data-vol
+    spec:
+      accessModes:
+        - ReadWriteOnce
+    {{- if .Values.storageClass }}
+      storageClassName: "custom-storage-class"
+    {{- else if .Values.storageClassName }}
+      storageClassName: "{{ .Values.storageClassName }}"
+    {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.storageVolume.size | default "10Gi" }}
+{{- end }}
+{{- if eq .Values.primaryStorage.type "local" }}
+  - metadata:
+      name: local-primary-vol
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.localVolume.name }}
+      resources:
+        requests:
+          storage: {{ .Values.localVolume.storage.size }}
+{{- end }}
+{{- if and .Values.cache.localVolume.enabled (eq .Values.primaryStorage.type "remote") }}
+  - metadata:
+      name: local-vol
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: {{ .Values.cache.localVolume.name }}
+      resources:
+        requests:
+          storage: {{ .Values.cache.localVolume.storage.size }}
+{{- end }}
+{{- if eq .Values.logsStorage.type "remote" }}
+  - metadata:
+      name: humio-logs-vol
+    spec:
+      accessModes:
+        - ReadWriteOnce
+    {{- if .Values.logsStorage.storageClassName }}
+      storageClassName: "{{ .Values.logsStorage.storageClassName }}"
+    {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.logsStorage.size | default "50Gi" }}
+{{- end }}

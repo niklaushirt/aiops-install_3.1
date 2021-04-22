@@ -1,0 +1,22 @@
+apiVersion: v1
+entries:
+  cp-helm-charts:
+  - apiVersion: v1
+    appVersion: "1.0"
+    created: "2019-11-13T08:28:12.102651-08:00"
+    description: A Helm chart for Confluent Open Source
+    digest: a51478b4bea1dc68cbd5cc42520412528e8f4730b081b25b86d577e72dc28c2a
+    name: cp-helm-charts
+    urls:
+    - cp-helm-charts-0.3.2.tgz
+    version: 0.3.2
+  - apiVersion: v1
+    appVersion: "1.0"
+    created: "2019-11-13T08:28:12.105617-08:00"
+    description: A Helm chart for Confluent Open Source
+    digest: 88e884b1fd053ede8b46a642ec4dbc28a9e67f1c6a9ac443707b9ef511fdd9ff
+    name: cp-helm-charts
+    urls:
+    - docs/cp-helm-charts-0.3.1.tgz
+    version: 0.3.1
+generated: "2019-11-13T08:28:12.099316-08:00"

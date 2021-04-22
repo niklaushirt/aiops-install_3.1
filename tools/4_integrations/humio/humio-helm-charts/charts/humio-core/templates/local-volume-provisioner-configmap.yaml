@@ -1,0 +1,24 @@
+{{- if and (or .Values.cache.localVolume.enabled (eq .Values.primaryStorage.type "local")) .Values.cache.localVolume.enableLocalVolumeProvisioner -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: local-provisioner-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "humio-core.name" . }}
+    chart: {{ template "humio-core.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+  useNodeNameOnly: "true"
+  storageClassMap: |
+  {{- if eq .Values.primaryStorage.type "local" }}
+    {{ .Values.localVolume.name }}:
+      hostDir: {{ .Values.localVolume.hostPath  }}
+      mountDir: {{ .Values.localVolume.hostPath }}
+  {{- else if .Values.cache.localVolume.enabled }}
+    {{ .Values.cache.localVolume.name }}:
+      hostDir: {{ .Values.cache.localVolume.hostPath }}
+      mountDir: {{ .Values.cache.localVolume.hostPath }}
+  {{- end }}
+{{- end -}}

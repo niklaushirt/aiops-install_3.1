@@ -1,0 +1,48 @@
+{{- if .Values.ingress.enabled -}}
+{{- range .Values.ingress.config -}}
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: "{{ include "humio-core.fullname" $ }}-{{ .name }}"
+  labels:
+    app: {{ template "humio-core.name" $ }}
+    chart: {{ template "humio-core.chart" $ }}
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
+  {{- with .annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+{{- if .tls }}
+  tls:
+  {{- range .tls }}
+    - hosts:
+      {{- range .hosts }}
+        - {{ . | quote }}
+      {{- end }}
+      secretName: {{ .secretName }}
+  {{- end }}
+{{- end }}
+{{ if .rules }}
+  {{ with .rules }}
+  rules:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- else }}
+  rules:
+  {{- range .hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+        {{- range .paths }}
+          - path: {{ . }}
+            backend:
+              serviceName: "{{ $.Release.Name }}-humio-core-headless"
+              servicePort: 8080
+        {{- end }}
+  {{- end }}
+{{- end }}
+---
+{{- end -}}
+{{- end -}}

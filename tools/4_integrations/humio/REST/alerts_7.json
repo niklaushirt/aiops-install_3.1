@@ -1,0 +1,22 @@
+{
+    "description": "resource.name=\\\"kubetoy-deployment\\\" severity=Critical resource.hostname=kubetoy-deployment type.eventType=\\\"kubetoy\\\"",
+    "id": "laUEEYdiFGpq34ieahnNQr9NIU1Zp7Hx",
+    "labels": [],
+    "lastAlarm": 1612888225037,
+    "name": "KubetoyLivenessProbe",
+    "notifiers": [
+      "<NOTIFIER_ID>"
+    ],
+    "query": {
+      "end": "now",
+      "isLive": true,
+      "queryString": "\"kubernetes.namespace_name\" = kubetoy | @rawstring = /I'm not feeling all that well./i\n",
+      "start": "20s"
+    },
+    "silenced": false,
+    "throttleTimeMillis": 60000
+  }
+
+
+
+

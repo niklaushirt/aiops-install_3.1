@@ -1,0 +1,30 @@
+---
+humio-core:
+  enabled: false
+  replicas: 3
+  imagePullPolicy: Always
+  cp-helm-charts:
+    cp-zookeeper:
+      servers: 3
+    cp-kafka:
+      brokers: 3
+
+humio-strix:
+  enabled: false
+  replicas: 10
+  imagePullPolicy: Always
+  simulationOptions:
+    hecSimulation:
+      users: 5
+
+humio-fluentbit:
+  enabled: false
+  es:
+    tls: false
+    autodiscovery: false
+
+humio-metrics:
+  enabled: false
+
+global:
+  sharedTokens: {}

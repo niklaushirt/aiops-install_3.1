@@ -1,0 +1,167 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demotoy-deployment
+  namespace: default
+  labels:
+    app: demotoy-app
+spec:
+    selector:
+      matchLabels:
+        app: demotoy
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: demotoy
+      spec:
+        containers:
+        - name: demotoy
+          image: niklaushirt/demotoy:1.1.1
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          env:
+          - name: TOKEN
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: TOKEN
+          - name: OCP_URL
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: OCP_URL
+          - name: NETCOOL_WEBHOOK_HUMIO
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: NETCOOL_WEBHOOK_HUMIO
+          - name: NETCOOL_WEBHOOK_INSTANA
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: NETCOOL_WEBHOOK_INSTANA
+          - name: NETCOOL_WEBHOOK_GIT
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: NETCOOL_WEBHOOK_GIT
+          - name: NETCOOL_WEBHOOK_METRICS
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: NETCOOL_WEBHOOK_METRICS
+          - name: NETCOOL_WEBHOOK_FALCO
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: NETCOOL_WEBHOOK_FALCO
+          - name: appgroupid_book
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: appgroupid_book
+          - name: appid_book
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: appid_book
+          - name: appgroupid_sock
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: appgroupid_sock
+          - name: appid_sock
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: appid_sock
+          - name: SEC_TOKEN
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: SEC_TOKEN 
+          - name: SLACK_TOKEN
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: SLACK_TOKEN 
+          - name: SLACK_CHANNEL_1
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: SLACK_CHANNEL_1 
+          - name: SLACK_CHANNEL_2
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: SLACK_CHANNEL_2 
+          - name: SLACK_CHANNEL_3
+            valueFrom: 
+              configMapKeyRef:
+                name: demotoy-configmap-env
+                key: SLACK_CHANNEL_3 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demotoy-service
+  namespace: default
+  labels:
+    app: demotoy-app
+spec:
+  type: ClusterIP
+  ports:
+    - targetPort: 3000
+      port: 3000
+      protocol: TCP
+      name: "http"
+  selector:
+    app: demotoy
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: demotoy-configmap-env
+  namespace: default
+data:
+  SEC_TOKEN: 'demo'
+  TOKEN: 'not_configured'
+  OCP_URL: 'not_configured'
+  NETCOOL_WEBHOOK_HUMIO: 'not_configured'
+  NETCOOL_WEBHOOK_GIT: 'not_configured'
+  NETCOOL_WEBHOOK_METRICS: 'not_configured'
+  NETCOOL_WEBHOOK_FALCO: 'not_configured'
+  NETCOOL_WEBHOOK_INSTANA: 'not_configured'
+  appgroupid_book: not_configured
+  appid_book: not_configured
+  appgroupid_sock: not_configured
+  appid_sock: not_configured
+  SLACK_TOKEN: ""
+  SLACK_CHANNEL_1: ".*test.*"
+  SLACK_CHANNEL_2: ".*test.*"
+  SLACK_CHANNEL_3: ".*test.*"
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: demotoy
+  namespace: default
+  labels:
+    app: demotoy-app
+spec:
+  subdomain: ''
+  to:
+    kind: Service
+    name: demotoy-service
+    weight: 100
+  port:
+    targetPort: http
+  wildcardPolicy: None

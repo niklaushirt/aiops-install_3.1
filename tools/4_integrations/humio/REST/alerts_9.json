@@ -1,0 +1,19 @@
+
+  {
+    "description": "resource.name=\\\"catalogue\\\" severity=Major resource.hostname=catalogue type.eventType=\\\"robotshop\\\"",
+    "id": "Ve7EcwvyhhGTsgLglKDug64ofbV6ODoG",
+    "labels": [],
+    "lastAlarm": 1615996907909,
+    "name": "RobotShopCatalogueProblem",
+    "notifiers": [
+      "<NOTIFIER_ID>"
+    ],
+    "query": {
+      "end": "now",
+      "isLive": true,
+      "queryString": "\"kubernetes.namespace_name\" = \"robot-shop\"\n| @rawstring = /Error: failed with status code 500/i\n| \"kubernetes.container_name\" = catalogue",
+      "start": "15s"
+    },
+    "silenced": false,
+    "throttleTimeMillis": 60000
+  }

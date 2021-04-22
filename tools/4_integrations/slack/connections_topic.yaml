@@ -1,0 +1,15 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: connections
+  namespace: zen
+  labels:
+    strimzi.io/cluster: strimzi-cluster
+spec:
+  config:
+    max.message.bytes: '1048588'
+    retention.ms: '1800000'
+    segment.bytes: '1073741824'
+  partitions: 1
+  replicas: 1
+  topicName: connections

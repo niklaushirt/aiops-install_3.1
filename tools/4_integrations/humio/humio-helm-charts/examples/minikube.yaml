@@ -1,0 +1,56 @@
+---
+humio-core:
+  enabled: true
+  replicas: 3
+  imagePullSecrets: []
+  cp-helm-charts:
+    cp-zookeeper:
+      servers: 3
+    cp-kafka:
+      brokers: 3
+
+humio-strix:
+  enabled: true
+  replicas: 0
+  simulation: HECSimulation
+  simulationOptions:
+    fixedRateIngestSimulation:
+      tensGbPerDay: 1
+    hecSimulation:
+      bulkSize: 10
+      dataspaces: 1
+      eventSize: 50
+      datasources: 2
+      fields: 10
+      users: 1
+    filebeatSimulation:
+      bulkSize: 100
+      dataspaces: 1
+      eventSize: 500
+      datasources: 20
+      fields: 10
+      users: 3
+    querySimulation:
+      searchQuery: "count()"
+      searchDuration: "24hours"
+
+humio-fluentbit:
+  enabled: true
+  es:
+    tls: false
+    autodiscovery: true
+
+humio-metrics:
+  enabled: true
+  publish:
+    enabled: true
+  queries:
+    sys-metrics: '#repo = kubernetes-metrics #type = beat kubernetes.pod.name = /humio|cp-/ | groupby(kubernetes.pod.name, function=[avg(kubernetes.pod.cpu.usage.limit.pct, as=cpu_usage_avg), avg(kubernetes.pod.memory.usage.limit.pct, as=mem_usage_avg), sum(kubernetes.pod.network.rx.bytes, as=rx_bytes_sum), sum(kubernetes.pod.network.rx.errors, as=rx_errors_sum), sum(kubernetes.pod.network.tx.bytes, as=tx_bytes_sum), sum(kubernetes.pod.network.tx.errors, as=tx_errors_sum)])'
+    pod-status: 'groupby(kubernetes.pod.name, function=[max(kubernetes.container.status.restarts, as=restarts), collect(kubernetes.pod.status.phase), collect(kubernetes.pod.status.ready)])'
+
+
+global:
+  sharedTokens:
+    perf: {performance-tests: default}
+    fluentbit: {kubernetes: in-cluster}
+    metricbeat: {kubernetes-metrics: default}

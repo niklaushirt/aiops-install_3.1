@@ -1,0 +1,109 @@
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: {{.Release.Name}}
+  name: {{.Release.Name}}
+  namespace: default
+spec:
+  ports:
+    - port: 389
+      targetPort: 389
+      nodePort: 32314
+  type: NodePort
+  selector:
+    app: {{.Release.Name}}
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: openldap
+  namespace: default
+  labels:
+    app: {{.Release.Name}}
+spec:
+  host: >-
+    openldap-default.{{.Values.OpenLdap.Route}}
+  to:
+    kind: Service
+    name: {{.Release.Name}}
+    weight: 100
+  wildcardPolicy: None
+status:
+  ingress:
+    - host: >-
+        openldap-default.{{.Values.OpenLdap.Route}}
+      routerName: router
+      conditions:
+        - type: Admitted
+          status: 'True'
+      wildcardPolicy: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Release.Name}}
+  namespace: default
+  labels:
+    app: {{.Release.Name}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{.Release.Name}}
+  template:
+    metadata:
+      labels:
+        app: {{.Release.Name}}
+    spec:
+      initContainers:
+        - name: init-copy
+          image: busybox
+          command: ['sh','-c','cp /config-map/* /config-storage; ls -lrt /config-storage']
+          volumeMounts:
+          - name: {{.Release.Name}}-seedusers
+            mountPath: /config-map
+          - name: config-storage
+            mountPath: /config-storage
+      containers:
+        - name: {{.Release.Name}}
+          image: osixia/openldap:1.3.0
+          args: ["--loglevel", "debug"]
+          volumeMounts:
+            - name: config-storage
+              mountPath: /container/service/slapd/assets/config/bootstrap/ldif/custom
+            - name: ldap-certs
+              mountPath: /container/service/slapd/assets/certs
+          ports:
+            - containerPort: 389
+            - containerPort: 636
+          env:
+            - name: LDAP_LOG_LEVEL
+              value: "256"
+            - name: LDAP_ORGANISATION
+              value: "demo"
+            - name: LDAP_DOMAIN
+              value: "{{.Values.OpenLdap.Domain}}"
+            - name: LDAP_ADMIN_PASSWORD
+              value: "{{.Values.OpenLdap.AdminPassword}}"
+            - name: LDAP_REMOVE_CONFIG_AFTER_SETUP
+              value: "false"
+      volumes:
+        - name: config-storage
+          emptyDir: {}
+        - name: ldap-certs
+          emptyDir: {}
+        - name: {{.Release.Name}}-seedusers
+          configMap:
+            name: {{.Release.Name}}-seedusers
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{.Release.Name}}-seedusers
+  namespace: default
+data:
+  seedusers.ldif: |
+{{- include (print .Template.BasePath "/_seedusers2.ldif.tpl") . | indent 4 }}  

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "humio-core.fullname" . }}-headless
+  labels:
+    app: {{ template "humio-core.name" . }}
+    chart: {{ template "humio-core.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  ports:
+    - port: 9200
+      name: humiointernales
+    - port: 8080
+      name: humiointernalhttp
+    - port: 80
+      name: humiointernalhttpeighty
+  clusterIP: None
+  selector:
+    app: {{ template "humio-core.name" . }}
+    release: {{ .Release.Name }}

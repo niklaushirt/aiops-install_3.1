@@ -1,0 +1,149 @@
+
+version: 1
+
+dn: cn=god,ou=Groups,dc=local,dc=io
+cn: god
+objectclass: groupOfUniqueNames
+objectclass: top
+uniquemember: uid=god,ou=People,dc=local,dc=io
+uniquemember: uid=demo,ou=People,dc=local,dc=io
+
+dn: cn=prodmgr,ou=Groups,dc=local,dc=io
+cn: prodmgr
+objectclass: groupOfUniqueNames
+objectclass: top
+uniquemember: uid=demo,ou=People,dc=local,dc=io
+uniquemember: uid=prod1,ou=People,dc=local,dc=io
+uniquemember: uid=prod2,ou=People,dc=local,dc=io
+uniquemember: uid=prod3,ou=People,dc=local,dc=io
+
+dn: cn=testers,ou=Groups,dc=local,dc=io
+cn: testers
+objectclass: groupOfUniqueNames
+objectclass: top
+uniquemember: uid=demo,ou=People,dc=local,dc=io
+uniquemember: uid=test1,ou=People,dc=local,dc=io
+uniquemember: uid=test2,ou=People,dc=local,dc=io
+uniquemember: uid=test3,ou=People,dc=local,dc=io
+
+dn: cn=devs,ou=Groups,dc=local,dc=io
+cn: devs
+objectclass: groupOfUniqueNames
+objectclass: top
+uniquemember: uid=demo,ou=People,dc=local,dc=io
+uniquemember: uid=dev1,ou=People,dc=local,dc=io
+uniquemember: uid=dev2,ou=People,dc=local,dc=io
+uniquemember: uid=dev3,ou=People,dc=local,dc=io
+
+dn: uid=demo,ou=People,dc=local,dc=io
+cn: demo
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+sn: demo
+uid: demo
+userpassword: P4ssw0rd!
+
+dn: uid=dev1,ou=People,dc=local,dc=io
+cn: dev1
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+sn: dev1
+uid: dev1
+userpassword: P4ssw0rd!
+
+# Entry 11: uid=dev2,ou=People,dc=local,dc=io
+dn: uid=dev2,ou=People,dc=local,dc=io
+cn: dev2
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+sn: dev2
+uid: dev2
+userpassword: P4ssw0rd!
+
+dn: uid=dev3,ou=People,dc=local,dc=io
+cn: dev3
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+sn: dev3
+uid: dev3
+userpassword: P4ssw0rd!
+
+dn: uid=god,ou=People,dc=local,dc=io
+cn: god
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+sn: god
+uid: god
+userpassword: P4ssw0rd!
+
+dn: uid=prod1,ou=People,dc=local,dc=io
+cn: prod1
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+sn: prod1
+uid: prod1
+userpassword: P4ssw0rd!
+
+# Entry 15: uid=prod2,ou=People,dc=local,dc=io
+dn: uid=prod2,ou=People,dc=local,dc=io
+cn: prod2
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+sn: prod2
+uid: prod2
+userpassword: P4ssw0rd!
+
+# Entry 16: uid=prod3,ou=People,dc=local,dc=io
+dn: uid=prod3,ou=People,dc=local,dc=io
+cn: prod3
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+sn: prod3
+uid: prod3
+userpassword: P4ssw0rd!
+
+dn: uid=test1,ou=People,dc=local,dc=io
+cn: test1
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+sn: test1
+uid: test1
+userpassword: P4ssw0rd!
+
+dn: uid=test2,ou=People,dc=local,dc=io
+cn: test2
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+sn: test2
+uid: test2
+userpassword: P4ssw0rd!
+
+dn: uid=test3,ou=People,dc=local,dc=io
+cn: test3
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+sn: test3
+uid: test3
+userpassword: P4ssw0rd!

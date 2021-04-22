@@ -1,0 +1,22 @@
+{
+    "description": "resource.name=\\\"front-end\\\" severity=Critical resource.hostname=front-end type.eventType=\\\"sockshop\\\"",
+    "id": "QH8uSwB2Mg4FfiBAcGmqLlL1dtpPzUM9",
+    "labels": [],
+    "lastAlarm": 1612885555035,
+    "name": "SockShopAvailability",
+    "notifiers": [
+      "<NOTIFIER_ID>"
+    ],
+    "query": {
+      "end": "now",
+      "isLive": true,
+      "queryString": "\"kubernetes.namespace_name\" = sockinfo \n| \"kubernetes.pod_name\" = /carts|front-end/i |  \"kubernetes.pod_name\" != /carts-db|catalogue-db/i | stripAnsiCodes(@rawstring)\n| \"@rawstring\" = /catalogue 500 /i",
+      "start": "5s"
+    },
+    "silenced": false,
+    "throttleTimeMillis": 60000
+  }
+
+
+
+

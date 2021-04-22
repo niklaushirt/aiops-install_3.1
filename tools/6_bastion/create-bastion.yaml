@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bastion-host
+  namespace: default
+  labels:
+      app: bastion-host
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bastion-host
+  template:
+    metadata:
+      labels:
+        app: bastion-host
+    spec:
+      containers:
+      - image: niklaushirt/bastion-ssh:1.0.0
+        imagePullPolicy: IfNotPresent
+        name: bastion
+        command:
+        ports:
+        - containerPort: 22
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "50Mi"
+          limits:
+            cpu: "50m"
+            memory: "50Mi"
+        env:
+          - name: PORT
+            value : "22"
+          - name: SSH_KEY
+            value : "22"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bastion-host-service
+  namespace: default
+spec:
+  selector:
+    app: bastion-host
+  ports:
+    - protocol: TCP
+      port: 22
+      targetPort: 22

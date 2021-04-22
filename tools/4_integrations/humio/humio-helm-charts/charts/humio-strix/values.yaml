@@ -1,0 +1,63 @@
+# Default values for humio-strix.
+
+replicas: 64
+
+# Simulation options are HECSimulation, FilebeatSimulation, FixedRateIngestSimulation or QuerySimulation
+simulation: HECSimulation
+
+simulationOptions:
+  fixedRateIngestSimulation:
+    tensGbPerDay: 10
+  hecSimulation:
+    bulkSize: 100
+    dataspaces: 1
+    eventSize: 500
+    datasources: 20
+    fields: 10
+    users: 3
+  hecRandomnessSimulation:
+    randomness: 3
+    bulkSize: 100
+    dataspaces: 1
+    eventSize: 500
+    datasources: 20
+    fields: 10
+    users: 3
+  filebeatSimulation:
+    bulkSize: 100
+    dataspaces: 1
+    eventSize: 500
+    datasources: 20
+    fields: 10
+    users: 3
+  querySimulation:
+    searchQuery: "count()"
+    searchDuration: "24hours"
+
+token: ""
+baseUrl: ""
+perfTime: ""
+
+image: humio/humio-ingest-load-test:latest
+imagePullPolicy: Always
+
+strixImage: humio/strix
+strixImagePullPolicy: Always
+
+initImage: humio/strix:latest
+initImagePullPolicy: Always
+
+nameOverride: "strix"
+fullnameOverride: "strix"
+
+resources:
+  limits:
+    cpu: 1.5
+    memory: 2Gi
+  requests:
+    cpu: 0.5
+    memory: 2Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
