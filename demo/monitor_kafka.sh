@@ -60,20 +60,19 @@ source ./01_config.sh
 #!/bin/bash
 menu_option_one () {
   echo "Kafka Topics"
-  oc get kafkatopic -n zen
+  oc get kafkatopic -n $WAIOPS_NAMESPACE
 
 }
 
 menu_option_two() {
   echo "Monitor Derived Stories"
   mv ca.crt ca.crt.old
-  oc extract secret/strimzi-cluster-cluster-ca-cert -n zen --keys=ca.crt
+  oc extract secret/strimzi-cluster-cluster-ca-cert -n $WAIOPS_NAMESPACE --keys=ca.crt
 
-  export sasl_password=$(oc get secret token -n zen --template={{.data.password}} | base64 --decode)
-  export BROKER=$(oc get routes strimzi-cluster-kafka-bootstrap -n zen -o=jsonpath='{.status.ingress[0].host}{"\n"}'):443
+  export sasl_password=$(oc get secret token -n $WAIOPS_NAMESPACE --template={{.data.password}} | base64 --decode)
+  export BROKER=$(oc get routes strimzi-cluster-kafka-bootstrap -n $WAIOPS_NAMESPACE -o=jsonpath='{.status.ingress[0].host}{"\n"}'):443
   
-  echo "	Press Enter to start, press CTRL-C to stop "
-  read
+  echo "	Press CTRL-C to stop "
 
   kafkacat -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512 -X sasl.username=token -X sasl.password=$sasl_password -b $BROKER -o -10 -C -t derived-stories 
 
@@ -82,11 +81,11 @@ menu_option_two() {
 menu_option_three() {
   echo "Monitor Specific Topic"
   mv ca.crt ca.crt.old
-  oc extract secret/strimzi-cluster-cluster-ca-cert -n zen --keys=ca.crt
-  oc get kafkatopic -n zen | awk '{print $1}'
+  oc extract secret/strimzi-cluster-cluster-ca-cert -n $WAIOPS_NAMESPACE --keys=ca.crt
+  oc get kafkatopic -n $WAIOPS_NAMESPACE | awk '{print $1}'
 
-  export sasl_password=$(oc get secret token -n zen --template={{.data.password}} | base64 --decode)
-  export BROKER=$(oc get routes strimzi-cluster-kafka-bootstrap -n zen -o=jsonpath='{.status.ingress[0].host}{"\n"}'):443
+  export sasl_password=$(oc get secret token -n $WAIOPS_NAMESPACE --template={{.data.password}} | base64 --decode)
+  export BROKER=$(oc get routes strimzi-cluster-kafka-bootstrap -n $WAIOPS_NAMESPACE -o=jsonpath='{.status.ingress[0].host}{"\n"}'):443
   
   read -p "Copy Paste Topic from above: " MY_TOPIC
 

@@ -27,7 +27,7 @@ export LOG_PATH=""
 __getClusterFQDN
 __getInstallPath
 
-
+banner
 __output "***************************************************************************************************************************************************"
 __output "***************************************************************************************************************************************************"
 __output "***************************************************************************************************************************************************"
@@ -41,7 +41,7 @@ __output "**********************************************************************
 __output "  "
 __output "  "
 
-checkInstallDone
+
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -55,21 +55,7 @@ checkInstallDone
 header1Begin "Initializing"
 
 
-
-
-# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# GET PARAMETERS
-# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-header2Begin "Input Parameters" "magnifying"
-
-        export STORAGE_CLASS_FILE=$WAIOPS_STORAGE_CLASS_FILE
-
-header2End
-
-
-
+export STORAGE_CLASS_FILE=$WAIOPS_STORAGE_CLASS_FILE
 
 
 
@@ -78,7 +64,7 @@ header2End
 # Install Checks
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-header2Begin "Install Checks"
+header2Begin "Prerequisites Checks"
 
         getClusterFQDN
         
@@ -97,8 +83,10 @@ header2Begin "Install Checks"
         checkStorageClassExists
         checkDefaultStorageDefined
         #checkRegistryCredentials
-        
+header2End
 
+header2Begin "Install Checks"
+        checkInstallDone
 header2End
 
 
@@ -111,18 +99,19 @@ header2Begin "CloudPak for Watson AI OPS 3.1 (CP4WAIOPS) will be installed in Cl
 # CONFIG SUMMARY
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
-__output "    ---------------------------------------------------------------------------------------------------------------------"
-__output "  🔎 Your configuration"
-__output "    ---------------------------------------------------------------------------------------------------------------------"
-__output "    CLUSTER :                  $CLUSTER_NAME"
-__output "    REGISTRY TOKEN:            $ENTITLED_REGISTRY_KEY"
-__output "    AI Manager NAMESPACE:      $WAIOPS_AI_MGR_NAMESPACE"
-__output "    Event Manager NAMESPACE:   $WAIOPS_EVENT_MGR_NAMESPACE"
-__output "    ---------------------------------------------------------------------------------------------------------------------"
-__output "    STORAGE CLASS:             $WAIOPS_AI_MGR_STORAGE_CLASS_FILE"
-__output "    ---------------------------------------------------------------------------------------------------------------------"
-__output "    INSTALL PATH:              $INSTALL_PATH"
-__output "    ---------------------------------------------------------------------------------------------------------------------------"
+__output "       ---------------------------------------------------------------------------------------------------------------------"
+__output "       🔍 Your configuration"
+__output "       ---------------------------------------------------------------------------------------------------------------------"
+__output "       🎛  CLUSTER :                  $CLUSTER_NAME"
+__output "       🛰  AI Manager NAMESPACE:      $WAIOPS_NAMESPACE"
+__output "       📛 INSTANCE NAME :            $WAIOPS_NAME"
+__output "       📦 INSTANCE SIZE :            $WAIOPS_SIZE"
+__output "       ---------------------------------------------------------------------------------------------------------------------"
+__output "       💾 STORAGE CLASS:             $WAIOPS_STORAGE_CLASS_FILE"
+__output "       💾 STORAGE CLASS LARGE:       $WAIOPS_STORAGE_CLASS_LARGE_BLOCK"
+__output "       ---------------------------------------------------------------------------------------------------------------------"
+__output "       #️⃣  TEMP PATH:                 $INSTALL_PATH"
+__output "       ---------------------------------------------------------------------------------------------------------------------------"
 __output "  "
 header2End
 
@@ -130,17 +119,13 @@ header2End
 
 header1End "Initializing"
 
-
+exit 1
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Installing Add-Ons that are dependent on Common Services
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 header1Begin "Register LDAP"
-
-waitForCPPassword
-waitForCPRoute
-waitForNSReady ibm-common-services
 
 
         header2Begin "LDAP - Register"
@@ -233,13 +218,29 @@ header1End "Create Strimzi Route"
 header1Begin "Create Gateway"
 
     header2Begin "Create Gateway for Robotshop"
-           kubectl apply -n $WAIOPS_NAMESPACE -f ./yaml/gateway/gateway-robotshop.yaml
+           oc apply -n $WAIOPS_NAMESPACE -f ./yaml/gateway/gateway-robotshop.yaml
     header2End
 
 header1End "Create Gateway"
 
 
 
+
+
+
+header1Begin "Create Topology Routes"
+
+    header2Begin "Create Topology Merge Route"
+            oc create route passthrough topology-merge -n $WAIOPS_NAMESPACE --service=evtmanager-topology-merge --port=merge-api
+    header2End
+
+    header2Begin "Create Topology Rest Route"
+            oc create route passthrough topology-rest -n $WAIOPS_NAMESPACE --service=evtmanager-topology-rest-observer --port=rest-observer-api
+    header2End
+
+
+
+header1End "Create Topology Routes"
 
 
 
@@ -264,7 +265,7 @@ header1Begin "Housekeeping"
             PODS_PENDING=""
 
             while  [[ $PODS_PENDING == "" ]]; do 
-                PODS_PENDING=$(oc get pods -l component=ibm-nginx | grep -v "No resources" || true)
+                PODS_PENDING=$(oc get pods -n $WAIOPS_NAMESPACE -l component=ibm-nginx | grep -v "No resources" || true)
                  __output "🕦   Still checking..."
                 sleep 5
             done
@@ -300,6 +301,23 @@ __output "----------------------------------------------------------------------
 __output "----------------------------------------------------------------------------------------------------------------------------------------------------"
 __output "***************************************************************************************************************************************************"
 __output "***************************************************************************************************************************************************"
+
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
 
 
 printCredentials

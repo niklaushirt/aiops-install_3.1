@@ -81,7 +81,7 @@ header2Begin "Input Parameters" "magnifying"
             __output "       USAGE: $0 -t <REGISTRY_TOKEN> [-s <STORAGE_CLASS> -l <LDAP_ADMIN_PASSWORD> -d <TEMP_DIRECTORY>]"
             exit 1
         else
-            __output "       🔐 Token                      Provided"
+            __output "       🔐  Token                     Provided"
             export ENTITLED_REGISTRY_KEY=$INPUT_TOKEN
         fi
 
@@ -109,7 +109,7 @@ header2End
 # Install Checks
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-header2Begin "Install Checks"
+header2Begin "Prerequisites Checks"
 
         getClusterFQDN
         
@@ -140,21 +140,30 @@ header2Begin "CloudPak for Watson AI OPS  3.1 (CP4WAIOPS) will be installed in C
 # CONFIG SUMMARY
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
-__output "    ---------------------------------------------------------------------------------------------------------------------"
-__output " 🔍 Your configuration"
-__output "    ---------------------------------------------------------------------------------------------------------------------"
-__output "    🎛  CLUSTER :                  $CLUSTER_NAME"
-__output "    🔐 REGISTRY TOKEN:            PROVIDED"
-__output "    📛 AI Manager NAMESPACE:      $WAIOPS_NAMESPACE"
-__output "    ---------------------------------------------------------------------------------------------------------------------"
-__output "    💾 STORAGE CLASS:             $WAIOPS_STORAGE_CLASS_FILE"
-__output "    ---------------------------------------------------------------------------------------------------------------------"
-__output "    #️⃣  INSTALL PATH:              $INSTALL_PATH"
-__output "    ---------------------------------------------------------------------------------------------------------------------------"
+__output "       ---------------------------------------------------------------------------------------------------------------------"
+__output "       🔍 Your configuration"
+__output "       ---------------------------------------------------------------------------------------------------------------------"
+__output "       🎛  CLUSTER :                  $CLUSTER_NAME"
+__output "       🔐 REGISTRY TOKEN:            provided"
+__output "       🛰 AI Manager NAMESPACE:       $WAIOPS_NAMESPACE"
+__output "       📛 INSTANCE NAME :            $WAIOPS_NAME"
+__output "       📦 INSTANCE SIZE :            $WAIOPS_SIZE"
+__output "       ---------------------------------------------------------------------------------------------------------------------"
+__output "       💾 STORAGE CLASS:             $WAIOPS_STORAGE_CLASS_FILE"
+__output "       💾 STORAGE CLASS LARGE:       $WAIOPS_STORAGE_CLASS_LARGE_BLOCK"
+
+__output "       ---------------------------------------------------------------------------------------------------------------------"
+__output "       #️⃣  TEMP PATH:                 $INSTALL_PATH"
+__output "       ---------------------------------------------------------------------------------------------------------------------------"
 __output "  "
 header2End
 
+
+
+
+header2Begin "CloudPak for Watson AI OPS  3.1 (CP4WAIOPS) will be installed with the following features:"
 printComponentsInstall
+header2End
 
 header1End "Initializing"
 
@@ -590,6 +599,22 @@ __output "**********************************************************************
 __output "***************************************************************************************************************************************************"
 
 
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
+__output ""
 
 
 printCredentials

@@ -37,7 +37,7 @@
         export WAIOPS_NAME=ibm-aiops
 
 
-        # WAIOPS AI Manager install namespace (default is zen)
+        # WAIOPS AI Manager install namespace (default is aiops)
         export WAIOPS_NAMESPACE=aiops
 
 

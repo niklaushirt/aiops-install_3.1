@@ -90,6 +90,9 @@ export INDENT=""
 
         function printCredentials() {
 
+
+
+            banner
             __output "***************************************************************************************************************************************************"
             __output "***************************************************************************************************************************************************"
             __output "***************************************************************************************************************************************************"
@@ -105,13 +108,14 @@ export INDENT=""
 
 
 
+   
 
 
-                header1Begin "CloudPak for Watson AIOps"
+                    header1Begin "CloudPak for Watson AIOps"
 
-                    header2Begin "Administration hub / Common Services"
+                 header2Begin "CP4WAIOPS"
                             __output "    AIOPS:"
-                            __output "        $(oc get route -n ibm-common-services cp-console -o jsonpath=‘{.spec.host}’)"
+                            __output "        URL:      https://cpd-aiops.$CLUSTER_NAME"
                             __output "        User:     $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_username}' | base64 -d && echo)"
                             __output "        Password: $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d)"
 
@@ -119,58 +123,63 @@ export INDENT=""
 
 
 
+                    header2Begin "Administration hub / Common Services"
+                            __output "        URL:      https://cp-console.$CLUSTER_NAME"
+                            __output "        User:     $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_username}' | base64 -d && echo)"
+                            __output "        Password: $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d)"
+
+                    header2End
+
+
+
+
                     header2Begin "Event Manager"
 
-                        
                             __output "---------------------------------------------------------------------------------------------"
                             __output "---------------------------------------------------------------------------------------------"
 
-                            __output "    AIOPS:"
-                            __output "        https://netcool.evtmanager.$CLUSTER_NAME:443/"
+                            __output "---------------------------------------------------------------------------------------------"
+                            __output "    ICPADMIN USER:"
                             __output "        User:     icpadmin"
                             __output "        Password: $(kubectl get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
 
+                            __output "---------------------------------------------------------------------------------------------"
+                            __output "    SMADMIN USER:"
+                            __output "        User:     smadmin"
+                            __output "        Password: $(kubectl get secret evtmanager-was-secret -o json -n $WAIOPS_NAMESPACE| grep WAS_PASSWORD | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
+                            
+                            __output "---------------------------------------------------------------------------------------------"
+                            __output "    ASM TOPOLOGY USER:"
+                            __output "        User:     aimanager-topology-aiops-user"
+                            __output "        Password: $(kubectl get secret evtmanager-topology-asm-credentials -n $WAIOPS_NAMESPACE -o=template --template={{.data.password}} | base64 -D)"
+                            __output " "
+                            __output " "
+
+                            __output "---------------------------------------------------------------------------------------------"
+                            __output "---------------------------------------------------------------------------------------------"
+
+                            __output "    Netcool (NOI):"
+                            __output "        URL:     https://netcool-evtmanager.$CLUSTER_NAME/"
 
 
                             __output "---------------------------------------------------------------------------------------------"
                             __output "    WebGUI:"
-                            __output "        https://netcool.evtmanager.$CLUSTER_NAME:443/ibm/console"
-                            __output "        User:     icpadmin"
-                            __output "        Password: $(kubectl get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
+                            __output "        URL:     https://netcool.evtmanager.$CLUSTER_NAME/ibm/console"
 
 
 
                             __output "---------------------------------------------------------------------------------------------"
                             __output "    WAS Console:"
-                            __output "        https://was.evtmanager.$CLUSTER_NAME:443/ibm/console"
-                            __output "        User:     smadmin"
-                            __output "        Password: $(kubectl get secret evtmanager-was-secret -o json -n $WAIOPS_NAMESPACE| grep WAS_PASSWORD | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
+                            __output "        URL:     https://was-evtmanager.$CLUSTER_NAME/ibm/console"
 
 
 
                             __output "---------------------------------------------------------------------------------------------"
-                            __output "    Impact GUI:"
-                            __output "        https://impact.evtmanager.$CLUSTER_NAME:443/ibm/console"
-                            __output "        User:     impactadmin"
-                            __output "        Password: $(kubectl get secret evtmanager-impact-secret -o json -n $WAIOPS_NAMESPACE| grep IMPACT_ADMIN_PASSWORD | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
-
-
-
-                            __output "---------------------------------------------------------------------------------------------"
-                            __output "    Impact Servers:"
-                            __output "        https://nci-0.evtmanager.$CLUSTER_NAME:443/nameserver/services"
-                            __output "        User:     impactadmin"
-                            __output "        Password: $(kubectl get secret evtmanager-impact-secret -o json -n $WAIOPS_NAMESPACE| grep IMPACT_ADMIN_PASSWORD | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
-
-
-
-
-                            __output "---------------------------------------------------------------------------------------------"
-                            __output "    ASM TOPOLOGY USER:"
-                            __output "        https://nci-0.evtmanager.$CLUSTER_NAME:443/nameserver/services"
-                            __output "        User:     aimanager-topology-aiops-user"
-                            __output "        Password: $(kubectl get secret evtmanager-topology-asm-credentials -n $WAIOPS_NAMESPACE -o=template --template={{.data.password}} | base64 -D)"
-
+                            __output "    CUSTOM TOPOLOGY ROUTES:"
+                            __output "        MERGE:"
+                            __output "            URL:     https://$(oc get route topology-merge -o jsonpath='{ .spec.host}')/1.0/merge/swagger"
+                            __output "        REST:"
+                            __output "            URL:     https://$(oc get route topology-rest -o jsonpath='{ .spec.host}')/1.0/rest-observer/swagger"
 
 
 
@@ -178,6 +187,21 @@ export INDENT=""
                     header2End
                 header1End "AIOPS Event Manager Connection Details"
 
+
+
+
+                header1Begin "LDAP Connection Details"
+                        
+                            __output "---------------------------------------------------------------------------------------------"
+                            __output "---------------------------------------------------------------------------------------------"
+
+                            __output "    OPENLDAP:"
+                            __output "        URL:      http://openldap-admin-default.$CLUSTER_NAME/"
+                            __output "        User:     cn=admin,dc=ibm,dc=com"
+                            __output "        Password: P4ssw0rd!"
+
+
+                header1End "LDAP Connection Details"
 
 
 
@@ -211,7 +235,7 @@ export INDENT=""
                                 __output "---------------------------------------------------------------------------------------------"
 
                                 __output "    HUMIO:"
-                                __output "        http://humio-humio-logging.$CLUSTER_NAME/"
+                                __output "        URL:      http://humio-humio-logging.$CLUSTER_NAME/"
                                 __output "        User:     developer"
                                 __output "        Password: $(kubectl get secret developer-user-password -n humio-logging -o=template --template={{.data.password}} | base64 -D)"
                     header1End "HUMIO Connection Details"
@@ -225,7 +249,7 @@ export INDENT=""
                                 __output "---------------------------------------------------------------------------------------------"
 
                                 __output "    Rook/Ceph Dashboard :"
-                                __output "        https://dash-rook-ceph.apps.$CLUSTER_NAME/"
+                                __output "        URL:      https://dash-rook-ceph.apps.$CLUSTER_NAME/"
                                 __output "        User:     admin"
                                 __output "        Password: $(kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode)"
                     header1End "Rook/Ceph Dashboard Connection Details"
@@ -239,20 +263,21 @@ export INDENT=""
             WAIOPS_READY=$(oc get installations.orchestrator.aiops.ibm.com $WAIOPS_NAME -n $WAIOPS_NAMESPACE -oyaml | grep "phase: Running" || true) 
             while  ([[ ! $WAIOPS_READY =~ "Running" ]]); do 
                 WAIOPS_READY=$(oc get installations.orchestrator.aiops.ibm.com $WAIOPS_NAME -n $WAIOPS_NAMESPACE -oyaml | grep "phase: Running" || true) 
-                __output "      ⭕ CP4WAIOPS not ready. Waiting for 10 seconds...." && sleep 10; 
+                WAIOPS_PODS_COUNT_TOTAL=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
+                WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
+                __output "      ⭕ CP4WAIOPS not ready ($WAIOPS_PODS_COUNT_NOTREADY/$WAIOPS_PODS_COUNT_TOTAL). Waiting for 10 seconds...." && sleep 10; 
 
                 if [[ $VERBOSE_INSTALL == "true" ]]; 
                 then
                     WAIOPS_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" || true) 
-                    WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
-                    __output "      🔎  Namespace $WAIOPS_NAMESPACE not ready ($WAIOPS_PODS_COUNT_NOTREADY):"
+                    __output "      🔎  Namespace $WAIOPS_NAMESPACE not ready"
                     __output "$WAIOPS_NOTREADY"
                 fi
-
-
-
             done
             __output "      ✅ OK"
+            __output ""
+
+
 
 
 
@@ -260,19 +285,22 @@ export INDENT=""
 
             AI_MGR_PWD=$(oc -n $WAIOPS_NAMESPACE get secret admin-user-details -o jsonpath='{.data.initial_admin_password}' | base64 -d || true )     
             while  ([[ $AI_MGR_PWD == "" ]]); do 
-                AI_MGR_PWD=$(oc -n $WAIOPS_NAMESPACE get secret admin-user-details -o jsonpath='{.data.initial_admin_password}' | base64 -d || true )     
-                __output "      ⭕ AI Manager not ready. Waiting for 10 seconds...." && sleep 10; 
+                AI_MGR_PWD=$(oc -n $WAIOPS_NAMESPACE get secret admin-user-details -o jsonpath='{.data.initial_admin_password}' | base64 -d || true )   
+                WAIOPS_PODS_COUNT_TOTAL=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
+                WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
+                __output "      ⭕ AI Manager not ready ($WAIOPS_PODS_COUNT_NOTREADY/$WAIOPS_PODS_COUNT_TOTAL). Waiting for 10 seconds...." && sleep 10; 
 
                 if [[ $VERBOSE_INSTALL == "true" ]]; 
                 then
                     WAIOPS_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" || true) 
-                    WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
-                    __output "      🔎  Namespace $WAIOPS_NAMESPACE not ready ($WAIOPS_PODS_COUNT_NOTREADY):"
+                    __output "      🔎  Namespace $WAIOPS_NAMESPACE not ready"
                     __output "$WAIOPS_NOTREADY"
                 fi
-
             done
             __output "      ✅ OK"
+            __output ""
+
+
 
 
             __output "   🔎 Check if Common Services ready."
@@ -280,17 +308,19 @@ export INDENT=""
             COMMON_SVC_PWD=$(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d || true )     
             while  ([[ $COMMON_SVC_PWD == "" ]]); do 
                 COMMON_SVC_PWD=$(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d || true )     
-                __output "      ⭕ Common Services not ready. Waiting for 10 seconds...." && sleep 10; 
+                __output "      ⭕ Common Services not ready ($WAIOPS_PODS_COUNT_NOTREADY/$WAIOPS_PODS_COUNT_TOTAL). Waiting for 10 seconds...." && sleep 10; 
 
                 if [[ $VERBOSE_INSTALL == "true" ]]; 
                 then
                     CS_NOTREADY=$(kubectl get pods -n ibm-common-services | grep -v "Completed" | grep "0/" || true) 
-                    CS_PODS_COUNT_NOTREADY=$(kubectl get pods -n ibm-common-services | grep -v "Completed" | grep "0/" | wc -l || true) 
-                    __output "      🔎 Namespace ibm-common-services not ready ($CS_PODS_COUNT_NOTREADY):"
+                    __output "      🔎 Namespace ibm-common-services not ready"
                     __output "$CS_NOTREADY"
                 fi
             done
             __output "      ✅ OK"
+            __output ""
+
+
 
 
             __output "   🔎 Check if Event Manager ready."
@@ -298,21 +328,36 @@ export INDENT=""
             EVT_MGR_PWD=$(kubectl get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d || true )     
             while  ([[ $EVT_MGR_PWD == "" ]]); do 
                 EVT_MGR_PWD=$(kubectl get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d  || true )     
-                __output "      ⭕ Event Manager not ready. Waiting for 10 seconds...." && sleep 10; 
+                WAIOPS_PODS_COUNT_TOTAL=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
+                WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
+                __output "      ⭕ Event Manager not ready ($WAIOPS_PODS_COUNT_NOTREADY/$WAIOPS_PODS_COUNT_TOTAL). Waiting for 10 seconds...." && sleep 10; 
 
                 if [[ $VERBOSE_INSTALL == "true" ]]; 
                 then
                     WAIOPS_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" || true) 
-                    WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
-                    __output "      🔎  Namespace $WAIOPS_NAMESPACE not ready ($WAIOPS_PODS_COUNT_NOTREADY):"
+                    __output "      🔎  Namespace $WAIOPS_NAMESPACE not ready"
                     __output "$WAIOPS_NOTREADY"
                 fi
             done
             __output "      ✅ OK"
+            __output ""
+
+
+
+
+            __output "   🔎 Check if all pods in $WAIOPS_NAMESPACE are ready."
+
+            WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
+            #WAIOPS_PODS_COUNT_NOTREADY="   0"
+            while  ([[ ! $WAIOPS_PODS_COUNT_NOTREADY =~ " 0" ]]); do 
+                WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
+                WAIOPS_PODS_COUNT_TOTAL=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
+                __output "      ⭕ CP4WAIOPS not ready ($WAIOPS_PODS_COUNT_NOTREADY/$WAIOPS_PODS_COUNT_TOTAL). Waiting for 10 seconds...." && sleep 10; 
+            done
+            __output "      ✅ OK"
+            __output ""
         }
-
-
-
+            
 
         function getInstallPath() {
 
@@ -980,7 +1025,7 @@ function progressbar {
        
        
         function header1Begin() {
-            export INDENT=" "
+            export INDENT="  "
             __output "  *****************************************************************************************************************************************"
             __output "  *****************************************************************************************************************************************"
             __output "  *****************************************************************************************************************************************"
@@ -1018,7 +1063,7 @@ function progressbar {
 
 
         function header2Begin() {
-            export INDENT="    "
+            export INDENT="        "
             __output "  "
             __output "***********************************************************************************************************************************"
             __output "-----------------------------------------------------------------------------------------------------------------------------------"
@@ -1045,7 +1090,7 @@ function progressbar {
 
 
         function header3Begin() {
-            export INDENT="       "
+            export INDENT="         "
             __output "  "
             __output "*******************************************************************************************************************"
             __output "-------------------------------------------------------------------------------------------------------------------"

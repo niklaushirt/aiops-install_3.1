@@ -9,24 +9,24 @@
 
 
 # Webhooks for Event injection
-export NETCOOL_WEBHOOK_HUMIO=https://netcool.demo-noi.aiopsch-a376efc1170b9b8ace6422196c51e491-0000.eu-de.containers.appdomain.cloud/norml/webhook/humio/cfd95b7e-3bc7-4006-a4a8-a73a79c71255/e9fd3a7e-5632-4c96-a30f-43f5e0ce2b16/u5O06fLmVrCca1wZbPkakc1h9B09RTBz97CQS-pF76g
+export NETCOOL_WEBHOOK_HUMIO=https://netcool-evtmanager.demo31-a376efc1170b9b8ace6422196c51e491-0000.eu-de.containers.appdomain.cloud/norml/webhook/humio/cfd95b7e-3bc7-4006-a4a8-a73a79c71255/60d7a6f8-ea89-494d-b5aa-3561f16ac47a/KKv9a6umgzRy5mTlJ7gr2GMO15dlgPmeYkko84uu4SA
 
-export NETCOOL_WEBHOOK_GIT=https://netcool.demo-noi.aiopsch-a376efc1170b9b8ace6422196c51e491-0000.eu-de.containers.appdomain.cloud/norml/webhook/webhookincomming/cfd95b7e-3bc7-4006-a4a8-a73a79c71255/61401236-15f3-4d23-9c21-bd49979d9465/uYgsIosAStCXKjpaTiCiaAVDfr2npH1i2SnxoYo0KlE
+export NETCOOL_WEBHOOK_GIT=not_configured
 
 export NETCOOL_WEBHOOK_METRICS=not_configured
 
-export NETCOOL_WEBHOOK_FALCO=https://netcool.demo-noi.aiopsch-a376efc1170b9b8ace6422196c51e491-0000.eu-de.containers.appdomain.cloud/norml/webhook/webhookincomming/cfd95b7e-3bc7-4006-a4a8-a73a79c71255/c8a9af32-222d-42e2-84ec-131d65b37b26/i5R11IWRUS2eien6W8HdpegitCwdgNtr2vzeg6IPWeg
+export NETCOOL_WEBHOOK_FALCO=not_configured
 
-export NETCOOL_WEBHOOK_INSTANA=https://netcool.demo-noi.aiopsch-a376efc1170b9b8ace6422196c51e491-0000.eu-de.containers.appdomain.cloud/norml/webhook/webhookincomming/cfd95b7e-3bc7-4006-a4a8-a73a79c71255/3a00ec2e-df2f-4b9c-a90d-6226eb63a625/m2RJJ0dEBZHQByN9-ArjreA9lTvSTJZaS-ONzJYpPAY
+export NETCOOL_WEBHOOK_INSTANA=not_configured
 
 
 # Bookinfo
-export appgroupid_bookinfo=cyyejiie
-export appid_bookinfo=iehl4yav
+export appgroupid_bookinfo=not_configured
+export appid_bookinfo=not_configured
 
 # Robotshop
-export appgroupid_robotshop=j9aw0vxl
-export appid_robotshop=flotlnkf
+export appgroupid_robotshop=not_configured
+export appid_robotshop=not_configured
 
 # Kubetoy
 export appgroupid_sockshop=not_configured
@@ -40,8 +40,13 @@ export appid_kubetoy=not_configured
 
 
 # Only for Topology Load
-export NOI_REST_USR=demo-noi-topology-noi-user
-export NOI_REST_PWD=j4k/7LVBUCuaqgXiqcZDHftuJ5bVD6tJJuclOHJPGkY=
+export NOI_REST_USR=aimanager-topology-aiops-user
+export NOI_REST_PWD=k9M9CkWgYACyWEA2zQn6A6Jquk65rvCuulWCzR10EDE=
+
+
+
+# WAIOPS AI Manager install namespace (default is aiops)
+export WAIOPS_NAMESPACE=aiops
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

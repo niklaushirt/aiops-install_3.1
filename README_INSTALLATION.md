@@ -18,19 +18,13 @@
 1. [Prerequisites](#prerequisites)
 1. [Architecture](#architecture)
 1. [AI and Event Manager Base Install](#ai-and-event-manager-base-install)
-1. [Demo Apps in AI Manager](#demo-apps)
-1. [Install Demo Apps](#demo-apps-in-ai-manager)
-1. [Create NOI Webhooks](#noi-webhooks)
 1. [Install Humio](#humio)
-1. [Train the Models](#train-the-models)
 1. [Connections from AI Manager (Ops Integration)](#connections-from-ai-manager-ops-integration)
 1. [Configure Event Manager / ASM Topology](#configure-event-manager--asm-topology)
 1. [Configure Runbooks](#configure-runbooks)
-1. [Install Event Manager Gateway](#install-event-manager-gateway)
-1. [Create ASM Integration in AI Manager](#create-asm-integration-in-ai-manager)
 1. [Slack integration](#slack-integration)
 1. [Some Polishing](#some-polishing)
-1. [Demo Assets](#demo-assets)
+1. [Check Installation](#check-installation)
 
 
 > ❗You can find a handy install checklist here: [INSTALLATION CHECKLIST](./README_INSTALLATION_CHECKLIST.md).
@@ -752,16 +746,6 @@ oc set env deployment/$(oc get deploy -l app.kubernetes.io/component=chatops-sla
 ---------------------------------------------------------------------------------------------------------------
 ## Some Polishing
 ------------------------------------------------------------------------------
-
-
-### Check if installation is ok
-
-Get the kafkacat Certificate
-
-```bash
-cd demo
-./check-aiops-install.sh
-```
 
 
 ### Check if data is flowing

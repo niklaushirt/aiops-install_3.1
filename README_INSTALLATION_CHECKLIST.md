@@ -13,44 +13,12 @@
  
 - [ ] Start installation
  
-- [ ] Create NOI User that can see Topology
+- [ ] Start Post Installation
 
-## Demo Apps in AI Manager
-- [ ] Create Dummy Slack integration
- 
-- [ ] Create Apps
 
-## Demo Apps
-- [ ] Install Bookinfo
- 
-	- [ ] Install Bookinfo generate load
-   
-- [ ] Install Kubetoy
- 
-- [ ] Install RobotShop
- 
-	- [ ] Install RobotShop generate load
-   
-   
-## NOI Webhooks
-- [ ] Humio Webhook
- 
-- [ ] Falco Webhook (optional)
- 
-- [ ] Git Webhook (optional)
- 
-- [ ] Metrics Webhook (optional)
- 
-- [ ] Instana Webhook (optional)
- 
-- [ ] Copy the Webhook URLS into 01_config.sh
- 
-- [ ] Create NOI Menu item
 
 ## HUMIO
-- [ ] Install HUMIO
- 
-	- [ ] Change developer password (optional)
+
    
 - [ ] Configure Humio
  
@@ -88,14 +56,7 @@
 
 	- [ ] RobotShopFrontendProblem
 
-## Train the Models
-- [ ] Prerequisite - adapt for ROKS S3 Storage
- 
-- [ ] Training - Bookinfo 
- 
-- [ ] Training - RobotShop 
- 
-- [ ] Training - Kubetoy 
+
 
 
 
@@ -106,14 +67,6 @@
 
 - [ ] Create Humio Ops Integration on RobotShop App
  
-- [ ] Create NOI Ops Integration on Bookinfo App
- 
-- [ ] Create NOI Ops Integration  on RobotShop App
- 
-- [ ] Create NOI Ops Integration  on Kubetoy App
- 
-   
-- [ ] Create Log Ops Integration on Bookinfo App (optional)
 
 
 
@@ -142,28 +95,6 @@
  
 
 
-## Install Event Manager Gateway
-- [ ] Create Strimzi route
- 
-- [ ] Copy secret strimzi-cluster-cluster-ca-cert
- 
-- [ ] Get needed info
- 
-- [ ] Modify Template
- 
-- [ ] Apply Manifest
-
-
-## Create ASM Integration in AI Manager
-- [ ] Create the Operations integration for the AppGroup
- 
-	- [ ] Get certificate
-   
-	- [ ] Input values
-   
-- [ ] Check ASM connection
-
-
 ## Slack integration
 - [ ] Refresh ingress certificates (otherwise Slack will not validate link)
  
@@ -173,14 +104,11 @@
 
 
 ## Some Polishing
-- [ ] Make Flink Console accessible
- 
-- [ ] Check if installation is ok
  
 - [ ] Check if data is flowing
  
-- [ ] Create USER
  
-- [ ] Change admin password AI Manager
 
 ## Check installation
+
+- [ ] Check if installation is ok
