@@ -65,7 +65,7 @@ subjects:
 apiVersion: v1
 kind: Service
 metadata:
-  name: cart
+  name: cart-svc
 spec:
   ports:
   - name: http
@@ -80,7 +80,7 @@ kind: Service
 metadata:
   labels:
     service: catalogue
-  name: catalogue
+  name: catalogue-svc
 spec:
   ports:
   - name: http
@@ -95,7 +95,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: dispatch
+  name: dispatch-svc
   labels:
     service: dispatch
 spec:
@@ -113,7 +113,7 @@ kind: Service
 metadata:
   labels:
     service: mongodb
-  name: mongodb
+  name: mongodb-svc
 spec:
   ports:
   - name: mongo
@@ -128,7 +128,7 @@ kind: Service
 metadata:
   labels:
     service: mysql
-  name: mysql
+  name: mysql-svc
 spec:
   ports:
   - name: mysql
@@ -141,7 +141,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: payment
+  name: payment-svc
   labels:
     service: payment
 spec:
@@ -156,7 +156,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: rabbitmq
+  name: rabbitmq-svc
   labels:
     service: rabbitmq
 spec:
@@ -177,7 +177,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ratings
+  name: ratings-svc
   labels:
     service: ratings
 spec:
@@ -194,7 +194,7 @@ kind: Service
 metadata:
   labels:
     service: redis
-  name: redis
+  name: redis-svc
 spec:
   ports:
   - name: redis
@@ -207,7 +207,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: shipping
+  name: shipping-svc
   labels:
     service: shipping
 spec:
@@ -222,7 +222,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: user
+  name: user-svc
   labels:
     service: user
 spec:
@@ -237,7 +237,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: web-deployment
+  name: web-deployment-svc
   labels:
     service: web-deployment
 spec:
@@ -254,7 +254,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cart
+  name: cart-deployment
   labels:
     service: cart
 spec:
@@ -294,7 +294,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: catalogue
+  name: catalogue-deployment
   labels:
     service: catalogue
 spec:
@@ -334,7 +334,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dispatch
+  name: dispatch-deployment
   labels:
     service: dispatch
 spec:
@@ -373,7 +373,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mongodb
+  name: mongodb-deployment
   labels:
     service: mongodb
 spec:
@@ -408,7 +408,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql
+  name: mysql-deployment
   labels:
     service: mysql
 spec:
@@ -447,7 +447,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: payment
+  name: payment-deployment
   labels:
     service: payment
     stage: prod
@@ -491,7 +491,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rabbitmq
+  name: rabbitmq-deployment
   labels:
     service: rabbitmq
 spec:
@@ -527,7 +527,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ratings
+  name: ratings-deployment
   labels:
     service: ratings
 spec:
@@ -570,7 +570,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: shipping
+  name: shipping-deployment
   labels:
     service: shipping
 spec:
@@ -614,7 +614,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: user
+  name: user-deployment
   labels:
     service: user
 spec:

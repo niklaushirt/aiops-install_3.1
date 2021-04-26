@@ -69,6 +69,20 @@ You'll need:
 You might get away with less if you don't install some components (Humio,...)
 
 
+### Storage Requirements
+
+
+Please make sure that an appropriate StorageClass is available (you will have to parametrize those as described in "Adapt configuration")
+
+- On IBM ROKS use: ibmc-file-gold-gid
+- On TEC use:      nfs-client
+- On FYRE use:     rook-cephfs 
+
+#### ❗Required for installations on IBM Fyre
+⚠️ **If you don't have a StorageClass, you can install Rook/Ceph with ./22_install_rook.sh.**
+            
+
+
 ### Tooling
 
 You need the following tools installed in order to follow through this guide:

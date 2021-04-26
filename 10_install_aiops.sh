@@ -178,45 +178,6 @@ header1End "Initializing"
 
 header1Begin "Install Prerequisites"
   
-  
-        header2Begin "Install Rook/Ceph" 
-            if [[ $INSTALL_ROOK_SC == "true" ]]; 
-            then
-
-                MYFS_READY=$(oc get pods -n rook-ceph | grep "rook-ceph-mds-myfs" | grep "Running" | grep "1/1" || true) 
-                OSD_READY=$(oc get pods -n rook-ceph | grep "rook-ceph-osd" | grep "Running" | grep "1/1" || true) 
-
-
-                if [[ $OSD_READY =~ "Running" ]] && [[ $MYFS_READY =~ "Running" ]];
-                then
-                    __output "     ⭕ Rook/Ceph already installed... Skipping"
-                else           
-                    __output "     🚀 Installing Rook Ceph..."
-                    ./tools/7_storage/install-rook.sh
-                    __output "     ✅ Rook Ceph installed..."
-
-                    OSD_READY=$(oc get pods -n rook-ceph | grep "rook-ceph-osd" | grep "Running" | grep "1/1" || true) 
-                    while  ([[ ! $OSD_READY =~ "Running" ]]); do 
-                        OSD_READY=$(oc get pods -n rook-ceph | grep "rook-ceph-osd" | grep "Running" | grep "1/1" || true) 
-                        __output "   🕦 Rook/Ceph not ready. Waiting for 10 seconds...." && sleep 10; 
-                    done
-
-
-                    MYFS_READY=$(oc get pods -n rook-ceph | grep "rook-ceph-mds-myfs" | grep "Running" | grep "1/1" || true) 
-                    while  ([[ ! $MYFS_READY =~ "Running" ]]); do 
-                        MYFS_READY=$(oc get pods -n rook-ceph | grep "rook-ceph-osd" | grep "Running" | grep "1/1" || true) 
-                        __output "   🕦 Rook/Ceph not ready. Waiting for 10 seconds...." && sleep 10; 
-                    done
-
-                    __output "     🚀 Create Rook Ceph Dashboard Route..."
-                    oc create route passthrough dash -n rook-ceph --service=rook-ceph-mgr-dashboard --port=8443
-
-                fi
-
-            else
-                __output "     ❌ Rook/Ceph not activated... Skipping"
-            fi
-        header2End
 
         header2Begin "Storage Checks"
 

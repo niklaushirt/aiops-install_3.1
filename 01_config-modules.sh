@@ -19,9 +19,6 @@
     # Prerequisites
     # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 
-         # Install Rook/Ceph Storage 
-        export INSTALL_ROOK_SC=false
-
          # Create more output 
         export VERBOSE_INSTALL=true
 

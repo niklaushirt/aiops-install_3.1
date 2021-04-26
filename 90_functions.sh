@@ -111,120 +111,118 @@ export INDENT=""
    
 
 
-                    header1Begin "CloudPak for Watson AIOps"
+            header1Begin "CloudPak for Watson AIOps"
 
-                 header2Begin "CP4WAIOPS"
-                            __output "    AIOPS:"
-                            __output "        URL:      https://cpd-aiops.$CLUSTER_NAME"
-                            __output "        User:     $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_username}' | base64 -d && echo)"
-                            __output "        Password: $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d)"
+                header2Begin "CP4WAIOPS"
+                        __output "    AIOPS:"
+                        __output "        URL:      https://cpd-aiops.$CLUSTER_NAME"
+                        __output "        User:     $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_username}' | base64 -d && echo)"
+                        __output "        Password: $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d)"
 
-                    header2End
-
-
-
-                    header2Begin "Administration hub / Common Services"
-                            __output "        URL:      https://cp-console.$CLUSTER_NAME"
-                            __output "        User:     $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_username}' | base64 -d && echo)"
-                            __output "        Password: $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d)"
-
-                    header2End
+                header2End
 
 
 
+                header2Begin "Administration hub / Common Services"
+                        __output "        URL:      https://cp-console.$CLUSTER_NAME"
+                        __output "        User:     $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_username}' | base64 -d && echo)"
+                        __output "        Password: $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d)"
 
-                    header2Begin "Event Manager"
-
-                            __output "---------------------------------------------------------------------------------------------"
-                            __output "---------------------------------------------------------------------------------------------"
-
-                            __output "---------------------------------------------------------------------------------------------"
-                            __output "    ICPADMIN USER:"
-                            __output "        User:     icpadmin"
-                            __output "        Password: $(kubectl get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
-
-                            __output "---------------------------------------------------------------------------------------------"
-                            __output "    SMADMIN USER:"
-                            __output "        User:     smadmin"
-                            __output "        Password: $(kubectl get secret evtmanager-was-secret -o json -n $WAIOPS_NAMESPACE| grep WAS_PASSWORD | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
-                            
-                            __output "---------------------------------------------------------------------------------------------"
-                            __output "    ASM TOPOLOGY USER:"
-                            __output "        User:     aimanager-topology-aiops-user"
-                            __output "        Password: $(kubectl get secret evtmanager-topology-asm-credentials -n $WAIOPS_NAMESPACE -o=template --template={{.data.password}} | base64 -D)"
-                            __output " "
-                            __output " "
-
-                            __output "---------------------------------------------------------------------------------------------"
-                            __output "---------------------------------------------------------------------------------------------"
-
-                            __output "    Netcool (NOI):"
-                            __output "        URL:     https://netcool-evtmanager.$CLUSTER_NAME/"
+                header2End
+            header1End "CloudPak for Watson AIOps"
 
 
-                            __output "---------------------------------------------------------------------------------------------"
-                            __output "    WebGUI:"
-                            __output "        URL:     https://netcool.evtmanager.$CLUSTER_NAME/ibm/console"
+            header1End "AIOPS Event Manager Connection Details"
+                header2Begin "Event Manager"
 
+                        __output "---------------------------------------------------------------------------------------------"
+                        __output "---------------------------------------------------------------------------------------------"
 
+                        __output "---------------------------------------------------------------------------------------------"
+                        __output "    ICPADMIN USER:"
+                        __output "        User:     icpadmin"
+                        __output "        Password: $(kubectl get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
 
-                            __output "---------------------------------------------------------------------------------------------"
-                            __output "    WAS Console:"
-                            __output "        URL:     https://was-evtmanager.$CLUSTER_NAME/ibm/console"
-
-
-
-                            __output "---------------------------------------------------------------------------------------------"
-                            __output "    CUSTOM TOPOLOGY ROUTES:"
-                            __output "        MERGE:"
-                            __output "            URL:     https://$(oc get route topology-merge -o jsonpath='{ .spec.host}')/1.0/merge/swagger"
-                            __output "        REST:"
-                            __output "            URL:     https://$(oc get route topology-rest -o jsonpath='{ .spec.host}')/1.0/rest-observer/swagger"
-
-
-
-
-                    header2End
-                header1End "AIOPS Event Manager Connection Details"
-
-
-
-
-                header1Begin "LDAP Connection Details"
+                        __output "---------------------------------------------------------------------------------------------"
+                        __output "    SMADMIN USER:"
+                        __output "        User:     smadmin"
+                        __output "        Password: $(kubectl get secret evtmanager-was-secret -o json -n $WAIOPS_NAMESPACE| grep WAS_PASSWORD | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
                         
-                            __output "---------------------------------------------------------------------------------------------"
-                            __output "---------------------------------------------------------------------------------------------"
+                        __output "---------------------------------------------------------------------------------------------"
+                        __output "    ASM TOPOLOGY USER:"
+                        __output "        User:     aimanager-topology-aiops-user"
+                        __output "        Password: $(kubectl get secret evtmanager-topology-asm-credentials -n $WAIOPS_NAMESPACE -o=template --template={{.data.password}} | base64 -D)"
+                        __output " "
+                        __output " "
 
-                            __output "    OPENLDAP:"
-                            __output "        URL:      http://openldap-admin-default.$CLUSTER_NAME/"
-                            __output "        User:     cn=admin,dc=ibm,dc=com"
-                            __output "        Password: P4ssw0rd!"
+                        __output "---------------------------------------------------------------------------------------------"
+                        __output "---------------------------------------------------------------------------------------------"
 
-
-                header1End "LDAP Connection Details"
-
-
-
-
-
-                header1Begin "OCP Connection Details"
-                        
-                            __output "---------------------------------------------------------------------------------------------"
-                            __output "---------------------------------------------------------------------------------------------"
-
-                            DEMO_TOKEN=$(oc -n default get secret $(oc get secret -n default |grep -m1 demo-admin-token|awk '{print$1}') -o jsonpath='{.data.token}'|base64 -d)
-                            DEMO_URL=$(oc status|grep -m1 "In project"|awk '{print$6}')
-
-                            __output "        URL:     $DEMO_URL"
-                            __output "        Token:   $DEMO_TOKEN"
-                            __output ""
-                            __output ""
-                            __output ""
-
-                            __output "        Login:   oc login --token=$DEMO_TOKEN --server=$DEMO_URL"
+                        __output "    Netcool (NOI):"
+                        __output "        URL:     https://netcool-evtmanager.$CLUSTER_NAME/"
 
 
-                header1End "OCP Connection Details"
+                        __output "---------------------------------------------------------------------------------------------"
+                        __output "    WebGUI:"
+                        __output "        URL:     https://netcool.evtmanager.$CLUSTER_NAME/ibm/console"
+
+
+
+                        __output "---------------------------------------------------------------------------------------------"
+                        __output "    WAS Console:"
+                        __output "        URL:     https://was-evtmanager.$CLUSTER_NAME/ibm/console"
+
+
+
+                        __output "---------------------------------------------------------------------------------------------"
+                        __output "    CUSTOM TOPOLOGY ROUTES:"
+                        __output "        MERGE:"
+                        __output "            URL:     https://$(oc get route topology-merge -o jsonpath='{ .spec.host}')/1.0/merge/swagger"
+                        __output "        REST:"
+                        __output "            URL:     https://$(oc get route topology-rest -o jsonpath='{ .spec.host}')/1.0/rest-observer/swagger"
+
+                header2End
+
+            header1End "AIOPS Event Manager Connection Details"
+
+
+
+
+            header1Begin "LDAP Connection Details"
+                    
+                        __output "---------------------------------------------------------------------------------------------"
+                        __output "---------------------------------------------------------------------------------------------"
+
+                        __output "    OPENLDAP:"
+                        __output "        URL:      http://openldap-admin-default.$CLUSTER_NAME/"
+                        __output "        User:     cn=admin,dc=ibm,dc=com"
+                        __output "        Password: P4ssw0rd!"
+
+
+            header1End "LDAP Connection Details"
+
+
+
+
+
+            header1Begin "OCP Connection Details"
+                    
+                        __output "---------------------------------------------------------------------------------------------"
+                        __output "---------------------------------------------------------------------------------------------"
+
+                        DEMO_TOKEN=$(oc -n default get secret $(oc get secret -n default |grep -m1 demo-admin-token|awk '{print$1}') -o jsonpath='{.data.token}'|base64 -d)
+                        DEMO_URL=$(oc status|grep -m1 "In project"|awk '{print$6}')
+
+                        __output "        URL:     $DEMO_URL"
+                        __output "        Token:   $DEMO_TOKEN"
+                        __output ""
+                        __output ""
+                        __output ""
+
+                        __output "        Login:   oc login --token=$DEMO_TOKEN --server=$DEMO_URL"
+
+
+            header1End "OCP Connection Details"
 
 
                 if [[ $INSTALL_HUMIO == "true" ]]; 
@@ -572,7 +570,7 @@ export INDENT=""
                 __output "    ❗   ERROR: Storage Class $STORAGE_CLASS_FILE does not exist."
                 __output "                 On IBM ROKS use: ibmc-file-gold-gid"
                 __output "                 On TEC use:      nfs-client"
-                __output "                 On FYRE use:     rook-cephfs"
+                __output "                 On FYRE use:     rook-cephfs (you can install Rook/Ceph with ./22_install_rook.sh"
                 __output "            Please set the correct storage class in file 01_config-modules.sh"
                 __output "           ❗ Aborting."
                 exit 1

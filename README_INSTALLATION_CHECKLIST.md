@@ -3,6 +3,8 @@
 
 ## Prerequisites
 
+- [ ] Check/Install StorageClass
+
 - [ ] Install Tooling
  
 - [ ] Get the scripts and code from GitHub

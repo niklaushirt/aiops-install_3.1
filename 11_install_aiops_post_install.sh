@@ -116,7 +116,6 @@ __output "  "
 header2End
 
 
-
 header1End "Initializing"
 
 exit 1
@@ -191,6 +190,26 @@ header1Begin "Install Demo Apps"
 header1End "Install Demo Apps"
 
 
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Patch Ingress 
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+header1Begin "Patch Ingress"
+
+            endpointPublishingStrategy=$(oc get ingresscontroller default -n openshift-ingress-operator -o yaml | grep HostNetwork || true) 
+
+            if [[ $endpointPublishingStrategy =~ "HostNetwork" ]]; 
+            then
+                header2Begin "Patch Ingress"
+                    oc patch namespace default --type=json -p '[{"op":"add","path":"/metadata/labels","value":{"network.openshift.io/policy-group":"ingress"}}]'
+                    __output "     ✅ Ingress successfully patched"
+                header2End
+            else
+                __output "     ⭕ Not needed... Skipping"
+            fi
+header1End "Patch Ingress"
 
 
 

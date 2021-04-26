@@ -69,6 +69,9 @@ header3Begin "Install HUMIO" "rocket"
                 kubectl delete -n humio-logging secret developer-user-password
                 kubectl apply -n humio-logging -f ./tools/4_integrations/humio/change-humio-dev-pwd.yaml
                 kubectl delete -n humio-logging pod humio-instance-humio-core-0
+
+                __output " ✅ HUMIO Installed"
+                __output "  ⚠️ Please check the documentation in order to create the Fluentbit agents!"
         fi
 
 
