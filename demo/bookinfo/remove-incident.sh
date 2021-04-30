@@ -1,1 +1,0 @@
-oc scale --replicas=1  deployment ratings-v1 -n bookinfo

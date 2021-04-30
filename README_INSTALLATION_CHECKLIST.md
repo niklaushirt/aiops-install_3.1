@@ -58,9 +58,16 @@
 
 
 
+## Train Incident Similarity (big ugly HACK)
+
+⚠️ **This is officially unsupported!**
+
+- [ ] Install old model-train-console
+
+- [ ] Incidents Similarity Training
 
 
- 
+
 ## Connections from AI Manager (Ops Integration)
 
 - [ ] Create Humio Ops Integration on Bookinfo App
@@ -81,8 +88,10 @@
 - [ ] Create Merge Rules for Kubernetes Observer
 
 - [ ] Load Merge Topologies for RobotShop and Bookinfo
+
+- [ ] Event Manager Webhooks
  
-- [ ] Create Templates
+- [ ] Create Templates (optional)
  
 - [ ] Create grouping Policy
 

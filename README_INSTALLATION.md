@@ -559,6 +559,66 @@ When you have defined your Alerts and Notifier you can test them by scaling down
 	
 	```
 
+---------------------------------------------------------------------------------------------------------------
+## Train Incident Similarity (big ugly HACK)
+------------------------------------------------------------------------------
+
+### Prerequisite - install old (and unsupported) model-train-console
+
+Run the following and make sure the Pod is running:
+
+```bash
+./tools/8_training/install-training-console.sh
+```
+
+
+
+### Training
+
+You have to train the following models.
+
+Bookinfo:
+
+- Similar Incidents
+
+Kubetoy:
+
+- Similar Incidents
+
+RobotShop:
+
+- Similar Incidents
+
+
+
+### Incidents Similarity Training
+
+
+Run the following:
+
+```bash
+./tools/8_training/train-incidents.sh
+```
+
+This will:
+
+1. upload the training files for the application to the training pod
+1. output the code that you will have to run in the training pod and 
+1. open a shell in the training pod where you can run the commands from step 2.
+
+So just start the script and wait until you get to the prompt.
+
+Then copy the code a bit further up
+
+![](./pics/train0.png)
+
+
+and paste/execute the code in the pod.
+
+![](./pics/train1.png)
+
+
+This will train the three similar incident models for the demo applications.
 
 
 
@@ -668,6 +728,95 @@ Launch the following:
 
 This will create Merge Topologies for the two Applications.
 
+
+
+### Event Manager Webhooks
+
+Create Webhooks in Event Manager for Event injection and incident simulation for the Demo.
+
+The demo scripts (in the `demo` folder) give you the possibility to simulate an outage without relying on the integrations with other systems.
+
+At this time it simulates:
+- Git push event
+- Log Events (Humio)
+- Security Events (Falco)
+- Instana Events
+
+* `demo.sh`: Menu based simulations
+* `gitpush_xxx`: Silent simulation, might be better for demoing
+
+You have to define the Webhooks in Event Manager (NOI):
+
+
+
+#### Generic Demo Webhook
+
+* Administration --> Integration with other Systems
+* Incoming --> New Integration
+* Webhook
+* Name it `Generic`
+* Jot down the WebHook URL
+* Click on `Optional event attributes`
+* Scroll down and click on the + sign for `URL`
+* Click `Confirm Selections`
+
+
+
+Use this json:
+
+```json
+{
+  "timestamp": "1619706828000",
+  "severity": "Critical",
+  "summary": "Test Event",
+  "nodename": "productpage-v1",
+  "alertgroup": "bookinfo",
+  "url": "https://pirsoscom.github.io/grafana-bookinfo.html"
+}
+```
+
+Fill out the following fields and save:
+
+* Severity: `severity`
+* Summary: `summary & " - " & nodename`
+* Resource name: `nodename`
+* Event type: `alertgroup`
+* Url: `url`
+* Description: `"URL"`
+
+Optionnally you can also add `Expiry Time` from `Optional event attributes` and set it to a convenient number of seconds (just make sure that you have time to run the demo before they expire.
+
+### Create Templates for Topology Grouping (optional)
+
+This is not strictly needed if you don't show Event Manager!
+
+In the CP4WAIOPS "Hamburger" Menu select
+Operate-->Topology Viewer
+Then, in the top right corner, click on the icon with the three squares (just right of the cog)
+Select `Create a new Template`
+Select `Dynamic Template`
+
+Create a template for Bookinfo and RobotShop:
+
+Bookinfo:
+* Search for productpage-v1 (deployment)
+* Create Topology 3 Levels
+* Name the template (bookinfo)
+* Select cluster in `Group type`
+* Enter `bookinfo_` for `Name prefix`
+* Select an Icon you like 
+* Add tag `app:bookinfo`
+* Save
+
+RobotShop:
+* Search for web-deployment (deployment)
+* Create Topology 3 Levels
+* Name the template (robotshop)
+* Select cluster in `Group type`
+* Enter `robotshop_` for `Name prefix`
+* Select an Icon you like 
+* Add tag `app:robotshop`
+* Save
 
 
 

@@ -72,10 +72,8 @@
 
 
 
-source ./01_config.sh
+
 clear
-get_sed
-checkK8sConnection  >/dev/null 2>&1
 
 
 echo "."

@@ -1,0 +1,12 @@
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","nodename": "web-deployment","alertgroup": "robot-shop","summary": "[Instana] Robotshop call rate is too high- Robotshop call rate stays at a high level for an extended period of time","url": "https://pirsoscom.github.io/INSTANA_SUMMARY_NOK_ROB.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Warning","nodename": "mysql-robotshop","alertgroup": "robot-shop", "summary": "[Instana] Robotshop change detected - The value **resources/limits** has changed","url": "https://pirsoscom.github.io/INSTANA_CHANGE_ROB.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","nodename": "mysql-deployment","alertgroup": "robot-shop", "summary": "[Instana] Robotshop available replicas is less than desired replicas - Check conditions and error events","url": "https://pirsoscom.github.io/INSTANA_SUMMARY_NOK_ROB.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Warning","nodename": "robot-shop","alertgroup": "robot-shop","summary": "[Security] Robotshop K8s Deployment Modified","url": "none"}
+{"timestamp": "MY_TIMESTAMP","severity": "Warning","nodename": "robot-shop","alertgroup": "robot-shop","summary": "[Security] Robotshop K8s Pod Created","url": "none"}
+{"timestamp": "MY_TIMESTAMP","severity": "Warning","nodename": "github","alertgroup": "robot-shop","summary": "[Git] Commit in repository robot-shop by Niklaus Hirt on file robot-shop.yaml - New Memory Limits","url": "https://pirsoscom.github.io/git-commit-robot.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Minor","nodename": "catalogue-deployment","alertgroup": "robot-shop","summary": "[Alert] RobotShop Catalogue Problem - Alert Description: resource.name=catalogue (Error: unable to contact http://ratings:9080/ratings got status of 503)","url": "https://pirsoscom.github.io/HUM_reviews_error.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Major","nodename": "ratings-deployment","alertgroup": "robot-shop","summary": "[Alert] RobotShop Ratings Problem - Alert Description: resource.name=ratings  (Error: unable to contact http://ratings:9080/ratings got status of 503)","url": "https://pirsoscom.github.io/HUM_reviews_error.html"}
+
+
+
+

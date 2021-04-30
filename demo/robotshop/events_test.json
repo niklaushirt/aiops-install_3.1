@@ -1,5 +1,0 @@
-{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "web-deployment","alertgroup": "robot-shop","url": "https://pirsoscom.github.io/grafana-robot-shop.html"}
-{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "catalogue-deployment","alertgroup": "robot-shop","url": "https://pirsoscom.github.io/grafana-robot-shop.html"}
-{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "payment-deployment","alertgroup": "robot-shop","url": "https://pirsoscom.github.io/grafana-robot-shop.html"}
-{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "user-deployment","alertgroup": "robot-shop","url": "https://pirsoscom.github.io/grafana-robot-shop.html"}
-^
