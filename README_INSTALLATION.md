@@ -14,6 +14,9 @@ The working repo might contain some newer commits and fixes:
 |  22 Apr 2021 | 3.1 Preview install  | This is experimental!  |
 |  27 Apr 2021 | Prerequisites  | `jq` and `kubectl` not needed anymore  |
 |  28 Apr 2021 | New CatalogSource  | CatalogSource adapted for AIOps Catalog  |
+|  29 Apr 2021 | Improved Topology Match  |  |
+|  30 Apr 2021 | Demo Events Injection  | New generic method to simulate Events |
+|  30 Apr 2021 | Hack for Incident Similarity Demo Training  |  ❗ Not officially supported  |
 |   |   |   | 
 
 
@@ -26,6 +29,7 @@ The working repo might contain some newer commits and fixes:
 1. [Architecture](#architecture)
 1. [AI and Event Manager Base Install](#ai-and-event-manager-base-install)
 1. [Install Humio](#humio)
+1. [Train Incident Similarity (HACK)](#train-incident-similarity)
 1. [Connections from AI Manager (Ops Integration)](#connections-from-ai-manager-ops-integration)
 1. [Configure Event Manager / ASM Topology](#configure-event-manager--asm-topology)
 1. [Configure Runbooks](#configure-runbooks)
@@ -560,9 +564,10 @@ When you have defined your Alerts and Notifier you can test them by scaling down
 	```
 
 ---------------------------------------------------------------------------------------------------------------
-## Train Incident Similarity (big ugly HACK)
+## Train Incident Similarity
 ------------------------------------------------------------------------------
 
+ ❗ Big ugly HACK!
 
 ### Prerequisite - install old (and unsupported) model-train-console
 
