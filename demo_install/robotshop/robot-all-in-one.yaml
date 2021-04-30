@@ -65,7 +65,7 @@ subjects:
 apiVersion: v1
 kind: Service
 metadata:
-  name: cart-svc
+  name: cart
 spec:
   ports:
   - name: http
@@ -80,7 +80,7 @@ kind: Service
 metadata:
   labels:
     service: catalogue
-  name: catalogue-svc
+  name: catalogue
 spec:
   ports:
   - name: http
@@ -95,7 +95,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: dispatch-svc
+  name: dispatch
   labels:
     service: dispatch
 spec:
@@ -113,7 +113,7 @@ kind: Service
 metadata:
   labels:
     service: mongodb
-  name: mongodb-svc
+  name: mongodb
 spec:
   ports:
   - name: mongo
@@ -128,7 +128,7 @@ kind: Service
 metadata:
   labels:
     service: mysql
-  name: mysql-svc
+  name: mysql
 spec:
   ports:
   - name: mysql
@@ -141,7 +141,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: payment-svc
+  name: payment
   labels:
     service: payment
 spec:
@@ -156,7 +156,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: rabbitmq-svc
+  name: rabbitmq
   labels:
     service: rabbitmq
 spec:
@@ -177,7 +177,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ratings-svc
+  name: ratings
   labels:
     service: ratings
 spec:
@@ -194,7 +194,7 @@ kind: Service
 metadata:
   labels:
     service: redis
-  name: redis-svc
+  name: redis
 spec:
   ports:
   - name: redis
@@ -207,7 +207,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: shipping-svc
+  name: shipping
   labels:
     service: shipping
 spec:
@@ -222,7 +222,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-svc
+  name: user
   labels:
     service: user
 spec:
@@ -233,20 +233,20 @@ spec:
   selector:
     service: user
 ---
-# Source: robot-shop/templates/web-deployment-service.yaml
+# Source: robot-shop/templates/web-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: web-deployment-svc
+  name: web
   labels:
-    service: web-deployment
+    service: web
 spec:
   ports:
   - name: http
     port: 8080
     targetPort: 8080
   selector:
-    service: web-deployment
+    service: web
   
   type: LoadBalancer
 ---
@@ -408,7 +408,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql-deployment
+  name: mysql
   labels:
     service: mysql
 spec:
@@ -657,22 +657,22 @@ kind: Deployment
 metadata:
   name: web-deployment
   labels:
-    service: web-deployment
+    service: web
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: web-deployment
+      service: web
   template:
     metadata:
       labels:
-        service: web-deployment
+        service: web
     spec:
       
       serviceAccountName: robot-shop
       
       containers:
-      - name: web-deployment
+      - name: web
         image: robotshop/rs-web:latest
         imagePullPolicy: IfNotPresent
         env:
@@ -739,12 +739,12 @@ spec:
           requests:
             storage: 1Gi
 ---
-# Source: robot-shop/templates/web-deployment-service.yaml
+# Source: robot-shop/templates/web-service.yaml
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: web-deployment
+  name: web
 spec:
   to:
     kind: Service
-    name: web-deployment
+    name: web

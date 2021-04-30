@@ -1,0 +1,10 @@
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "productpage-v1","alertgroup": "bookinfo","url": "https://pirsoscom.github.io/grafana-bookinfo.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "details-v1","alertgroup": "bookinfo","url": "https://pirsoscom.github.io/grafana-bookinfo.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "ratings-v1","alertgroup": "bookinfo","url": "https://pirsoscom.github.io/grafana-bookinfo.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "reviews-v1","alertgroup": "bookinfo","url": "https://pirsoscom.github.io/grafana-bookinfo.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "reviews-v2","alertgroup": "bookinfo","url": "https://pirsoscom.github.io/grafana-bookinfo.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "reviews-v2","alertgroup": "bookinfo","url": "https://pirsoscom.github.io/grafana-bookinfo.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "productpage-v1","alertgroup": "bookinfo","url": "https://pirsoscom.github.io/grafana-bookinfo.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "productpage-v1","alertgroup": "bookinfo","url": "https://pirsoscom.github.io/grafana-bookinfo.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "productpage-v1","alertgroup": "bookinfo","url": "https://pirsoscom.github.io/grafana-bookinfo.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","summary": "Test Event","nodename": "productpage-v1","alertgroup": "bookinfo","url": "https://pirsoscom.github.io/grafana-bookinfo.html"}

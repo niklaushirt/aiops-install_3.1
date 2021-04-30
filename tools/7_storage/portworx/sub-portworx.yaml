@@ -1,0 +1,14 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: portworx-essentials
+  namespace: openshift-operators
+  labels:
+    operators.coreos.com/portworx-essentials.openshift-operators: ''
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: portworx-essentials
+  source: community-operators
+  sourceNamespace: openshift-marketplace
+  startingCSV: portworx-essentials.v1.4.5

@@ -5,10 +5,10 @@
 # - Note the bootstrap servers are `my-confluent-oss-cp-kafka:9092`. You may need to change this with your own connection strings
 #
 # Run the pod:
-#   $ kubectl apply -f examples/ksql-demo.yaml
+#   $ oc apply -f examples/ksql-demo.yaml
 #
 # Run KSQL CLI:
-#   $ kubectl exec -it ksql-demo --container ksql -- /bin/bash ksql
+#   $ oc exec -it ksql-demo --container ksql -- /bin/bash ksql
 #   ksql> list topics ;
 #   ksql> print 'pageviews';
 #

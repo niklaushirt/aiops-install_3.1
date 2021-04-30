@@ -20,7 +20,7 @@ echo "--------------------------------------------------------------------------
 echo "✅ Check Topology Pods (must all be Running 1/1 or Completed)"
 echo "--------------------------------------------------------------------------------------------"
 
-kubectl get -n $WAIOPS_NAMESPACE pods | grep topology-
+oc get -n $WAIOPS_NAMESPACE pods | grep topology-
 
 
 echo ""
@@ -29,7 +29,7 @@ echo "--------------------------------------------------------------------------
 echo "✅ Check Gateway Pods (must all be Running 1/1 or Completed)"
 echo "--------------------------------------------------------------------------------------------"
 
-kubectl get -n $WAIOPS_NAMESPACE pods | grep nikh-
+oc get -n $WAIOPS_NAMESPACE pods | grep nikh-
 
 
 
@@ -40,7 +40,7 @@ echo "--------------------------------------------------------------------------
 echo "✅ Check Bookinfo Demo (must be Running 1/1)"
 echo "--------------------------------------------------------------------------------------------"
 
-kubectl get -n bookinfo pods | grep ratings
+oc get -n bookinfo pods | grep ratings
 
 echo ""
 echo ""
@@ -48,7 +48,7 @@ echo "--------------------------------------------------------------------------
 echo "✅ Check RobotShop Demo (must be Running 1/1)"
 echo "--------------------------------------------------------------------------------------------"
 
-kubectl get -n robot-shop pods | grep catalogue
+oc get -n robot-shop pods | grep catalogue
 
 
 

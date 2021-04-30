@@ -2,7 +2,7 @@ apiVersion: ai-manager.watson-aiops.ibm.com/v1beta1
 kind: EventManagerGateway
 metadata:
   name: nikh-gateway-robotshop
-  namespace: aiops
+  namespace: <CP4WAIOPS_NAMESPACE>
 spec:
   logLevel: WARN
   license: accept

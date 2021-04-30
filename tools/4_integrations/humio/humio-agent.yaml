@@ -30,8 +30,8 @@ humio-fluentbit:
   # Example of custom resources
   resources:
     limits:
-      cpu: 2
-      memory: 1024Mi
+      cpu: 256m
+      memory: 500Mi
     requests:
-      cpu: 1
-      memory: 512Mi
+      cpu: 128m
+      memory: 256Mi

@@ -66,7 +66,7 @@ export INDENT=""
 
         
         function __getClusterFQDN() {
-            CLUSTER_ROUTE=$(kubectl get routes console -n openshift-console | tail -n 1 2>&1 ) 
+            CLUSTER_ROUTE=$(oc get routes console -n openshift-console | tail -n 1 2>&1 ) 
             if [[ $CLUSTER_ROUTE =~ "reencrypt" ]];
             then
                 CLUSTER_FQDN=$( echo $CLUSTER_ROUTE | awk '{print $2}')
@@ -76,10 +76,21 @@ export INDENT=""
                 export MCM_SERVER=https://cp-console.$CLUSTER_NAME
                 export MCM_PROXY=https://icp-proxy.$CLUSTER_NAME
             else
+                CLUSTER_FQDN=$( echo $CLUSTER_ROUTE | awk '{print $2}')
+                
+                echo "1111:$CLUSTER_FQDN"
+                
+                export CLUSTER_NAME=$(echo $CLUSTER_FQDN | ${SED} "s/$OCP_CONSOLE_PREFIX.//")
+                            echo "1112:$CLUSTER_NAME"
+
+                export CONSOLE_URL=$OCP_CONSOLE_PREFIX.$CLUSTER_NAME
+                export MCM_SERVER=https://cp-console.$CLUSTER_NAME
+                export MCM_PROXY=https://icp-proxy.$CLUSTER_NAME
+
                 echo "    ❗ Cannot determine Route"
                 echo "    Check your Kubernetes Configuration"
                 echo "    IF you are on Fyre you might have to add the following to your hosts file:"
-                IP_HOST=$(ping -c 1 api.yard.os.fyre.ibm.com | sed -n 1p | awk '{print $3}' | gsed "s/\://"| gsed "s/(//"| gsed "s/)//")
+                IP_HOST=$(ping -c 1 api.$CLUSTER_NAME | sed -n 1p | awk '{print $3}' | gsed "s/\://"| gsed "s/(//"| gsed "s/)//")
                 echo "    9$IP_HOST	cp-console.apps.<FYRE_INSTALCE_NAME>.os.fyre.ibm.com api.<FYRE_INSTALCE_NAME>.os.fyre.ibm.com"
                 echo "    ❌ Aborting"
                 exit 1
@@ -88,7 +99,7 @@ export INDENT=""
 
 
 
-        function printCredentials() {
+ function printCredentials() {
 
 
 
@@ -111,47 +122,42 @@ export INDENT=""
    
 
 
-            header1Begin "CloudPak for Watson AIOps"
+            header2Begin "CloudPak for Watson AIOps"
 
-                header2Begin "CP4WAIOPS"
+                header3Begin "CP4WAIOPS"
                         __output "    AIOPS:"
                         __output "        URL:      https://cpd-aiops.$CLUSTER_NAME"
                         __output "        User:     $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_username}' | base64 -d && echo)"
                         __output "        Password: $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d)"
 
-                header2End
+                header3End
 
 
 
-                header2Begin "Administration hub / Common Services"
+                header3Begin "Administration hub / Common Services"
                         __output "        URL:      https://cp-console.$CLUSTER_NAME"
                         __output "        User:     $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_username}' | base64 -d && echo)"
                         __output "        Password: $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d)"
 
-                header2End
-            header1End "CloudPak for Watson AIOps"
+                header3End
 
 
-            header1End "AIOPS Event Manager Connection Details"
-                header2Begin "Event Manager"
-
-                        __output "---------------------------------------------------------------------------------------------"
-                        __output "---------------------------------------------------------------------------------------------"
+                header3Begin "Event Manager"
 
                         __output "---------------------------------------------------------------------------------------------"
                         __output "    ICPADMIN USER:"
                         __output "        User:     icpadmin"
-                        __output "        Password: $(kubectl get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
+                        __output "        Password: $(oc get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
 
                         __output "---------------------------------------------------------------------------------------------"
                         __output "    SMADMIN USER:"
                         __output "        User:     smadmin"
-                        __output "        Password: $(kubectl get secret evtmanager-was-secret -o json -n $WAIOPS_NAMESPACE| grep WAS_PASSWORD | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
+                        __output "        Password: $(oc get secret evtmanager-was-secret -o json -n $WAIOPS_NAMESPACE| grep WAS_PASSWORD | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
                         
                         __output "---------------------------------------------------------------------------------------------"
                         __output "    ASM TOPOLOGY USER:"
                         __output "        User:     aimanager-topology-aiops-user"
-                        __output "        Password: $(kubectl get secret evtmanager-topology-asm-credentials -n $WAIOPS_NAMESPACE -o=template --template={{.data.password}} | base64 -D)"
+                        __output "        Password: $(oc get secret evtmanager-topology-asm-credentials -n $WAIOPS_NAMESPACE -o=template --template={{.data.password}} | base64 -D)"
                         __output " "
                         __output " "
 
@@ -177,41 +183,39 @@ export INDENT=""
                         __output "---------------------------------------------------------------------------------------------"
                         __output "    CUSTOM TOPOLOGY ROUTES:"
                         __output "        MERGE:"
-                        __output "            URL:     https://$(oc get route topology-merge -o jsonpath='{ .spec.host}')/1.0/merge/swagger"
+                        __output "            SWAGGER URL:     https://$(oc get route topology-merge  -n $WAIOPS_NAMESPACE -o jsonpath='{ .spec.host}')/1.0/merge/swagger"
                         __output "        REST:"
-                        __output "            URL:     https://$(oc get route topology-rest -o jsonpath='{ .spec.host}')/1.0/rest-observer/swagger"
+                        __output "            SWAGGER URL:     https://$(oc get route topology-rest  -n $WAIOPS_NAMESPACE -o jsonpath='{ .spec.host}')/1.0/rest-observer/swagger"
 
-                header2End
+                header3End
 
-            header1End "AIOPS Event Manager Connection Details"
-
-
+            header2End "CloudPak for Watson AIOps"
 
 
-            header1Begin "LDAP Connection Details"
+
+
+            header2Begin "LDAP Connection Details"
                     
-                        __output "---------------------------------------------------------------------------------------------"
-                        __output "---------------------------------------------------------------------------------------------"
-
                         __output "    OPENLDAP:"
                         __output "        URL:      http://openldap-admin-default.$CLUSTER_NAME/"
                         __output "        User:     cn=admin,dc=ibm,dc=com"
                         __output "        Password: P4ssw0rd!"
 
 
-            header1End "LDAP Connection Details"
+            header2End "LDAP Connection Details"
 
 
 
 
 
-            header1Begin "OCP Connection Details"
+            header2Begin "OCP Connection Details"
                     
-                        __output "---------------------------------------------------------------------------------------------"
-                        __output "---------------------------------------------------------------------------------------------"
 
                         DEMO_TOKEN=$(oc -n default get secret $(oc get secret -n default |grep -m1 demo-admin-token|awk '{print$1}') -o jsonpath='{.data.token}'|base64 -d)
                         DEMO_URL=$(oc status|grep -m1 "In project"|awk '{print$6}')
+
+                        #echo "        URL:     $DEMO_URL"
+                        #echo "        Token:   $DEMO_TOKEN"
 
                         __output "        URL:     $DEMO_URL"
                         __output "        Token:   $DEMO_TOKEN"
@@ -222,52 +226,61 @@ export INDENT=""
                         __output "        Login:   oc login --token=$DEMO_TOKEN --server=$DEMO_URL"
 
 
-            header1End "OCP Connection Details"
+            header2End "OCP Connection Details"
 
 
-                if [[ $INSTALL_HUMIO == "true" ]]; 
-                then
-                    header1Begin "HUMIO Connection Details"
-                            
-                                __output "---------------------------------------------------------------------------------------------"
-                                __output "---------------------------------------------------------------------------------------------"
+            if [[ $INSTALL_HUMIO == "true" ]]; 
+            then
+                header2Begin "HUMIO Connection Details"
+                        
 
-                                __output "    HUMIO:"
-                                __output "        URL:      http://humio-humio-logging.$CLUSTER_NAME/"
-                                __output "        User:     developer"
-                                __output "        Password: $(kubectl get secret developer-user-password -n humio-logging -o=template --template={{.data.password}} | base64 -D)"
-                    header1End "HUMIO Connection Details"
-                fi
+                            __output "    HUMIO:"
+                            __output "        URL:      http://humio-humio-logging.$CLUSTER_NAME/"
+                            __output "        User:     developer"
+                            __output "        Password: $(oc get secret developer-user-password -n humio-logging -o=template --template={{.data.password}} | base64 -D)"
+                            __output ""
+                            __output ""
+                            __output ""
+                            __output "        INTEGRATION URL:      http://humio-humio-logging.$CLUSTER_NAME/api/v1/repositories/aiops/query"
 
-                if [[ $INSTALL_ROOK_SC == "true" ]]; 
-                then
-                    header1Begin "Rook/Ceph Dashboard Connection Details"
-                            
-                                __output "---------------------------------------------------------------------------------------------"
-                                __output "---------------------------------------------------------------------------------------------"
+                header2End "HUMIO Connection Details"
+            fi
 
-                                __output "    Rook/Ceph Dashboard :"
-                                __output "        URL:      https://dash-rook-ceph.apps.$CLUSTER_NAME/"
-                                __output "        User:     admin"
-                                __output "        Password: $(kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode)"
-                    header1End "Rook/Ceph Dashboard Connection Details"
-                fi
+
+
+            MYFS_READY=$(oc get pods -n rook-ceph | grep "rook-ceph-mds-myfs" | grep "Running" | grep "1/1" || true) 
+            if [[ $MYFS_READY =~ "Running" ]]; 
+            then
+
+                header2Begin "Rook/Ceph Dashboard Connection Details"
+
+
+                __output "    Rook/Ceph Dashboard :"
+                __output "        URL:      https://dash-rook-ceph.$CLUSTER_NAME/"
+                __output "        User:     admin"
+                __output "        Password: $(oc -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode)"
+                header2End "Rook/Ceph Dashboard Connection Details"
+            fi
+
         }
 
 
         function checkInstallDone() {
-            __output "   🔎 Check if CP4WAIOPS install ready."
+
+
+            __output "   🔎 Check if CP4WAIOPS Installation CR ready."
 
             WAIOPS_READY=$(oc get installations.orchestrator.aiops.ibm.com $WAIOPS_NAME -n $WAIOPS_NAMESPACE -oyaml | grep "phase: Running" || true) 
             while  ([[ ! $WAIOPS_READY =~ "Running" ]]); do 
                 WAIOPS_READY=$(oc get installations.orchestrator.aiops.ibm.com $WAIOPS_NAME -n $WAIOPS_NAMESPACE -oyaml | grep "phase: Running" || true) 
-                WAIOPS_PODS_COUNT_TOTAL=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
-                WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
-                __output "      ⭕ CP4WAIOPS not ready ($WAIOPS_PODS_COUNT_NOTREADY/$WAIOPS_PODS_COUNT_TOTAL). Waiting for 10 seconds...." && sleep 10; 
+                WAIOPS_PODS_COUNT_TOTAL=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
+                WAIOPS_PODS_COUNT_NOTREADY=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
+        
+                __output "      ⭕ CP4WAIOPS Installation CR not ready ($(($WAIOPS_PODS_COUNT_TOTAL - $WAIOPS_PODS_COUNT_NOTREADY))/$(($WAIOPS_PODS_COUNT_TOTAL))). Waiting for 10 seconds...." && sleep 10; 
 
                 if [[ $VERBOSE_INSTALL == "true" ]]; 
                 then
-                    WAIOPS_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" || true) 
+                    WAIOPS_NOTREADY=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" || true) 
                     __output "      🔎  Namespace $WAIOPS_NAMESPACE not ready"
                     __output "$WAIOPS_NOTREADY"
                 fi
@@ -279,18 +292,19 @@ export INDENT=""
 
 
 
-            __output "   🔎 Check if AI Manager ready."
+            __output "   🔎 Check if AI Manager Password is ready."
 
             AI_MGR_PWD=$(oc -n $WAIOPS_NAMESPACE get secret admin-user-details -o jsonpath='{.data.initial_admin_password}' | base64 -d || true )     
             while  ([[ $AI_MGR_PWD == "" ]]); do 
                 AI_MGR_PWD=$(oc -n $WAIOPS_NAMESPACE get secret admin-user-details -o jsonpath='{.data.initial_admin_password}' | base64 -d || true )   
-                WAIOPS_PODS_COUNT_TOTAL=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
-                WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
-                __output "      ⭕ AI Manager not ready ($WAIOPS_PODS_COUNT_NOTREADY/$WAIOPS_PODS_COUNT_TOTAL). Waiting for 10 seconds...." && sleep 10; 
+                WAIOPS_PODS_COUNT_TOTAL=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
+                WAIOPS_PODS_COUNT_NOTREADY=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
+                
+                __output "      ⭕ AI Manager not ready ($(($WAIOPS_PODS_COUNT_TOTAL - $WAIOPS_PODS_COUNT_NOTREADY))/$(($WAIOPS_PODS_COUNT_TOTAL))). Waiting for 10 seconds...." && sleep 10; 
 
                 if [[ $VERBOSE_INSTALL == "true" ]]; 
                 then
-                    WAIOPS_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" || true) 
+                    WAIOPS_NOTREADY=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" || true) 
                     __output "      🔎  Namespace $WAIOPS_NAMESPACE not ready"
                     __output "$WAIOPS_NOTREADY"
                 fi
@@ -301,16 +315,17 @@ export INDENT=""
 
 
 
-            __output "   🔎 Check if Common Services ready."
+            __output "   🔎 Check if Common Services Password is ready."
 
             COMMON_SVC_PWD=$(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d || true )     
             while  ([[ $COMMON_SVC_PWD == "" ]]); do 
                 COMMON_SVC_PWD=$(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d || true )     
-                __output "      ⭕ Common Services not ready ($WAIOPS_PODS_COUNT_NOTREADY/$WAIOPS_PODS_COUNT_TOTAL). Waiting for 10 seconds...." && sleep 10; 
+                
+                __output "      ⭕ Common Services not ready. Waiting for 10 seconds...." && sleep 10; 
 
                 if [[ $VERBOSE_INSTALL == "true" ]]; 
                 then
-                    CS_NOTREADY=$(kubectl get pods -n ibm-common-services | grep -v "Completed" | grep "0/" || true) 
+                    CS_NOTREADY=$(oc get pods -n ibm-common-services | grep -v "Completed" | grep "0/" || true) 
                     __output "      🔎 Namespace ibm-common-services not ready"
                     __output "$CS_NOTREADY"
                 fi
@@ -321,18 +336,19 @@ export INDENT=""
 
 
 
-            __output "   🔎 Check if Event Manager ready."
+            __output "   🔎 Check if Event Manager is ready."
 
-            EVT_MGR_PWD=$(kubectl get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d || true )     
+            EVT_MGR_PWD=$(oc get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d || true )     
             while  ([[ $EVT_MGR_PWD == "" ]]); do 
-                EVT_MGR_PWD=$(kubectl get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d  || true )     
-                WAIOPS_PODS_COUNT_TOTAL=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
-                WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
-                __output "      ⭕ Event Manager not ready ($WAIOPS_PODS_COUNT_NOTREADY/$WAIOPS_PODS_COUNT_TOTAL). Waiting for 10 seconds...." && sleep 10; 
+                EVT_MGR_PWD=$(oc get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d  || true )     
+                WAIOPS_PODS_COUNT_TOTAL=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
+                WAIOPS_PODS_COUNT_NOTREADY=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
+                
+                __output "      ⭕ Event Manager not ready ($(($WAIOPS_PODS_COUNT_TOTAL - $WAIOPS_PODS_COUNT_NOTREADY))/$(($WAIOPS_PODS_COUNT_TOTAL))). Waiting for 10 seconds...." && sleep 10; 
 
                 if [[ $VERBOSE_INSTALL == "true" ]]; 
                 then
-                    WAIOPS_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" || true) 
+                    WAIOPS_NOTREADY=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" || true) 
                     __output "      🔎  Namespace $WAIOPS_NAMESPACE not ready"
                     __output "$WAIOPS_NOTREADY"
                 fi
@@ -345,17 +361,53 @@ export INDENT=""
 
             __output "   🔎 Check if all pods in $WAIOPS_NAMESPACE are ready."
 
-            WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
+            WAIOPS_PODS_COUNT_NOTREADY=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
             #WAIOPS_PODS_COUNT_NOTREADY="   0"
             while  ([[ ! $WAIOPS_PODS_COUNT_NOTREADY =~ " 0" ]]); do 
-                WAIOPS_PODS_COUNT_NOTREADY=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
-                WAIOPS_PODS_COUNT_TOTAL=$(kubectl get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
-                __output "      ⭕ CP4WAIOPS not ready ($WAIOPS_PODS_COUNT_NOTREADY/$WAIOPS_PODS_COUNT_TOTAL). Waiting for 10 seconds...." && sleep 10; 
+                WAIOPS_PODS_COUNT_NOTREADY=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
+                WAIOPS_PODS_COUNT_TOTAL=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
+                
+                __output "      ⭕ CP4WAIOPS not ready ($(($WAIOPS_PODS_COUNT_TOTAL - $WAIOPS_PODS_COUNT_NOTREADY))/$(($WAIOPS_PODS_COUNT_TOTAL)))  (will be around 150 pods).. Waiting for 10 seconds...." && sleep 10; 
             done
             __output "      ✅ OK"
             __output ""
         }
             
+
+
+        function checkCSDone() {
+ 
+            __output "   🔎 Check if Common Services Password is ready."
+
+            COMMON_SVC_PWD=$(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d || true )     
+            while  ([[ $COMMON_SVC_PWD == "" ]]); do 
+                COMMON_SVC_PWD=$(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d || true )     
+
+                __output "      ⭕ Common Services not ready. Waiting for 10 seconds...." && sleep 10; 
+
+                if [[ $VERBOSE_INSTALL == "true" ]]; 
+                then
+                    CS_NOTREADY=$(oc get pods -n ibm-common-services | grep -v "Completed" | grep "0/" || true) 
+                    __output "      🔎 Namespace ibm-common-services not ready"
+                    __output "$CS_NOTREADY"
+                fi
+            done
+            __output "      ✅ OK"
+            __output ""
+
+            __output "   🔎 Check if all pods in common-services are ready."
+
+            CS_PODS_COUNT_NOTREADY=$(oc get pods -n ibm-common-services | grep -v "Completed" | grep "0/" | wc -l || true) 
+            #WAIOPS_PODS_COUNT_NOTREADY="   0"
+            while  ([[ ! $CS_PODS_COUNT_NOTREADY =~ " 0" ]]); do 
+                CS_PODS_COUNT_NOTREADY=$(oc get pods -n ibm-common-services | grep -v "Completed" | grep "0/" | wc -l || true) 
+                CS_PODS_COUNT_TOTAL=$(oc get pods -n ibm-common-services | grep -v "Completed" | wc -l || true) 
+
+                __output "      ⭕ Common Services not ready ($(($CS_PODS_COUNT_TOTAL - $CS_PODS_COUNT_NOTREADY))/$(($CS_PODS_COUNT_TOTAL)))  (will be around 33 pods). Waiting for 10 seconds...." && sleep 10; 
+            done
+            __output "      ✅ OK"
+            __output ""
+        }
 
         function getInstallPath() {
 
@@ -375,7 +427,7 @@ export INDENT=""
         function getClusterFQDN() {
         __output  "  "
         __output " 🔧 Determining Cluster FQDN"
-            CLUSTER_ROUTE=$(kubectl get routes console -n openshift-console | tail -n 1 2>&1 ) 
+            CLUSTER_ROUTE=$(oc get routes console -n openshift-console | tail -n 1 2>&1 ) 
             if [[ $CLUSTER_ROUTE =~ "reencrypt" ]];
             then
                 CLUSTER_FQDN=$( echo $CLUSTER_ROUTE | awk '{print $2}')
@@ -385,14 +437,14 @@ export INDENT=""
                 export MCM_SERVER=https://cp-console.$CLUSTER_NAME
                 export MCM_PROXY=https://icp-proxy.$CLUSTER_NAME
                 
-                __output "      🖲️ Cluster FQDN:                                   $CLUSTER_NAME"
+                __output "      🖲️  Cluster FQDN:                                   $CLUSTER_NAME"
                 __output " "
             #return $CLUSTER_NAME
             else
                 __output "    ❗ Cannot determine Route"
                 __output "    Check your Kubernetes Configuration"
                 __output "    IF you are on Fyre you might have to add the following to your hosts file:"
-                IP_HOST=$(ping -c 1 api.yard.os.fyre.ibm.com | sed -n 1p | awk '{print $3}' | gsed "s/\://"| gsed "s/(//"| gsed "s/)//")
+                IP_HOST=$(ping -c 1 api.$CLUSTER_NAME | sed -n 1p | awk '{print $3}' | gsed "s/\://"| gsed "s/(//"| gsed "s/)//")
                 __output "    9$IP_HOST	cp-console.apps.<FYRE_INSTALCE_NAME>.os.fyre.ibm.com api.<FYRE_INSTALCE_NAME>.os.fyre.ibm.com"
                 __output "    ❗ ❌ Aborting"
                 exit 1
@@ -405,7 +457,7 @@ export INDENT=""
         function getAPIUrl() {
             __output "  "
             __output " 🔧 Determining API URL"
-            API_URL_STRING=$(kubectl config current-context 2>&1 ) 
+            API_URL_STRING=$(oc config current-context 2>&1 ) 
 
             API_URL=https://$( echo "$API_URL_STRING" | awk -F/ '{print $2}' 2>&1 ) 
     
@@ -421,12 +473,12 @@ export INDENT=""
         function getHosts() {
             __output "  "
             __output " 🔧 Determining Cluster Node IPs"
-            CLUSTERS=$(kubectl get nodes --selector=node-role.kubernetes.io/worker="" 2>&1 ) 
+            CLUSTERS=$(oc get nodes --selector=node-role.kubernetes.io/worker="" 2>&1 ) 
 
 
             if [[ $CLUSTERS =~ "No resources found" ]];
             then
-                CLUSTERS=$(kubectl get nodes --selector=node-role.kubernetes.io/compute='true' 2>&1 ) 
+                CLUSTERS=$(oc get nodes --selector=node-role.kubernetes.io/compute='true' 2>&1 ) 
             fi
 
             if [[ $CLUSTERS =~ "NAME" ]];
@@ -460,7 +512,7 @@ export INDENT=""
             else
                 __output "       ❗ Cannot determine Cluster Nodes"
                 __output "       Check your Kubernetes Configuration"
-                __output "       kubectl output is: $CLUSTERS"
+                __output "       oc output is: $CLUSTERS"
                 __output "       ❗ ❌ Aborting"
                 exit 1
             fi
@@ -543,7 +595,7 @@ export INDENT=""
 
         function checkKubeconfigIsSet() {
             __output "   🔎 Check if OpenShift KUBECONTEXT is set for        $CLUSTER_NAME"
-            KUBECTX_RESOLVE=$(kubectl get routes --all-namespaces 2>&1)
+            KUBECTX_RESOLVE=$(oc get routes --all-namespaces 2>&1)
 
 
             if [[ $KUBECTX_RESOLVE =~ $CLUSTER_NAME ]];
@@ -576,6 +628,25 @@ export INDENT=""
                 exit 1
             fi
             __output ""
+
+            if [[ $CLUSTER_NAME =~ "appdomain.cloud" ]] && [[ ! $STORAGE_CLASS_FILE =~ "ibmc-file-gold-gid" ]];
+            then 
+                __output "    ⚠️   WARNING: It seems that you are on IBM ROKS and your Storage Class is $STORAGE_CLASS_FILE."
+                __output "        This might not work!."
+            fi
+
+            if [[ $CLUSTER_NAME =~ "tec.uk.ibm.com" ]] && [[ ! $STORAGE_CLASS_FILE =~ "nfs-client" ]];
+            then 
+                __output "    ⚠️   WARNING: It seems that you are on TEC and your Storage Class is $STORAGE_CLASS_FILE."
+                __output "        This might not work!."
+            fi
+
+            if [[ $CLUSTER_NAME =~ "fyre.ibm.com" ]] && [[ ! $STORAGE_CLASS_FILE =~ "rook-cephfs" ]];
+            then 
+                __output "    ⚠️   WARNING: It seems that you are on IBM Fyre and your Storage Class is $STORAGE_CLASS_FILE."
+                __output "        This might not work!."
+            fi
+
         }
 
 
@@ -644,7 +715,7 @@ export INDENT=""
 
         function checkClusterServiceBroker() {
             __output "   🔎 Check if ClusterServiceBroker exists on          $CLUSTER_NAME"
-            CSB_RESOLVE=$(kubectl api-resources 2>&1)
+            CSB_RESOLVE=$(oc api-resources 2>&1)
 
             if [[ $CSB_RESOLVE =~ "servicecatalog.k8s.io" ]];
             then
@@ -655,14 +726,14 @@ export INDENT=""
                 __output "      https://docs.openshift.com/container-platform/4.2/applications/service_brokers/installing-service-catalog.html"
                 __output "     "
                 __output "      Updating 'Removed' to 'Managed'  "
-                kubectl patch -n openshift-service-catalog-apiserver servicecatalogapiserver cluster --type=json -p '[{"op":"replace","path":"/spec/managementState","value":"Managed"}]'
-                kubectl patch -n openshift-service-catalog-controller-manager servicecatalogcontrollermanager cluster --type=json -p '[{"op":"replace","path":"/spec/managementState","value":"Managed"}]'
+                oc patch -n openshift-service-catalog-apiserver servicecatalogapiserver cluster --type=json -p '[{"op":"replace","path":"/spec/managementState","value":"Managed"}]'
+                oc patch -n openshift-service-catalog-controller-manager servicecatalogcontrollermanager cluster --type=json -p '[{"op":"replace","path":"/spec/managementState","value":"Managed"}]'
                 
-                #kubectl get servicecatalogapiservers cluster -oyaml --export | sed -e '/status:/d' -e '/creationTimestamp:/d' -e '/selfLink: [a-z0-9A-Z/]\+/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/phase:/d' -e '/uid: [a-z0-9-]\+/d'
-                #kubectl get servicecatalogcontrollermanagers cluster -oyaml --export | sed -e '/status:/d' -e '/creationTimestamp:/d' -e '/selfLink: [a-z0-9A-Z/]\+/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/phase:/d' -e '/uid: [a-z0-9-]\+/d'
+                #oc get servicecatalogapiservers cluster -oyaml --export | sed -e '/status:/d' -e '/creationTimestamp:/d' -e '/selfLink: [a-z0-9A-Z/]\+/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/phase:/d' -e '/uid: [a-z0-9-]\+/d'
+                #oc get servicecatalogcontrollermanagers cluster -oyaml --export | sed -e '/status:/d' -e '/creationTimestamp:/d' -e '/selfLink: [a-z0-9A-Z/]\+/d' -e '/resourceVersion: "[0-9]\+"/d' -e '/phase:/d' -e '/uid: [a-z0-9-]\+/d'
 
-                # kubectl apply -f ./tools/catalog_operator/ServiceCatalogAPIServer.yaml
-                # kubectl apply -f ./tools/catalog_operator/ServiceCatalogControllerManager.yaml
+                # oc apply -f ./tools/catalog_operator/ServiceCatalogAPIServer.yaml
+                # oc apply -f ./tools/catalog_operator/ServiceCatalogControllerManager.yaml
 
                 # waitForPod apiserver openshift-service-catalog-apiserver
                 # waitForPod controller-manager openshift-service-catalog-controller-manager
@@ -860,7 +931,7 @@ function progressbar {
 
             if [[ $INSTALL_COMPONENT == true ]]; 
             then
-                NUM_FOUND=$(kubectl get pods -n $COMP_NAMESPACE -l $COMP_LABEL_NAME | grep -c "")
+                NUM_FOUND=$(oc get pods -n $COMP_NAMESPACE -l $COMP_LABEL_NAME | grep -c "")
 
                 if [[ $NUM_FOUND > 0 ]]; 
                 then
@@ -884,18 +955,6 @@ function progressbar {
             __output "          ✅ 'CP4WAIOPS' will be installed with size: $WAIOPS_SIZE"
          
 
-
-            __output ""
-            __output "     📦 Rook/Ceph"
-            if [[ $INSTALL_ROOK_SC == true ]]; 
-            then
-                __output "          ✅ 'Rook/Ceph' will be installed"
-            else
-                __output "          ⭕ 'Rook/Ceph' will NOT be installed"
-
-            fi
-
-
             __output ""
             __output "     📦 Humio"
             if [[ $INSTALL_HUMIO == true ]]; 
@@ -914,6 +973,16 @@ function progressbar {
                 __output "          ✅ 'OpenLDAP' will be installed"
             else
                 __output "          ⭕ 'OpenLDAP' will NOT be installed"
+
+            fi
+
+            __output ""
+            __output "     📦 Demo Apps"
+            if [[ $INSTALL_DEMO == true ]]; 
+            then
+                __output "          ✅ 'Demo Apps' will be installed"
+            else
+                __output "          ⭕ 'Demo Apps' will NOT be installed"
 
             fi
         } 
@@ -988,7 +1057,7 @@ function progressbar {
 
             if [[ $INSTALL_COMPONENT == true ]]; 
             then
-                NUM_FOUND=$(kubectl get pods -n $COMP_NAMESPACE -l $COMP_LABEL_NAME | grep -c "" || true )
+                NUM_FOUND=$(oc get pods -n $COMP_NAMESPACE -l $COMP_LABEL_NAME | grep -c "" || true )
 
                 if [[ $NUM_FOUND > 0 ]]; 
                 then
@@ -1004,7 +1073,7 @@ function progressbar {
             COMP_LABEL=$1
             COMP_NAMESPACE=$2
 
-            NUM_FOUND=$(kubectl get pods -n $COMP_NAMESPACE -l $COMP_LABEL | grep -c "" || true )
+            NUM_FOUND=$(oc get pods -n $COMP_NAMESPACE -l $COMP_LABEL | grep -c "" || true )
 
             if [[ $NUM_FOUND > 0 ]]; 
             then
@@ -1115,6 +1184,7 @@ function progressbar {
 
 
         function headerModuleFileBegin() {
+            export INDENT="         "
             __output "****************************************************************************************************************************"
             __output " 🚚 $1                   $2"
             __output "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
@@ -1122,6 +1192,7 @@ function progressbar {
         }
 
         function headerModuleFileEnd() {
+            export INDENT="         "
             __output "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
             __output " 🚚 $1....Done            $2"
             __output "****************************************************************************************************************************"
@@ -1226,12 +1297,12 @@ function progressbar {
             __output "🕦   Waiting for Namespace $NAMESPACE being ready."
 
 
-            PODS_PENDING=$(kubectl get po -n $NAMESPACE | grep -v Running | grep -v Completed | grep -c "" || true)
+            PODS_PENDING=$(oc get po -n $NAMESPACE | grep -v Running | grep -v Completed | grep -c "" || true)
 
 
             while  [[ $PODS_PENDING > 1 ]] && [[ $ACTCOUNT -lt $MAXCOUNT ]]; do 
                 
-                PODS_PENDING=$(kubectl get po -n $NAMESPACE | grep -v Running |grep -v Completed | grep -c "" || true)
+                PODS_PENDING=$(oc get po -n $NAMESPACE | grep -v Running |grep -v Completed | grep -c "" || true)
 
                 if [[ -z "$PODS_PENDING" ]]; then
                     PODS_PENDING=0
@@ -1275,12 +1346,12 @@ function progressbar {
             __output "🕦   Waiting for CloudPak for Multicloud Management in Namespace $NAMESPACE being ready."
 
 
-            PODS_PENDING=$(kubectl get po -n $NAMESPACE | grep -v Running | grep -v Completed | grep -c "" || true)
+            PODS_PENDING=$(oc get po -n $NAMESPACE | grep -v Running | grep -v Completed | grep -c "" || true)
 
 
             while  [[ $PODS_PENDING > 1 ]] && [[ $ACTCOUNT -lt $MAXCOUNT ]]; do 
                 
-                PODS_PENDING=$(kubectl get po -n $NAMESPACE | grep -v Running |grep -v Completed | grep -c "" || true)
+                PODS_PENDING=$(oc get po -n $NAMESPACE | grep -v Running |grep -v Completed | grep -c "" || true)
 
                 if [[ -z "$PODS_PENDING" ]]; then
                     PODS_PENDING=0
@@ -1334,11 +1405,11 @@ function progressbar {
 
         function podsPending() {
             NAMESPACE=$1
-            PODS_PENDING=$(kubectl get pods --field-selector=status.phase=Pending -n $NAMESPACE | grep -c "" || true )
+            PODS_PENDING=$(oc get pods --field-selector=status.phase=Pending -n $NAMESPACE | grep -c "" || true )
             if [[ "$PODS_PENDING" == "" ]]; then
                 PODS_PENDING=0
             fi
-            PODS_STATE=$(kubectl get pods -n $NAMESPACE | grep -E "Crash|Creat" | grep -c "" || true )
+            PODS_STATE=$(oc get pods -n $NAMESPACE | grep -E "Crash|Creat" | grep -c "" || true )
             if [[ "$PODS_STATE" == "" ]]; then
                 PODS_STATE=0
             fi
@@ -1349,11 +1420,11 @@ function progressbar {
 
         function podsPendingLabel() {
             NAMESPACE=$1
-            PODS_PENDING=$(kubectl get pods -l $LABEL --field-selector=status.phase=Pending -n $NAMESPACE | grep -c "" || true )
+            PODS_PENDING=$(oc get pods -l $LABEL --field-selector=status.phase=Pending -n $NAMESPACE | grep -c "" || true )
             if [[ "$PODS_PENDING" == "" ]]; then
                 PODS_PENDING=0
             fi
-            PODS_STATE=$(kubectl get pods -l $LABEL -n $NAMESPACE | grep -E "Crash|Creat" | grep -c "" || true )
+            PODS_STATE=$(oc get pods -l $LABEL -n $NAMESPACE | grep -E "Crash|Creat" | grep -c "" || true )
             if [[ "$PODS_STATE" == "" ]]; then
                 PODS_STATE=0
             fi
@@ -1406,7 +1477,7 @@ check_and_install_kubectl() {
     if [ -x "$(command -v kubectl)" ]; then
         __output "      ✅ OK"
     else
-        __output "      WARNING: kubectl is not installed. Installing it now"
+        __output "      WARNING: oc is not installed. Installing it now"
         if [[ "${OSTYPE}" == "darwin"* ]]; then
             curl --silent --show-error -kLo kubectl-darwin-amd64 "https://${CLUSTER_NAME}:443/api/cli/kubectl-darwin-amd64" \
                 && chmod +x kubectl-darwin-amd64 \

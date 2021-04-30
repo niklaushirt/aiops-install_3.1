@@ -4,7 +4,7 @@ metadata:
   name: ibm-aiops-orchestrator
   namespace: openshift-operators
 spec:
-  channel: 3.1-stable
+  channel: v3.1
   installPlanApproval: Automatic
   name: ibm-aiops-orchestrator
   source: ibm-aiops-catalog

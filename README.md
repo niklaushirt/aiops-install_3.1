@@ -1,6 +1,21 @@
 # CP4WatsonAIOps 3.1 Demo Environment 
 ---------------------------------------------------------------------------------------------------------------
 
+## ❗ THIS IS WORK IN PROGRESS
+Please drop me a note on Slack or by mail nikh@ch.ibm.com if you find glitches or problems.
+This version is up to date as of April 27th 2021.
+The working repo might contain some newer commits and fixes:
+[https://github.com/niklaushirt/aiops-install_3.1](https://github.com/niklaushirt/aiops-install_3.1)
+
+# Changes
+
+| Date  | Description  | Files  | 
+|---|---|---|
+|  22 Apr 2021 | 3.1 Preview install  | This is experimental!  |
+|   |   |   | 
+
+
+
 
 ## Install it
 

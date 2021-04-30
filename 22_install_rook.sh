@@ -28,6 +28,8 @@ export SCRIPT_PATH=$(pwd)
 export LOG_PATH=""
 __getClusterFQDN
 __getInstallPath
+export STORAGE_CLASS_FILE=$WAIOPS_STORAGE_CLASS_FILE
+
 
 banner 
 __output "***************************************************************************************************************************************************"
@@ -86,10 +88,9 @@ header2Begin "Input Parameters" "magnifying"
         fi
 
 
-        export STORAGE_CLASS_FILE=$WAIOPS_AI_MGR_STORAGE_CLASS_FILE
+        export STORAGE_CLASS_FILE=$WAIOPS_STORAGE_CLASS_FILE
 
 header2End
-
 
 
 
@@ -155,7 +156,7 @@ header1Begin "Install Rook/Ceph"
                 oc create route passthrough dash -n rook-ceph --service=rook-ceph-mgr-dashboard --port=8443
 
                 #HACK
-                kubectl -n rook-ceph create secret generic --type kubernetes.io/rook rook-ceph-crash-collector-keyring
+                oc -n rook-ceph create secret generic --type kubernetes.io/rook rook-ceph-crash-collector-keyring
 
                 MYFS_READY=$(oc get pods -n rook-ceph | grep "rook-ceph-mds-myfs" | grep "Running" | grep "1/1" || true) 
                 while  ([[ ! $MYFS_READY =~ "Running" ]]); do 
@@ -189,9 +190,9 @@ header1Begin "Install Rook/Ceph"
                 __output "---------------------------------------------------------------------------------------------"
 
                 __output "    Rook/Ceph Dashboard :"
-                __output "        URL:      https://dash-rook-ceph.apps.$CLUSTER_NAME/"
+                __output "        URL:      https://dash-rook-ceph.$CLUSTER_NAME/"
                 __output "        User:     admin"
-                __output "        Password: $(kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode)"
+                __output "        Password: $(oc -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode)"
         header2End
 
 header1End "Install Rook/Ceph"

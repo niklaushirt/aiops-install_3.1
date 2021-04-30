@@ -8,7 +8,7 @@ spec:
   displayName: IBM AIOps Catalog
   publisher: IBM
   sourceType: grpc
-  image: docker.io/ibmcom/aiops-orchestrator-catalog:3.1-latest
+  image: icr.io/cpopen/aiops-orchestrator-catalog:3.1-latest
   updateStrategy:
     registryPoll:
       interval: 45m

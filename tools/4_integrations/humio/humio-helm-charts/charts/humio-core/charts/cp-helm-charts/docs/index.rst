@@ -63,11 +63,11 @@ installation.
 
 .. code:: sh
 
-      kubectl delete --namespace kube-system svc tiller-deploy
-      kubectl delete --namespace kube-system deploy tiller-deploy
-      kubectl create serviceaccount --namespace kube-system tiller
-      kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-      kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
+      oc delete --namespace kube-system svc tiller-deploy
+      oc delete --namespace kube-system deploy tiller-deploy
+      oc create serviceaccount --namespace kube-system tiller
+      oc create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+      oc patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
       helm init --service-account tiller --upgrade
 
 Run |cp|
@@ -163,7 +163,7 @@ topic.
 
    .. code:: sh
 
-          kubectl get pods
+          oc get pods
 
 2. Connect to the container ``cp-kafka-broker`` in a Kafka broker pod to
    produce messages to a Kafka topic. If you specified a different
@@ -172,7 +172,7 @@ topic.
 
    .. code:: sh
 
-      kubectl exec -c cp-kafka-broker -it my-confluent-oss-cp-kafka-0 -- /bin/bash /usr/bin/kafka-console-producer --broker-list localhost:9092 --topic test
+      oc exec -c cp-kafka-broker -it my-confluent-oss-cp-kafka-0 -- /bin/bash /usr/bin/kafka-console-producer --broker-list localhost:9092 --topic test
 
    Wait for a ``>`` prompt, and enter some text.
 
@@ -187,7 +187,7 @@ topic.
 
    .. code:: sh
 
-      kubectl exec -c cp-kafka-broker -it my-confluent-oss-cp-kafka-0 -- /bin/bash  /usr/bin/kafka-console-consumer --bootstrap-server localhost:9092 --topic test --from-beginning
+      oc exec -c cp-kafka-broker -it my-confluent-oss-cp-kafka-0 -- /bin/bash  /usr/bin/kafka-console-consumer --bootstrap-server localhost:9092 --topic test --from-beginning
 
    You should see the messages which were published from the console producer. Press Control-c to stop consuming.
 
@@ -206,16 +206,16 @@ Manual Test
 
    ::
 
-    kubectl apply -f cp-helm-charts/examples/zookeeper-client.yaml
+    oc apply -f cp-helm-charts/examples/zookeeper-client.yaml
 
 2. Connect to the |zk| client pod and use the ``zookeeper-shell``
    command to explore brokers, topics, etc:
 
    ::
 
-    kubectl exec -it zookeeper-client -- /bin/bash zookeeper-shell <zookeeper service>:<port> ls /brokers/ids
-    kubectl exec -it zookeeper-client -- /bin/bash zookeeper-shell <zookeeper service>:<port> get /brokers/ids/0
-    kubectl exec -it zookeeper-client -- /bin/bash zookeeper-shell <zookeeper service>:<port> ls /brokers/topics
+    oc exec -it zookeeper-client -- /bin/bash zookeeper-shell <zookeeper service>:<port> ls /brokers/ids
+    oc exec -it zookeeper-client -- /bin/bash zookeeper-shell <zookeeper service>:<port> get /brokers/ids/0
+    oc exec -it zookeeper-client -- /bin/bash zookeeper-shell <zookeeper service>:<port> ls /brokers/topics
 
 Kafka
 '''''
@@ -224,13 +224,13 @@ Kafka
 
    ::
 
-    kubectl apply -f cp-helm-charts/examples/kafka-client.yaml
+    oc apply -f cp-helm-charts/examples/kafka-client.yaml
 
 2. Log into the Pod
 
    ::
 
-    kubectl exec -it kafka-client -- /bin/bash
+    oc exec -it kafka-client -- /bin/bash
 
 3. From within the kafka-client pod, explore with kafka commands:
 
@@ -348,13 +348,13 @@ Exporter is installed as a sidecar container along with all Pods.
 Teardown
 --------
 
-To remove the pods, list the pods with ``kubectl get pods`` and then
+To remove the pods, list the pods with ``oc get pods`` and then
 delete the pods by name.
 
 .. code:: sh
 
-      kubectl get pods
-      kubectl delete pod <podname>
+      oc get pods
+      oc delete pod <podname>
 
 To delete the Helm release, find the Helm release name with
 ``helm list`` and delete it with ``helm delete``. You may also need to
@@ -366,8 +366,8 @@ this release.
 
       helm list
       helm delete <release name>
-      kubectl delete statefulset <release name>-cp-kafka <release name>-cp-zookeeper
-      kubectl delete pvc --selector=release=<release name>
+      oc delete statefulset <release name>-cp-kafka <release name>-cp-zookeeper
+      oc delete pvc --selector=release=<release name>
 
 To stop or delete Minikube:
 
@@ -458,10 +458,10 @@ Start Minikube
 
       eval $(minikube docker-env)
 
-      kubectl config set-context minikube.internal --cluster=minikube --user=minikube
+      oc config set-context minikube.internal --cluster=minikube --user=minikube
     Context "minikube.internal" modified.
 
-      kubectl config use-context minikube.internal
+      oc config use-context minikube.internal
     Switched to context "minikube.internal".
 
 Verify Minikube Local Kubernetes Environment
@@ -469,9 +469,9 @@ Verify Minikube Local Kubernetes Environment
 
 ::
 
-      kubectl config current-context
+      oc config current-context
     minikube.internal
 
-      kubectl cluster-info
+      oc cluster-info
     Kubernetes master is running at https://192.168.99.106:8443
     KubeDNS is running at https://192.168.99.106:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy

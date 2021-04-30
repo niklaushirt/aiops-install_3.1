@@ -1,12 +1,19 @@
 # CP4WatsonAIOps 3.1 Demo Environment Installation
 
 
+## ❗ THIS IS WORK IN PROGRESS
+Please drop me a note on Slack or by mail nikh@ch.ibm.com if you find glitches or problems.
+This version is up to date as of April 27th 2021.
+The working repo might contain some newer commits and fixes:
+[https://github.com/niklaushirt/aiops-install_3.1](https://github.com/niklaushirt/aiops-install_3.1)
 
 # Changes
 
 | Date  | Description  | Files  | 
 |---|---|---|
 |  22 Apr 2021 | 3.1 Preview install  | This is experimental!  |
+|  27 Apr 2021 | Prerequisites  | `jq` and `kubectl` not needed anymore  |
+|  28 Apr 2021 | New CatalogSource  | CatalogSource adapted for AIOps Catalog  |
 |   |   |   | 
 
 
@@ -57,6 +64,7 @@ So please if you have any feedback contact me
 ## Prerequisites
 ------------------------------------------------------------------------------
 
+
 ### OpenShift requirements
 
 I installed the demo in a ROKS environment.
@@ -69,19 +77,70 @@ You'll need:
 You might get away with less if you don't install some components (Humio,...)
 
 
+
+### Adapt Hosts file (Fyre only)
+
+When using IBM Fyre on Mac you have to adapt your Hosts file.
+
+- Get the IP address of your Cluster 
+
+	```bash
+	ping api.<your-fyre-url>
+	
+		EXAMPLE: 
+		ping api.dteocp-270003bu3k-vyvrs.cp.fyre.ibm.com -c1
+		
+		PING cp-console.apps.dteocp-270003bu3k-vyvrs.cp.fyre.ibm.com (9.30.91.173): 56 data bytes
+		64 bytes from 9.30.91.173: icmp_seq=0 ttl=52 time=236.575 ms
+	```
+
+- Update Hosts file
+
+	```bash
+	vi /etc/hosts
+	```
+	
+- Add the following
+	
+	```bash	
+	<IP from above> cp-console.<your-fyre-url> api.<your-fyre-url>
+	
+	
+		EXAMPLE: 
+		9.30.91.173   cp-console.apps.dteocp-270003bu3k-vyvrs.cp.fyre.ibm.com api.dteocp-270003bu3k-vyvrs.cp.fyre.ibm.com
+	```
+
+
+
 ### Storage Requirements
 
 
-Please make sure that an appropriate StorageClass is available (you will have to parametrize those as described in "Adapt configuration")
+Please make sure that an appropriate StorageClass is available (you will have to parametrize those as described in [Adapt configuration](#adapt-configuration))
 
 - On IBM ROKS use: ibmc-file-gold-gid
 - On TEC use:      nfs-client
 - On FYRE use:     rook-cephfs 
 
 #### ❗Required for installations on IBM Fyre
-⚠️ **If you don't have a StorageClass, you can install Rook/Ceph with ./22_install_rook.sh.**
+⚠️ **If you don't have a StorageClass, you can install Rook/Ceph with `./22_install_rook.sh`.**
             
 
+### Docker Pull secret
+
+In order to avoid errors with Docker Registry pull rate limits, you should add your Docker credentials to the Cluster.
+This can occur especially with Rook/Ceph installation.
+
+* Go to Secrets in Namespace `openshift-config`
+* Select `Actions`/`Edit Secret` 
+* Scroll down and click `Add Credentials`
+* Enter your Docker credentials
+
+	![](./pics/dockerpull.png)
+
+* Click Save
+
+If you already have Pods in ImagePullBackoff state then just delete them. They will recreate and should pull the image correctly.
+ 
 
 ### Tooling
 
@@ -89,8 +148,8 @@ You need the following tools installed in order to follow through this guide:
 
 - gnu-sed (on Mac)
 - oc
-- jq
-- kubectl
+- jq (Not needed anymore)
+- kubectl (Not needed anymore - replaced by `oc`)
 - kafkacat
 - helm 3
 
@@ -98,18 +157,18 @@ You need the following tools installed in order to follow through this guide:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew install gnu-sed
 brew install kafkacat
-brew install jq
+# brew install jq
 ```
 
 
-Get oc and kubectl from [here](https://github.com/openshift/okd/releases/)
+Get oc and oc from [here](https://github.com/openshift/okd/releases/)
 
 or use :
 
 ```bash
 wget https://github.com/openshift/okd/releases/download/4.6.0-0.okd-2021-02-14-205305/openshift-client-mac-4.6.0-0.okd-2021-02-14-205305.tar.gz -O oc.tar.gz
 tar xfzv oc.tar.gz
-mv kubectl /usr/local/bin
+mv oc /usr/local/bin
 mv oc /usr/local/bin
 ```
 
@@ -161,7 +220,7 @@ export WAIOPS_STORAGE_CLASS_LARGE_BLOCK=ibmc-file-gold-gid
 **Optional Components**
 
 ```bash
-# Install Humio and Fluentbit (not implemented yet)
+# Install Humio
 export INSTALL_HUMIO=true
 
 # Install LDAP Server
@@ -180,30 +239,51 @@ Make sure that you are logged into your cluster!
 ./10_install_aiops.sh -t <PULL_SECRET_TOKEN>
 ```
 
-This will install 
+This will install:
+
+- Knative
+- Strimzi
 - CP4WAIOPS
 - Humio 
 - OpenLDAP
 
+And automatically launch the post-installation:
+
+- Demo Apps
+- Register LDAP Users
+- Gateway
+- Housekeeping
+	- Additional Routes (Topology, Flink, Strimzi)
+	- OCP User
+	- Patch Ingress
+	- Adapt NGINX Certificates
 
 
-### Post installation
+
+Get the exhaustive list of all the steps [here](./README_INSTALLATION_SCRIPT_STEPS.md).
+
+
+
+### Re-running post-installation
+
+In some cases it might be that the post-installation tasks abort for some reason.
+
+It is safe to re-run the post-installation script as many times as needed:
 
 ```bash
-./11_install_aiops_post_install.sh
+./11_postinstall_aiops.sh
 ```
 
-This will install and configure some additional things:
 
-- Register LDAP Users
-- Demo Apps
-- Gateway
-- And some housekeeping
+### Get Passwords and Credentials
 
+At any moment you can run `./80_get_logins.sh` that will print out all the relevant passwords and credentials.
 
+Usually it's a good idea to store this in a file for later use:
 
-
-
+```bash
+./80_get_logins.sh > my_credentials.txt
+```
 
 
 ---------------------------------------------------------------------------------------------------------------
@@ -241,7 +321,7 @@ You have to change the retention options for the humio repository
 ### Humio Fluentbit
 
 ```bash
-export INGEST_TOKEN=ZsXyuLJrdKnZFqtLaTldvqsNhRYCmhFikLLQ9mBM1tDQ (put your token from above)
+export INGEST_TOKEN=<MY_TOKEN> (put your token from above)
 
 ```
 
@@ -261,12 +341,12 @@ helm install humio-fluentbit humio/humio-helm-charts \
 #### Modify DaemonSet
 
 ```bash
-kubectl patch DaemonSet humio-fluentbit-fluentbit -n humio-logging -p '{"spec": {"template": {"spec": {"containers": [{"name": "humio-fluentbit","image": "fluent/fluent-bit:1.4.2","securityContext": {"privileged": true}}]}}}}' --type=merge
+oc patch DaemonSet humio-fluentbit-fluentbit -n humio-logging -p '{"spec": {"template": {"spec": {"containers": [{"name": "humio-fluentbit","image": "fluent/fluent-bit:1.4.2","securityContext": {"privileged": true}}]}}}}' --type=merge
 
-kubectl apply -n humio-logging -f ./tools/4_integrations/humio/FluentbitDaemonSet_DEBUG.yaml
+oc apply -n humio-logging -f ./tools/4_integrations/humio/FluentbitDaemonSet_CUSTOM.yaml
 
 
-kubectl delete -n humio-logging pods -l k8s-app=humio-fluentbit
+oc delete -n humio-logging pods -l k8s-app=humio-fluentbit
 
 
 ```
@@ -488,8 +568,6 @@ When you have defined your Alerts and Notifier you can test them by scaling down
 ------------------------------------------------------------------------------
 
 
-### ❗NEEDS UPDATING
-
 
 ### Create Humio Ops Integrations
 
@@ -497,9 +575,8 @@ Do this for Bookinfo and RobotShop
 
 #### URL
 
-Get the Humio Base URL from your browser
-
-Add at the end `/api/v1/repositories/aiops/query`
+- Get the Humio Base URL from your browser
+- Add at the end `/api/v1/repositories/aiops/query`
 
 
 
@@ -543,61 +620,55 @@ Check the mapping
 ## Configure Event Manager / ASM Topology
 ------------------------------------------------------------------------------
 
-### ❗NEEDS UPDATING
 
 
-### Create Observer to Load Topologies
+### Create Kubernetes Observer for the Demo Applications
 
-* In NOI go into Administration --> Topology Management --> ObserverJobs --> Configure --> Add a new Job
+Do this for all three Demo Apps (or at least the ones you're going to use).
+
+* In CP4WAIOPS go into Define --> Data and tool integrations --> Advanced --> Manage ObserverJobs --> Add a new Job
+* Select Kubernetes --> Configure
+* Choose “local”
+* Set Unique ID to “<app-namespace>” (bookinfo, robot-shop, ...)
+* Set Datacenter (I use "demo")
+* Set Correlate to true
+* Set Namespace to “<app-namespace>” (bookinfo, robot-shop, ...)
+* Set Provider to whatever you like (usually I set it to “listenJob” as well)
+* Save
+
+
+### Create REST Observer to Load Topologies
+
+* In CP4WAIOPS go into Define --> Data and tool integrations --> Advanced --> Manage ObserverJobs --> Add a new Job
 * Select REST --> Configure
 * Choose “listen”
 * Set Unique ID to “listenJob” (important!)
 * Set Provider to whatever you like (usually I set it to “listenJob” as well)
 * Save
 
-### Load Topologies for RobotShop and Bookinfo
+
+
+### Create Merge Rules for Kubernetes Observer
+
+Launch the following:
 
 ```bash
-cd demo
-./load_topology.sh
+./tools/5_topology/create-merge-rules.sh
 ```
 
-Select option 1, 2 or 3.
 
-This will create Topologies for one of the three Applications.
+### Load Merge Topologies for RobotShop and Bookinfo
+
+```bash
+./tools/5_topology/create-merge-topology-bookinfo.sh
+
+./tools/5_topology/create-merge-topology-robotshop.sh
+
+```
+
+This will create Merge Topologies for the two Applications.
 
 
-### Create Templates
-
-Go to Netcool WebGUI
-Administration-->Topology Template
-
-Create a template for Bookinfo and RobotShop:
-
-Bookinfo:
-* Search for productpage-v1 (deployment)
-* Create Topology 3 Levels
-* Select Dynamic
-* Enable "Correlate event groups on topologies from this template"
-* Add tag `app:bookinfo`
-* Save
-
-RobotShop:
-* Search for web (deployment)
-* Create Topology 3 Levels
-* Select Dynamic
-* Enable "Correlate event groups on topologies from this template"
-* Add tag `app:robotshop`
-* Save
-
-Kubetoy:
-* Search for kubetoy (deployment)
-* Create Topology 3 Levels
-* Select Static
-* Enable "Correlate event groups on topologies from this template"
-* Save
-
-> If you want to add templates to the Topology Dashboard just click the Star icon for the Topology you want included. 
 
 
 ### Create grouping Policy
@@ -618,7 +689,7 @@ Kubetoy:
 This creates a simple Pod with the needed tools (oc, kubectl) being used as a bastion host for Runbook Automation. 
 
 ```bash
-kubectl apply -n default -f ./tools/6_bastion/create-bastion.yaml
+oc apply -n default -f ./tools/6_bastion/create-bastion.yaml
 ```
 
 ### Create the NOI Integration
@@ -644,7 +715,7 @@ Bookinfo
 
 ```bash
 oc login --token=$token --server=$ocp_url
-kubectl scale deployment --replicas=1 -n bookinfo ratings-v1
+oc scale deployment --replicas=1 -n bookinfo ratings-v1
 ```
 
 
@@ -652,7 +723,7 @@ Robotshop
 
 ```bash
 oc login --token=$token --server=$ocp_url
-kubectl scale deployment --replicas=1 -n robot-shop mongodb
+oc scale deployment --replicas=1 -n robot-shop mongodb
 oc delete pod -n robot-shop $(oc get po -n robot-shop|grep catalogue|awk '{print$1}') --force --grace-period=0
 oc delete pod -n robot-shop $(oc get po -n robot-shop|grep user|awk '{print$1}') --force --grace-period=0
 ```
@@ -674,20 +745,20 @@ $ocp_url : URL from your login (ACCESS_DETAILS_XXX.md, something like https://c1
 ```yaml
 -------
 Check if the Pod is still running
-kubectl get pods -n NAMESPACE PODNAME 
+oc get pods -n NAMESPACE PODNAME 
 If the return value is empty proceed with the next steps.
 
 -------
 Get the name of the Pod
-kubectl get pods -n NAMESPACE | grep <your-pod-name>
+oc get pods -n NAMESPACE | grep <your-pod-name>
 
 -------
 Check the logs
-kubectl logs -n NAMESPACE kubetoy-deployment-<your-pod-id>
+oc logs -n NAMESPACE kubetoy-deployment-<your-pod-id>
 
 -------
 Restart the pod if needed
-kubectl delete pod -n NAMESPACE <your-pod-id>
+oc delete pod -n NAMESPACE <your-pod-id>
 ```
 
 
@@ -760,6 +831,24 @@ oc set env deployment/$(oc get deploy -l app.kubernetes.io/component=chatops-sla
 ---------------------------------------------------------------------------------------------------------------
 ## Some Polishing
 ------------------------------------------------------------------------------
+
+### Add LDAP Logins
+
+
+* Go to CP4AIOps Dashboard
+* Click on the top left "Hamburger" menu
+* Select `User Management`
+* Select `User Groups` Tab
+* Click `New User Group`
+* Enter demo (or whatever you like)
+* Click Next
+* Select `LDAP Groups`
+* Search for `demo`
+* Select `cn=demo,ou=Groups,dc=ibm,dc=com`
+* Click Next
+* Select Roles (I use Administrator for the demo environment)
+* Click Next
+* Click Create
 
 
 ### Check if data is flowing

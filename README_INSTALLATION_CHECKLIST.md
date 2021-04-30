@@ -14,8 +14,6 @@
 - [ ] Adapt install configuration
  
 - [ ] Start installation
- 
-- [ ] Start Post Installation
 
 
 
@@ -73,7 +71,16 @@
 
 
 ## Configure Event Manager / ASM Topology
-- [ ] Load Topologies for RobotShop and Bookinfo
+
+
+
+- [ ] Create Kubernetes Observer for the Demo Applications
+
+- [ ] Create REST Observer to Load Topologies
+
+- [ ] Create Merge Rules for Kubernetes Observer
+
+- [ ] Load Merge Topologies for RobotShop and Bookinfo
  
 - [ ] Create Templates
  

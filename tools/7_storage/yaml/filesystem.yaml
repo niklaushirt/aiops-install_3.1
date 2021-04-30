@@ -1,7 +1,7 @@
 #################################################################################################################
 # Create a filesystem with settings with replication enabled for a production environment.
 # A minimum of 3 OSDs on different nodes are required in this example.
-#  kubectl create -f filesystem.yaml
+#  oc create -f filesystem.yaml
 #################################################################################################################
 
 apiVersion: ceph.rook.io/v1

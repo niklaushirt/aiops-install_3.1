@@ -13,6 +13,9 @@
 
 export TEMP_PATH=~/aiops-install
 
+# HACK for M1 Macs
+export GODEBUG=asyncpreemptoff=1
+
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # Do Not Edit Below
@@ -115,9 +118,9 @@ header2Begin "Prerequisites Checks"
         
         #getHosts
 
-        check_and_install_jq
+        #check_and_install_jq
         check_and_install_cloudctl
-        check_and_install_kubectl
+        #check_and_install_kubectl
         check_and_install_oc
         check_and_install_helm
         checkHelmExecutable
@@ -188,9 +191,16 @@ header1Begin "Install Prerequisites"
 
 
         header2Begin "Restart OCP Image Registry" 
-            oc delete pod -n openshift-image-registry $(oc get po -n openshift-image-registry|grep image-registry|awk '{print$1}')
-        header2End
+            if [[ $CLUSTER_NAME =~ "appdomain.cloud" ]];
+            then 
+                 __output "     ⭕ You are on ROKS... Skipping"
+            else
+                oc delete pod -n openshift-image-registry $(oc get po -n openshift-image-registry|grep image-registry|awk '{print$1}') >/dev/null 2>&1 
+                __output "      ✅ OK"
+            fi
 
+
+        header2End
 
 
         header2Begin "Install Operators" 
@@ -227,13 +237,13 @@ header1Begin "Install Prerequisites"
 
             header3Begin "Install IBM Operator Catalog"
 
-                CATALOG_INSTALLED=$(kubectl get -n openshift-marketplace CatalogSource ibm-operator-catalog -o yaml | grep "lastObservedState: READY" || true) 
+                CATALOG_INSTALLED=$(oc get -n openshift-marketplace CatalogSource ibm-operator-catalog -o yaml | grep "lastObservedState: READY" || true) 
 
                 if [[ $CATALOG_INSTALLED =~ "READY" ]]; 
                 then
                     __output "     ⭕ CatalogSource already installed... Skipping"
                 else
-                    kubectl apply -f ./yaml/waiops/cat-ibm-operator.yaml >/dev/null 2>&1
+                    oc apply -f ./yaml/waiops/cat-ibm-operator.yaml >/dev/null 2>&1
                     __output "      ✅ OK"
                 fi
             header3End
@@ -242,15 +252,15 @@ header1Begin "Install Prerequisites"
 
             header3Begin "Install IBM AIOps Catalog"
 
-                CATALOG_INSTALLED=$(kubectl get -n openshift-marketplace CatalogSource ibm-aiops-catalog -o yaml | grep "lastObservedState: READY" || true) 
+                CATALOG_INSTALLED=$(oc get -n openshift-marketplace CatalogSource ibm-aiops-catalog -o yaml | grep "lastObservedState: READY" || true) 
 
                 if [[ $CATALOG_INSTALLED =~ "READY" ]]; 
                 then
                     __output "     ⭕ CatalogSource already installed... Skipping"
                 else
-                    kubectl apply -f ./yaml/waiops/cat-ibm-aiops.yaml >/dev/null 2>&1
+                    oc apply -f ./yaml/waiops/cat-ibm-aiops.yaml >/dev/null 2>&1
 
-                    __output " 🔧 Restart Marketplace (HACK)"
+                        #__output " 🔧 Restart Marketplace (HACK)"
                         #oc delete pod -n openshift-marketplace -l name=marketplace-operator 2>&1
                     __output "      ✅ OK"
                     __output "  "
@@ -262,16 +272,14 @@ header1Begin "Install Prerequisites"
 
             header3Begin "Install IBM Common Services Catalog"
 
-                CATALOG_INSTALLED=$(kubectl get -n openshift-marketplace CatalogSource ibm-aiops-catalog -o yaml | grep "lastObservedState: READY" || true) 
+                CATALOG_INSTALLED=$(oc get -n openshift-marketplace CatalogSource ibm-aiops-catalog -o yaml | grep "lastObservedState: READY" || true) 
 
                 if [[ $CATALOG_INSTALLED =~ "READY" ]]; 
                 then
                     __output "     ⭕ CatalogSource already installed... Skipping"
                 else
-                    kubectl apply -f ./yaml/waiops/cat-ibm-common-services.yaml >/dev/null 2>&1
+                    oc apply -f ./yaml/waiops/cat-ibm-common-services.yaml >/dev/null 2>&1
 
-                    __output " 🔧 Restart Marketplace (HACK)"
-                        #oc delete pod -n openshift-marketplace -l name=marketplace-operator 2>&1
                     __output "      ✅ OK"
                     __output "  "
 
@@ -283,52 +291,45 @@ header1Begin "Install Prerequisites"
 
             header3Begin "AI OPS - Install Subscription"
 
-                SUB_INSTALLED=$(kubectl get -n openshift-operators subscriptions.operators.coreos.com ibm-aiops-orchestrator -o yaml | grep "state: AtLatestKnown" || true) 
+                SUB_INSTALLED=$(oc get -n openshift-operators subscriptions.operators.coreos.com ibm-aiops-orchestrator -o yaml | grep "state: AtLatestKnown" || true) 
 
                 if [[ $SUB_INSTALLED =~ "AtLatestKnown" ]]; 
                 then
                     __output "     ⭕ Subscription already installed... Skipping"
                 else
-                    kubectl apply -n openshift-operators -f ./yaml/waiops/sub-ibm-aiops-orchestrator.yaml >/dev/null 2>&1 || true
+                    oc apply -n openshift-operators -f ./yaml/waiops/sub-ibm-aiops-orchestrator.yaml >/dev/null 2>&1 || true
                     #progressbar 120
                     
                     __output "      ✅ OK"
                 fi
 
             header3End
-
-
         header2End
-
 
 
 
         header2Begin "Install Strimzi"
   
-
             header3Begin "AI OPS - Create Subscription for Strimzi"
-                CPD_SUB=$(kubectl get subscriptions.operators.coreos.com -n openshift-operators | grep strimzi-kafka-operator 2>&1 ) || true
+                CPD_SUB=$(oc get subscriptions.operators.coreos.com -n openshift-operators | grep strimzi-kafka-operator 2>&1 ) || true
                 if [[ $CPD_SUB =~ "strimzi-kafka-operator" ]];
                 then
                     __output "     ⭕ Strimzi Subscription already installed. Skipping..."
                 else
-                    kubectl apply -f ./yaml/strimzi/strimzi-subscription.yaml
+                    oc apply -f ./yaml/strimzi/strimzi-subscription.yaml 2>&1  || true
                 
-                    #progressbar 60
                     __output "      ✅ OK"
 
                 fi
 
                 oc label --overwrite namespace $WAIOPS_NAMESPACE ns=$WAIOPS_NAMESPACE >/dev/null 2>&1  || true
+
             header3End
-
-
         header2End 
 
 
         header2Begin "Install Knative"
   
-
             header3Begin "Create Namespace knative-serving"    
                 oc create ns knative-serving >/dev/null 2>&1 || true
                 __output "      ✅ OK"
@@ -346,19 +347,19 @@ header1Begin "Install Prerequisites"
             header3End
 
 
-              header3Begin "Install Knative Subscription"
+            header3Begin "Install Knative Subscription"
 
-                SUB_INSTALLED=$(kubectl get -n openshift-serverless subscriptions.operators.coreos.com serverless-operator -o yaml | grep "state: AtLatestKnown" || true) 
+                SUB_INSTALLED=$(oc get -n openshift-serverless subscriptions.operators.coreos.com serverless-operator -o yaml | grep "state: AtLatestKnown" || true) 
 
                 if [[ $SUB_INSTALLED =~ "AtLatestKnown" ]]; 
                 then
                     __output "     ⭕ Subscription already installed... Skipping"
                 else
-                    kubectl apply --namespace=openshift-serverless -f ./yaml/knative/knative-subscription.yaml || true
+                    oc apply --namespace=openshift-serverless -f ./yaml/knative/knative-subscription.yaml || true
                     #progressbar 120
-                    SUB_INSTALLED=$(kubectl get -n openshift-serverless subscriptions.operators.coreos.com serverless-operator -o yaml | grep "state: AtLatestKnown" || true) 
+                    SUB_INSTALLED=$(oc get -n openshift-serverless subscriptions.operators.coreos.com serverless-operator -o yaml | grep "state: AtLatestKnown" || true) 
                     while  ([[ ! $SUB_INSTALLED =~ "AtLatestKnown" ]]); do 
-                        SUB_INSTALLED=$(kubectl get -n openshift-serverless subscriptions.operators.coreos.com serverless-operator -o yaml | grep "state: AtLatestKnown" || true) 
+                        SUB_INSTALLED=$(oc get -n openshift-serverless subscriptions.operators.coreos.com serverless-operator -o yaml | grep "state: AtLatestKnown" || true) 
                         __output "   🕦 The Knative Subscriptions is not ready. Waiting for 10 seconds...." && sleep 10; 
                     done
 
@@ -369,12 +370,12 @@ header1Begin "Install Prerequisites"
 
 
             header3Begin "AI OPS - Create Knative Serving"
-                CPD_SUB=$(kubectl get KnativeServing -n knative-serving | grep knative-serving 2>&1 ) || true
+                CPD_SUB=$(oc get KnativeServing -n knative-serving | grep knative-serving 2>&1 ) || true
                 if [[ $CPD_SUB =~ "knative-serving" ]];
                 then
                     __output "     ⭕ Knative Serving already installed... Skipping"
                 else
-                    kubectl apply -n knative-serving -f ./yaml/knative/knative-serving.yaml
+                    oc apply -n knative-serving -f ./yaml/knative/knative-serving.yaml
                      __output "      ✅ OK"
                 fi
 
@@ -383,12 +384,12 @@ header1Begin "Install Prerequisites"
 
 
             header3Begin "AI OPS - Create Knative Eventing"
-                CPD_SUB=$(kubectl get KnativeEventing -n knative-eventing | grep knative-eventing 2>&1 ) || true
+                CPD_SUB=$(oc get KnativeEventing -n knative-eventing | grep knative-eventing 2>&1 ) || true
                 if [[ $CPD_SUB =~ "knative-eventing" ]];
                 then
                     __output "     ⭕ Knative Eventing  already installed... Skipping"
                 else
-                    kubectl apply -n knative-eventing -f ./yaml/knative/knative-eventing.yaml
+                    oc apply -n knative-eventing -f ./yaml/knative/knative-eventing.yaml
                     oc annotate service.serving.knative.dev/kn-cli -n knative-serving serving.knative.openshift.io/disableRoute=true >/dev/null 2>&1 || true
 
                     __output "      ✅ OK"
@@ -406,14 +407,18 @@ header1End "Install Prerequisites"
 
 header1Begin "Waiting for Prerequisites to be ready"
 
-    SUCCESFUL_SUBS=$(kubectl get -n openshift-operators ClusterServiceVersion | grep Succeeded | wc -l || true)
+    SUCCESFUL_SUBS=$(oc get -n openshift-operators ClusterServiceVersion | grep Succeeded | wc -l || true)
     __output "      ℹ️  Found $SUCCESFUL_SUBS in Ready state";
+    __output "";
+
     SUCCESFUL_SUBS_TARGET=9
 
     while  ([[ $SUCCESFUL_SUBS -lt $SUCCESFUL_SUBS_TARGET ]]); do 
-        SUCCESFUL_SUBS=$(kubectl get -n openshift-operators ClusterServiceVersion | grep Succeeded | wc -l || true)
+        SUCCESFUL_SUBS=$(oc get -n openshift-operators ClusterServiceVersion | grep Succeeded | wc -l || true)
         __output "            🕦 There are still Subscriptions that are not ready $SUCCESFUL_SUBS/$SUCCESFUL_SUBS_TARGET. Waiting for 10 seconds...." && sleep 10; 
     done
+
+    __output "";
     __output "      ✅  Continuing..."
 header1End "Waiting for Prerequisites to be ready"
 
@@ -430,7 +435,7 @@ header1End "Waiting for Prerequisites to be ready"
 header1Begin "Install CP4WAIOPS"
 
      
-    AI_MANAGER_INSTALLED=$(kubectl get -n $WAIOPS_NAMESPACE installations.orchestrator.aiops.ibm.com ibm-aiops -o yaml | grep "phase: Running" || true) 
+    AI_MANAGER_INSTALLED=$(oc get -n $WAIOPS_NAMESPACE installations.orchestrator.aiops.ibm.com ibm-aiops -o yaml | grep "phase: Running" || true) 
 
     if [[ $AI_MANAGER_INSTALLED =~ "Running" ]]; 
     then
@@ -444,12 +449,15 @@ header1Begin "Install CP4WAIOPS"
             ${SED} -i "s/<NAME>/$WAIOPS_NAME/" $TEMP_PATH/$CLUSTER_NAME/$0/waiops-install.yaml
             ${SED} -i "s/<NAMESPACE>/$WAIOPS_NAMESPACE/" $TEMP_PATH/$CLUSTER_NAME/$0/waiops-install.yaml
             ${SED} -i "s/<ENV_SIZE>/$WAIOPS_SIZE/" $TEMP_PATH/$CLUSTER_NAME/$0/waiops-install.yaml
+
+            __output "      ✅ OK"
+
         header3End
 
 
 
         header3Begin "Install CP4WAIOPS CR"
-            kubectl apply -f $TEMP_PATH/$CLUSTER_NAME/$0/waiops-install.yaml || true
+            oc apply -f $TEMP_PATH/$CLUSTER_NAME/$0/waiops-install.yaml || true
             __output "      ✅ OK"
         header3End
 
@@ -461,95 +469,14 @@ header1End "Install CP4WAIOPS"
 
 
 
-header1Begin "Post-Install - Independent from CP4WAIOPS"
-
-# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Installing Add-Ons that are independent from AIOPS Install
-# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    
-
-
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # Installing HUMIO
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-        header2Begin "Install HUMIO"
-        
-            if [[ $INSTALL_HUMIO == "true" ]]; 
-            then
-                # --------------------------------------------------------------------------------------------------------------------------------
-                #  INSTALL
-                # --------------------------------------------------------------------------------------------------------------------------------
-                ./41_addon_install_humio.sh
-
-            else
-                __output "     ❌ Humio is not enabled... Skipping"
-            fi
-
-        header2End 
-
-
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # Installing LDAP
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  
-        header2Begin "LDAP - Install"
-
-            if [[ $INSTALL_LDAP == "true" ]]; 
-            then
-
-                # --------------------------------------------------------------------------------------------------------------------------------
-                #  INSTALL
-                # --------------------------------------------------------------------------------------------------------------------------------
-                ./42_addon_install_ldap.sh
-
-            else
-                __output "     ❌ LDAP is not enabled... Skipping"
-            fi
-        header2End
-
-
-
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # Create Demo User
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  
-        header2Begin "Create OCP User"
-
-            oc project $WAIOPS_NAMESPACE 
-            
-            kubectl create serviceaccount -n default demo-admin || true
-            oc create clusterrolebinding test-admin --clusterrole=cluster-admin --serviceaccount=default:demo-admin || true
-
-
-        header2End
-
-
-
-header1End "Post-Install - Independent from CP4WAIOPS"
-
-
-
-
-header1Begin "Waiting for CP4WAIOPS being ready..."
-
-    checkInstallDone
-
-header1End "Waiting for CP4WAIOPS being ready"
+./11_postinstall_aiops.sh
 
 
 
 __output "----------------------------------------------------------------------------------------------------------------------------------------------------"
 __output "----------------------------------------------------------------------------------------------------------------------------------------------------"
-__output " ✅ CP4WAIOPS Installed"
+__output " ✅ CP4WAIOPS Base Elements Installed"
+__output "----------------------------------------------------------------------------------------------------------------------------------------------------"
 __output "----------------------------------------------------------------------------------------------------------------------------------------------------"
 __output "----------------------------------------------------------------------------------------------------------------------------------------------------"
 __output "----------------------------------------------------------------------------------------------------------------------------------------------------"
@@ -560,22 +487,4 @@ __output "**********************************************************************
 __output "***************************************************************************************************************************************************"
 
 
-__output ""
-__output ""
-__output ""
-__output ""
-__output ""
-__output ""
-__output ""
-__output ""
-__output ""
-__output ""
-__output ""
-__output ""
-__output ""
-__output ""
-__output ""
-__output ""
 
-
-printCredentials

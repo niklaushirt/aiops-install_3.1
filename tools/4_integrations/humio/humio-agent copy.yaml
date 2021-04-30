@@ -1,0 +1,37 @@
+humio-fluentbit:
+  enabled: true
+  #humioRepoName: aiops
+  humioHostname: humio-instance-humio-core-es.humio-logging
+  es:
+    tls: false # TLS On. Set to false to turn it off.
+    tls_verify: false # TLS verify On. Set to false to turn it off.
+    autodiscovery: false
+  # Example of custom fluentbit config
+  customFluentBitConfig:
+
+  # Example of custom input config
+  inputConfig: |-
+    [INPUT]
+        Name             tail
+        Path             /var/log/containers/*bookinfo_*.log
+        Parser           docker
+        Tag              kube.*
+        Refresh_Interval 5
+        Mem_Buf_Limit    256MB
+        Skip_Long_Lines  On
+    [INPUT]
+        Name             tail
+        Path             /var/log/containers/*robot-shop_*.log
+        Parser           docker
+        Tag              kube.*
+        Refresh_Interval 5
+        Mem_Buf_Limit    256MB
+        Skip_Long_Lines  On
+  # Example of custom resources
+  resources:
+    limits:
+      cpu: 2
+      memory: 1024Mi
+    requests:
+      cpu: 1
+      memory: 512Mi

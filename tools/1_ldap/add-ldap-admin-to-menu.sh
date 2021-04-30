@@ -1,5 +1,5 @@
 
-kubectl get navconfigurations.foundation.ibm.com multicluster-hub-nav -n kube-system -o yaml > navconfigurations.orginal
+oc get navconfigurations.foundation.ibm.com multicluster-hub-nav -n kube-system -o yaml > navconfigurations.orginal
 cp navconfigurations.orginal navconfigurations.ldap.yaml
 nano navconfigurations.ldap.yaml
 
@@ -15,6 +15,6 @@ Add this (don't forget to change the URL)
 
 
 
-kubectl apply -n kube-system --validate=false -f navconfigurations.ldap.yaml  
+oc apply -n kube-system --validate=false -f navconfigurations.ldap.yaml  
 
 

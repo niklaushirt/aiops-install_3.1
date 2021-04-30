@@ -19,14 +19,14 @@ source ./99_config-global.sh
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 
-headerModuleFileBegin "Install Open LDAP " $0
+#headerModuleFileBegin "Install Open LDAP " $0
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # INSTALL CHECKS
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
-header3Begin "Install Checks"
+header3Begin "Install LDAP"
 
 
         getInstallPath
@@ -40,8 +40,10 @@ header3Begin "Install Checks"
         then
             __output "    ⭕ LDAP already installed! Skipping..."
 
-            headerModuleFileEnd "Install Open LDAP " $0
+            #headerModuleFileEnd "Install Open LDAP " $0
             exit 0
+        else
+            __output "      ✅ OK"
         fi
 
 header3End
@@ -56,6 +58,7 @@ header3End
 header3Begin "Running Prerequisites" "rocket"
 
         export SCRIPT_PATH=$(pwd)
+        __output "      ✅ OK"
 
 header3End
 
@@ -79,10 +82,11 @@ header3Begin "Install OpenLDAP" "rocket"
           --set OpenLdap.SeedUsers.passw0rd=P4ssw0rd! \
           --set OpenLdap.Route=$CLUSTER_NAME || true
 
+        __output "      ✅ OpenLDAP Installed"
 header3End
 
 
-headerModuleFileEnd "Install Open LDAP " $0
+#headerModuleFileEnd "Install Open LDAP " $0
 
 
 

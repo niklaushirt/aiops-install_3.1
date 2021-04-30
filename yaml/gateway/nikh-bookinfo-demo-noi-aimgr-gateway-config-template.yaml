@@ -1,0 +1,383 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+  namespace: aiops
+  labels:
+    app: noi
+    chart: noi
+data:
+  G_XML.props: |-
+    #
+    # Standard properties. Gate.Reader.Server identifies the section of the
+    # NC_HOME/intergations/omnibus/omni.dat file having connection details for the
+    # Object Server the gateway should connect to
+    #
+
+    Gate.Reader.Server              : 'AGG_V'
+    Gate.Reader.CommonNames         : 'AGG_V'
+    Gate.Reader.Description         : 'XML Event Feed Gateway'
+    MessageLevel                    : 'warn'
+    Gate.Reader.TblReplicateDefFile : '/opt/IBM/tivoli/netcool/omnibus/gates/xml/row_filter.def'
+
+    #
+    # The event observer requires the timestamp in this format, including the timezone
+    #
+
+    Gate.XMLGateway.DateFormat      : 'yyyy-MM-dd\'T\'HH:mm:ss'
+
+    #
+    # Want events flowing through the system, so flush IDUC every 5s
+    #
+
+    Gate.Reader.IducFlushRate       : 5
+
+    #
+    # Set memory limits
+    #
+
+    Gate.Java.Arguments             : '-Xmx500m'
+
+    #
+    # Properties defining JSON messages over kafka
+    #
+
+    #Gate.MapFile                    :
+    #'$NCHOME/omnibus/gates/xml/field_filter.map'
+
+    #Gate.Java.Arguments                   : '-Xmx500m -Djavax.net.debug=ssl:handshake:verbose'
+    #Gate.Java.Debug                       : TRUE
+  asm-trigger.sql: ''
+  configure-objectservers.sh: |-
+    #
+
+    # This script is run as an initContainer to configure the target ObjectServers with
+    # the required alerts.status fields and XML triggers.
+
+    source /init.sh
+
+    createKeystore
+
+
+    # update primary
+
+    writeOmniDotDatOneObjectServer evtmanager-topology-objserv-primary 4100
+
+    ncoping
+
+
+    # update backup
+
+    writeOmniDotDatOneObjectServer evtmanager-topology-objserv-backup 4100
+
+    ncoping
+  event_transformer.xml: |-
+    <?xml version="1.0" encoding="UTF-8"?>
+
+    <tns:transformers
+    xmlns:tns="http://item.tivoli.ibm.com/omnibus/netcool/transformer"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <tns:transformer name="netcoolEvents" type="northbound"  endpoint="netcool" className="com.ibm.tivoli.netcool.integrations.transformer.XSLTTransformer">
+        <tns:property name="xsltFilename" type="java.lang.String" value="${OMNIHOME}/java/conf/netcool2json.xsl" description="XSLT file for converting Netcool events to JSON"/>
+      </tns:transformer>
+    </tns:transformers>
+  field_filter.map: |-
+    CREATE MAPPING StatusMap
+    (
+        'Agent'                 = '@Agent',
+        'AlertGroup'            = '@AlertGroup',
+        'Class'                 = '@Class',
+        'Customer'              = '@Customer',
+        'EventId'               = '@EventId',
+        'Identifier'            = '@Identifier',
+        'LastOccurrence'        = '@LastOccurrence',
+        'LastOccurrenceUSec'    = '@LastOccurrenceUSec',
+        'LocalPriObj'           = '@LocalPriObj',
+        'LocalRootObj'          = '@LocalRootObj',
+        'Manager'               = '@Manager',
+        'Node'                  = '@Node',
+        'NodeAlias'             = '@NodeAlias',
+        'ServerName'            = '@ServerName',
+        'ServerSerial'          = '@ServerSerial',
+        'Severity'              = '@Severity',
+        'StateChange'           = '@StateChange',
+        'Summary'               = '@Summary',
+        'Tally'                 = '@Tally',
+        'Type'                  = '@Type'
+    );
+  http_event_transformer.xml: |-
+    <?xml version="1.0" encoding="UTF-8"?>
+
+    <tns:transformers
+    xmlns:tns="http://item.tivoli.ibm.com/omnibus/netcool/transformer"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+      <tns:transformer name="netcoolEvents" type="northbound" endpoint="netcool" className="com.ibm.tivoli.netcool.integrations.transformer.XSLTTransformer">
+
+       <tns:property name="xsltFilename" type="java.lang.String" value="${OMNIHOME}/java/conf/netcool2json.xsl" description="XSLT file for converting Netcool events to JSON events"/>
+
+       </tns:transformer>
+
+    </tns:transformers>
+  init.sh: |-
+    CA_CERTIFICATE=/opt/ibm/netcool/omni-certificate-secret/ROOTCA
+    KAFKA_CERTIFICATE=/opt/ibm/netcool/kafka_certificate_secret/ca.crt
+    INTERMEDIATE_CERTIFICATE=/opt/ibm/netcool/omni-certificate-secret/INTERMEDIATECA
+    INTERMEDIATE_NAME=AGG_V
+
+    KDB_PW=`head -c 32 /dev/urandom | base64` CACERTS_PW="changeit"
+    NCO_SSL_SETTING=" "
+
+
+    writeOmniDotDat() {
+      if [ -s "${NCHOME}/etc/omni.dat" ];
+      then
+        rm ${NCHOME}/etc/omni.dat
+      fi
+
+      cat <<- EOF > ${NCHOME}/etc/omni.dat
+    [AGG_P]
+
+    {
+      Primary: evtmanager-objserv-agg-primary ${NCO_SSL_SETTING} 4100
+    }
+
+    [AGG_B]
+
+    {
+      Primary: evtmanager-topology-objserv-backup ${NCO_SSL_SETTING} 4100
+    }
+
+    [AGG_V]
+
+    {
+      Primary: evtmanager-objserv-agg-primary ${NCO_SSL_SETTING} 4100
+      Backup: evtmanager-topology-objserv-backup ${NCO_SSL_SETTING} 4100
+    }
+
+    [G_XML]
+
+    {
+        Primary: 0.0.0.0 4300
+    }
+
+    EOF
+      echo "$(date) omni.dat is:"
+      cat ${NCHOME}/etc/omni.dat
+      ${NCHOME}/bin/nco_igen
+    }
+
+
+    writeOmniDotDatOneObjectServer() {
+      if [ -s "${NCHOME}/etc/omni.dat" ]; then
+        rm ${NCHOME}/etc/omni.dat
+      fi
+
+      cat <<- EOF > ${NCHOME}/etc/omni.dat
+    [AGG_V]
+
+    {
+      Primary: ${1} ${NCO_SSL_SETTING} ${2}
+    }
+
+    EOF
+      echo "$(date) omni.dat is:"
+      cat ${NCHOME}/etc/omni.dat
+      ${NCHOME}/bin/nco_igen
+    }
+
+
+    createKeystore() {
+      # do we have a root CA cert for TLS'd ObjectServers?
+      if [ -s ${CA_CERTIFICATE} ]; then
+
+        echo "$(date) Enabling ssl for omni.dat"
+        NCO_SSL_SETTING=" ssl "
+
+        echo "$(date) Creating a key database"
+        ${NCHOME}/bin/nc_gskcmd -keydb -create -db ${NCHOME}/etc/security/keys/omni.kdb -pw ${KDB_PW} -stash -expire 366
+
+        echo "$(date) Importing certificate ($(basename ${CA_CERTIFICATE})) to the key database"
+        ${NCHOME}/bin/nc_gskcmd -cert -add -db ${NCHOME}/etc/security/keys/omni.kdb -pw ${KDB_PW} -label ${CA_NAME} -file ${CA_CERTIFICATE}
+
+        if [ -s ${INTERMEDIATE_CERTIFICATE} ]; then
+          echo "$(date) Importing certificate ($(basename ${INTERMEDIATE_CERTIFICATE})) to the key database"
+          ${NCHOME}/bin/nc_gskcmd -cert -add -db ${NCHOME}/etc/security/keys/omni.kdb -pw ${KDB_PW} -label ${INTERMEDIATE_NAME} -file ${INTERMEDIATE_CERTIFICATE}
+        fi
+      fi
+    }
+
+    addKafkaCertificate() {
+      if [ -s ${KAFKA_CERTIFICATE} ]; then
+        echo "$(date) Importing certificate KAFKA_CERTIFICATE to the key database"
+        chmod +w /opt/IBM/tivoli/netcool/platform/linux2x86/jre64_1.8.0/jre/lib/security/cacerts
+        ${NCHOME}/platform/linux2x86/jre64_1.8.0/jre/bin/keytool -noprompt -import -keystore /opt/IBM/tivoli/netcool/platform/linux2x86/jre64_1.8.0/jre/lib/security/cacerts -file ${KAFKA_CERTIFICATE} -alias "strimzi-kafka" -storepass ${CACERTS_PW}
+      fi
+    }
+
+    initialize() {
+      # check if we have a certificate mounted and create keystore if needed
+      createKeystore
+      # write omni.dat with ssl options when cert is found
+      writeOmniDotDat
+      # add kafka certificate
+      addKafkaCertificate
+    }
+
+    ncoping() {
+      while [ true ];do
+        echo -n "`date` ";
+        if ${NCHOME}/omnibus/bin/nco_ping AGG_V; then
+          break;
+        else
+          sleep 2;
+        fi;
+      done
+    }
+
+
+    rungateway() {
+      # The props file mounted from the ConfigMap is read-only. We need to copy the file so
+      # we can append credentials and encryption properties
+      PROPERTIES_FILE=${NCHOME}/omnibus/etc/G_XML.props
+      cp ${NCHOME}/omnibus/etc/G_XML.configmap $PROPERTIES_FILE
+      # the default encryption cipher
+      CRYPTO_ALG=AES_FIPS
+      echo "$(date) The default encryption cipher is ${CRYPTO_ALG}"
+      # If we have already been given a keyfile, then username and password are already encrypted
+      if [ -s /opt/ibm/netcool/credentials/keyfile ]; then
+        KEYFILE=/opt/ibm/netcool/credentials/keyfile
+        echo "$(date) Secret contains a keyfile, so the credentials must already be encrypted"
+        if [ -s /opt/ibm/netcool/credentials/cipher ]; then
+          CRYPTO_ALG=$(cat /opt/ibm/netcool/credentials/cipher)
+          echo "$(date) The encryption cipher has been set to ${CRYPTO_ALG}"
+        fi
+        if [ -s /opt/ibm/netcool/credentials/username ]; then
+          USERNAME=$(cat /opt/ibm/netcool/credentials/username)
+        fi
+        if [ -s /opt/ibm/netcool/credentials/password ]; then
+          PASSWORD=$(cat /opt/ibm/netcool/credentials/password)
+        fi
+      # otherwise we have plain text credentials that we want to encrypt
+      else
+        echo "$(date) Genertating an encryption key"
+        KEYFILE=${NCHOME}/etc/security/keyfile
+        ${NCHOME}/omnibus/bin/nco_keygen -o ${KEYFILE} -l 256
+        if [ -s /opt/ibm/netcool/credentials/username ]; then
+          USERNAME=$(${NCHOME}/omnibus/bin/nco_aes_crypt -c ${CRYPTO_ALG} -k ${KEYFILE} $(cat /opt/ibm/netcool/credentials/username ))
+        fi
+        if [ -s /opt/ibm/netcool/credentials/password ]; then
+          PASSWORD=$(${NCHOME}/omnibus/bin/nco_aes_crypt -c ${CRYPTO_ALG} -k ${KEYFILE} $(cat /opt/ibm/netcool/credentials/password ))
+        fi
+      fi
+
+    cat <<EOF >> ${PROPERTIES_FILE}
+
+
+    #
+
+    # Credentials and encryption settings supplied via secret
+
+    #
+
+    ConfigKeyFile: '${KEYFILE}'
+
+    ConfigCryptoAlg: '${CRYPTO_ALG}'
+
+    Gate.Reader.Username: '${USERNAME}'
+
+    Gate.Reader.Password: '${PASSWORD}'
+
+    EOF
+            echo "$(date) Configuring gateway for kafka integration"
+            cat <<EOF2 >> ${PROPERTIES_FILE}
+
+    Gate.XMLGateway.TransformerFile :
+    '$NCHOME/omnibus/java/conf/event_transformer.xml'
+
+    Gate.XMLGateway.TransportFile   :
+    '$NCHOME/omnibus/java/conf/kafkatransport.properties'
+
+    Gate.XMLGateway.TransportType   : 'KAFKA'
+
+    Gate.XMLGateway.MessageKey      : '@ServerSerial'
+
+
+    EOF2
+
+      # and run gateway
+      ${NCHOME}/omnibus/bin/nco_g_xml -name G_XML -messagelog stdout
+      echo "transport log file................."
+      cat /opt/IBM/tivoli/netcool/omnibus/log/transport.log
+    }
+  kafkaClient_javaSys.properties: |-
+    java.security.auth.login.config=/opt/IBM/tivoli/netcool/omnibus/java/conf/kafka_client_jaas.conf
+    https.protocol=TLSv1.2
+  kafkaConnectionProperties.json: |-
+    {
+      "zookeeper_client" : {
+        "target" : "",
+        "properties" : "",
+        "java_sys_props" : "",
+        "topic_watch": false,
+        "broker_watch": false
+      },
+      "brokers" : "strimzi-cluster-kafka-bootstrap-aiops.dteroks-270003bu3k-iztoq-4b4a324f027aea19c5cbc0c3275c4656-0000.eu-gb.containers.appdomain.cloud:443",
+      "topics": "alerts-noi-1000-1000",
+      "kafka_client" : {
+        "properties" : "/opt/IBM/tivoli/netcool/omnibus/java/conf/producer.properties",
+        "java_sys_props" : "/opt/IBM/tivoli/netcool/omnibus/java/conf/kafkaClient_javaSys.properties"
+      }
+    }
+  kafka_client_jaas.conf: |-
+    KafkaClient {
+     org.apache.kafka.common.security.scram.ScramLoginModule required
+     tokenauth="true"
+     username="token"
+     password="ueiy30dpeW7y" 
+    };
+  kafkatransport.properties: |-
+    kafkaClientMode=PRODUCER
+    LivenessCriterion=TOPIC
+    LivenessCheckInterval=20
+    LivenessCheckTimeout=10
+    connectionPropertiesFile=/opt/IBM/tivoli/netcool/omnibus/java/conf/kafkaConnectionProperties.json
+  log4j2.xml: |-
+    <?xml version="1.0" encoding="UTF-8"?> <!-- Log4j2 Configuration for Transport Module --> 
+    <Configuration>
+     <Appenders>
+       <File name="LOGFILE" fileName="${env:OMNIHOME}/log/transport.log">
+        <PatternLayout pattern="%d %-5p [%t] %C{2} (%F:%L) - %m%n"/>
+       </File>
+      </Appenders>
+      <Loggers>
+       <Root level="ERROR" > 
+        <!-- Increase the logging level to get more detailed logs if necessary. -->
+        <AppenderRef ref="LOGFILE"/>
+       </Root>
+      </Loggers>
+    </Configuration>
+  producer.properties: |-
+    acks=1
+    retries=3
+    retry.backoff.ms=1000
+    ssl.truststore.location=/opt/IBM/tivoli/netcool/platform/linux2x86/jre64_1.8.0/jre/lib/security/cacerts
+    ssl.truststore.password=changeit
+    ssl.truststore.type=JKS
+    group.id=test-producer-group
+    acks=all
+    security.protocol=SSL
+    sasl.mechanism=SCRAM-SHA-512
+    ssl.protocol=TLSv1.2
+    ssl.enabled.protocols=TLSv1.2
+    key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+    value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+    key.serializer=org.apache.kafka.common.serialization.StringSerializer
+    value.serializer=org.apache.kafka.common.serialization.StringSerializer
+  row_filter.def: |-
+    REPLICATE INSERT FROM TABLE 'alerts.status'
+    USING MAP 'StatusMap'
+    FILTER WITH 'Severity>2 AND Manager=\'Inbound Webhook\'';
+  updated-generic-clear.sql: ''
+
+

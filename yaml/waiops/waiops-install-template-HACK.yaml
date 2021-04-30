@@ -1,0 +1,89 @@
+apiVersion: orchestrator.aiops.ibm.com/v1alpha1
+kind: Installation
+metadata:
+  name: <NAME>
+  namespace: <NAMESPACE>
+spec:
+  imagePullSecret: ibm-entitlement-key
+  license:
+    accept: true
+  pakModules:
+    - enabled: true
+      name: aiManager
+      config:
+        - name: aimanager-operator
+          spec:
+            aimanager:
+              aimanagerValues:
+                global:
+                  dockerRegistryPrefix: cp.icr.io/cp/cp4waiops
+                  existingServiceAccount: aimanager-operator
+                  icpDockerRepo: cp.icr.io/cp/cp4waiops
+                  image:
+                    pullSecret: ibm-aiops-pull-secret
+                  kafka:
+                    strimzi:
+                      clusterName: strimzi-cluster
+                  license: "true"
+                  persistence:
+                    enabled: "true"
+                  privilegedServiceAccount:
+                    create: "false"
+                    name: aimanager-operator
+                  product:
+                    existingServiceAccount: aimanager-operator
+                    name: ibm-aiops
+                    schName: aio
+                  serviceAccount:
+                    create: "false"
+                    name: aimanager-operator
+                  storageClassName: <STORAGE_CLASS>
+                  zenControlPlaneNamespace: <NAMESPACE>
+                postgres:
+                  keeper:
+                    resources:
+                      limits:
+                        cpu: 500m
+                        memory: 512Mi
+                      requests:
+                        cpu: 100m
+                        memory: 256Mi
+                  livenessProbe:
+                    failureThreshold: 5
+                    initialDelaySeconds: 300
+                    periodSeconds: 15
+                    successThreshold: 1
+                    timeoutSeconds: 15
+                  persistence:
+                    enabled: true
+                    size: 20Gi
+                    storageClass: <STORAGE_CLASS>
+                  readinessProbe:
+                    failureThreshold: 5
+                    initialDelaySeconds: 300
+                    periodSeconds: 15
+                    successThreshold: 1
+                    timeoutSeconds: 15
+                  sentinel:
+                    resources:
+                      limits:
+                        cpu: 500m
+                        memory: 512Mi
+                      requests:
+                        cpu: 100m
+                        memory: 256Mi
+                  serviceAccount:
+                    name: aimanager-operator
+    - enabled: true
+      name: aiopsFoundation
+    - enabled: true
+      name: applicationManager
+      config:
+        - name: noi-operator
+          spec:
+            noi:
+              persistence:
+                storageClassDB2: <STORAGE_CLASS>
+  size: <ENV_SIZE>
+  storageClass: '<STORAGE_CLASS>'
+  storageClassLargeBlock: '<STORAGE_CLASS_LB>'

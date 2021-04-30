@@ -1,0 +1,365 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nikh-bookinfo-demo-noi-aimgr-gateway
+  namespace: aiops
+  labels:
+    app: noi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: noi
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: noi
+    spec:
+      restartPolicy: Always
+      initContainers:
+        - resources:
+            limits:
+              cpu: 100m
+              memory: 64Mi
+            requests:
+              cpu: 100m
+              memory: 64Mi
+          terminationMessagePath: /dev/termination-log
+          name: wait-for-objectserver
+          command:
+            - /bin/sh
+            - '-c'
+            - source /init.sh && initialize && ncoping
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            runAsUser: 1001
+            runAsNonRoot: true
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: omni-certificate-secret
+              mountPath: /opt/ibm/netcool/omni-certificate-secret
+            - name: init-script
+              mountPath: /init.sh
+              subPath: init.sh
+          terminationMessagePolicy: File
+          image: 'cp.icr.io/cp/noi/netcool-gateway-messagebus:11.3.0-amd64-1056'
+        - resources:
+            limits:
+              cpu: 100m
+              memory: 64Mi
+            requests:
+              cpu: 100m
+              memory: 64Mi
+          terminationMessagePath: /dev/termination-log
+          name: demo-noi-topology-noi-update-schema
+          command:
+            - /bin/sh
+          env:
+            - name: OMNIBUS_ROOT_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: demo-noi-omni-secret
+                  key: OMNIBUS_ROOT_PASSWORD
+                  optional: true
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            runAsUser: 1001
+            runAsNonRoot: true
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: omni-certificate-secret
+              mountPath: /opt/ibm/netcool/omni-certificate-secret
+            - name: asm-trigger
+              mountPath: /opt/ibm/netcool/asm/asm-trigger.sql
+              subPath: asm-trigger.sql
+            - name: configure-objectservers
+              mountPath: /opt/ibm/netcool/asm/configure-objectservers.sh
+              subPath: configure-objectservers.sh
+            - name: init-script
+              mountPath: /init.sh
+              subPath: init.sh
+          terminationMessagePolicy: FallbackToLogsOnError
+          image: 'cp.icr.io/cp/noi/netcool-gateway-messagebus:11.3.0-amd64-1056'
+          args:
+            - '-c'
+            - /opt/ibm/netcool/asm/configure-objectservers.sh
+      serviceAccountName: noi-service-account
+      imagePullSecrets:
+        - name: ibm-aiops-pull-secret
+      schedulerName: default-scheduler
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: beta.kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 50
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: NotIn
+                      values:
+                        - noi
+                    - key: component
+                      operator: NotIn
+                      values:
+                        - gateway
+                    - key: release
+                      operator: NotIn
+                      values:
+                        - demo-noi-topology
+                topologyKey: kubernetes.io/hostname
+      terminationGracePeriodSeconds: 120
+      securityContext:
+        runAsUser: 1001
+        runAsNonRoot: true
+        fsGroup: 2001
+      containers:
+        - resources:
+            limits:
+              cpu: '1'
+              memory: 1Gi
+            requests:
+              cpu: 500m
+              memory: 800Mi
+          readinessProbe:
+            exec:
+              command:
+                - /opt/IBM/tivoli/netcool/omnibus/bin/nco_ping
+                - G_XML
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: nco-g-xml
+          command:
+            - /bin/sh
+            - '-c'
+            - source /init.sh && initialize && rungateway
+          livenessProbe:
+            exec:
+              command:
+                - /opt/IBM/tivoli/netcool/omnibus/bin/nco_ping
+                - G_XML
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 6
+          env:
+            - name: TRANSPORT
+              value: KAFKA
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            runAsUser: 1001
+            runAsNonRoot: true
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+          ports:
+            - containerPort: 4300
+              protocol: TCP
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: omni-certificate-secret
+              mountPath: /opt/ibm/netcool/omni-certificate-secret
+            - name: gateway-credentials
+              mountPath: /opt/ibm/netcool/credentials
+            - name: asm-credentials
+              mountPath: /opt/ibm/netcool/asm-credentials
+            - name: ca-secret
+              readOnly: true
+              mountPath: /opt/ibm/netcool/asm/security
+            - name: init-script
+              mountPath: /init.sh
+              subPath: init.sh
+            - name: props-file
+              mountPath: /opt/IBM/tivoli/netcool/omnibus/etc/G_XML.configmap
+              subPath: G_XML.props
+            - name: row-filter
+              mountPath: /opt/IBM/tivoli/netcool/omnibus/gates/xml/row_filter.def
+              subPath: row_filter.def
+            - name: field-filter
+              mountPath: /opt/IBM/tivoli/netcool/omnibus/gates/xml/field_filter.map
+              subPath: field_filter.map
+            - name: transformers-file
+              mountPath: /opt/IBM/tivoli/netcool/omnibus/java/conf/event_transformer.xml
+              subPath: event_transformer.xml
+            - name: transport-file
+              mountPath: >-
+                /opt/IBM/tivoli/netcool/omnibus/java/conf/kafkatransport.properties
+              subPath: kafkatransport.properties
+            - name: kafka-connection-file
+              mountPath: >-
+                /opt/IBM/tivoli/netcool/omnibus/java/conf/kafkaConnectionProperties.json
+              subPath: kafkaConnectionProperties.json
+            - name: kafka-client-file
+              mountPath: /opt/IBM/tivoli/netcool/omnibus/java/conf/producer.properties
+              subPath: producer.properties
+            - name: kafka-client-javasys-file
+              mountPath: >-
+                /opt/IBM/tivoli/netcool/omnibus/java/conf/kafkaClient_javaSys.properties
+              subPath: kafkaClient_javaSys.properties
+            - name: kafka-client-jaas-file
+              mountPath: /opt/IBM/tivoli/netcool/omnibus/java/conf/kafka_client_jaas.conf
+              subPath: kafka_client_jaas.conf
+            - name: log4j2-file
+              mountPath: /opt/IBM/tivoli/netcool/omnibus/java/conf/log4j/log4j2.xml
+              subPath: log4j2.xml
+            - name: strimzi-cluster-cluster-ca-cert
+              readOnly: true
+              mountPath: /opt/ibm/netcool/kafka_certificate_secret
+          terminationMessagePolicy: File
+          image: 'cp.icr.io/cp/noi/netcool-gateway-messagebus:11.3.0-amd64-1056'
+      serviceAccount: noi-service-account
+      volumes:
+        - name: ca-secret
+          secret:
+            secretName: evtmanager-topology-ca-secret
+            defaultMode: 420
+        - name: omni-certificate-secret
+          secret:
+            secretName: evtmanager-omni-certificate-secret
+            defaultMode: 420
+            optional: true
+        - name: gateway-credentials
+          secret:
+            secretName: evtmanager-topology-gateway-credentials
+            defaultMode: 420
+            optional: true
+        - name: asm-credentials
+          secret:
+            secretName: evtmanager-topology-asm-credentials
+            defaultMode: 420
+            optional: true
+        - name: init-script
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: init.sh
+                path: init.sh
+            defaultMode: 420
+        - name: props-file
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: G_XML.props
+                path: G_XML.props
+            defaultMode: 420
+        - name: field-filter
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: field_filter.map
+                path: field_filter.map
+            defaultMode: 420
+        - name: row-filter
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: row_filter.def
+                path: row_filter.def
+            defaultMode: 420
+        - name: transformers-file
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: event_transformer.xml
+                path: event_transformer.xml
+            defaultMode: 420
+        - name: http-transformers-file
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: http_event_transformer.xml
+                path: http_event_transformer.xml
+            defaultMode: 420
+        - name: transport-file
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: kafkatransport.properties
+                path: kafkatransport.properties
+            defaultMode: 420
+        - name: kafka-connection-file
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: kafkaConnectionProperties.json
+                path: kafkaConnectionProperties.json
+            defaultMode: 420
+        - name: kafka-client-file
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: producer.properties
+                path: producer.properties
+            defaultMode: 420
+        - name: kafka-client-javasys-file
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: kafkaClient_javaSys.properties
+                path: kafkaClient_javaSys.properties
+            defaultMode: 420
+        - name: kafka-client-jaas-file
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: kafka_client_jaas.conf
+                path: kafka_client_jaas.conf
+            defaultMode: 420
+        - name: asm-trigger
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: asm-trigger.sql
+                path: asm-trigger.sql
+            defaultMode: 493
+        - name: configure-objectservers
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: configure-objectservers.sh
+                path: configure-objectservers.sh
+            defaultMode: 493
+        - name: log4j2-file
+          configMap:
+            name: nikh-bookinfo-evtmanager-aimgr-gateway-config
+            items:
+              - key: log4j2.xml
+                path: log4j2.xml
+            defaultMode: 420
+        - name: strimzi-cluster-cluster-ca-cert
+          secret:
+            secretName: strimzi-cluster-cluster-ca-cert
+            defaultMode: 420
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

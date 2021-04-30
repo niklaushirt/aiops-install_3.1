@@ -28,7 +28,7 @@ helm install humio/humio-helm-charts --name humio --namespace logging
 If `humio-core.authenticationMethod` is set to `single-user` (default), then you need to supply a username and password
 when logging in. The default username is `developer` and the password can be retrieved from the command:
 ```
-kubectl get secret developer-user-password -n logging -o=template --template={{.data.password}} | base64 -D
+oc get secret developer-user-password -n logging -o=template --template={{.data.password}} | base64 -D
 ```
 _Note: the base64 command may vary depending on OS and distribution._
 
@@ -39,7 +39,7 @@ https://docs.humio.com/cluster-management/security/saml and configure the `samlC
 once the IDP certificate is obtained, you must create a secret containing that certificate like so:
 
 ```
-kubectl create secret generic idp-certificate --from-file=idp-certificate=./my-idp-certificate.pem -n logging
+oc create secret generic idp-certificate --from-file=idp-certificate=./my-idp-certificate.pem -n logging
 ```
 
 Once the SAML authentication is configured, you will also need to grant at least one user root access. Currently this
@@ -56,7 +56,7 @@ See the file `examples/s3-bucket-storage.yaml`.
 ### GCP Bucket Storage
 If you are using a service account to authenticate GCS requests add the your service account json to your Kubernetes secrets:
 ```
-kubectl create secret generic gcp-storage-account-json-file --from-file=gcp-storage-account-json-file=./my-gcp-storage-account.json -n logging
+oc create secret generic gcp-storage-account-json-file --from-file=gcp-storage-account-json-file=./my-gcp-storage-account.json -n logging
 ```
 
 See the file `examples/gcp-bucket-storage.yaml`.
@@ -81,7 +81,7 @@ If running Fluentbit by itself, you'll need to create a Kubernetes secret with t
 where `my-namespace` is the namespace where you are installing the chart:
 
 ```
-kubectl create secret generic fluentbit-shared-token --from-literal=token=my-token -n my-namespace
+oc create secret generic fluentbit-shared-token --from-literal=token=my-token -n my-namespace
 ```
 
 You will also need to configure the endpoint if running in standalone. For example:

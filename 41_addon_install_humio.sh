@@ -19,7 +19,7 @@ source ./99_config-global.sh
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 
-headerModuleFileBegin "Install HUMIO " $0
+#headerModuleFileBegin "Install HUMIO " $0
 
 
 
@@ -31,6 +31,7 @@ headerModuleFileBegin "Install HUMIO " $0
 header3Begin "Running Prerequisites" "rocket"
 
         export SCRIPT_PATH=$(pwd)
+        __output "      ✅ OK"
 
 header3End
 
@@ -62,16 +63,18 @@ header3Begin "Install HUMIO" "rocket"
                 oc adm policy add-scc-to-user privileged -n humio-logging -z humio-instance
                 oc adm policy add-scc-to-user privileged -n humio-logging -z default
 
-                kubectl apply -n humio-logging -f ./tools/4_integrations/humio/humio-route.yaml
+                oc apply -n humio-logging -f ./tools/4_integrations/humio/humio-route.yaml
 
                 __output "    🕦 Wait 60 seconds..."
 
-                kubectl delete -n humio-logging secret developer-user-password
-                kubectl apply -n humio-logging -f ./tools/4_integrations/humio/change-humio-dev-pwd.yaml
-                kubectl delete -n humio-logging pod humio-instance-humio-core-0
+                oc delete -n humio-logging secret developer-user-password
+                oc apply -n humio-logging -f ./tools/4_integrations/humio/change-humio-dev-pwd.yaml
+                oc delete -n humio-logging pod humio-instance-humio-core-0
 
                 __output " ✅ HUMIO Installed"
+                __output ""
                 __output "  ⚠️ Please check the documentation in order to create the Fluentbit agents!"
+                __output "    https://github.ibm.com/up-and-running/watson-aiops/blob/master/docs/automations/nik_installation_3.1/README_INSTALLATION.md#humio-fluentbit"
         fi
 
 
@@ -81,7 +84,7 @@ header3End
 
 
 
-headerModuleFileEnd "Install HUMIO " $0
+#headerModuleFileEnd "Install HUMIO " $0
 
 
 

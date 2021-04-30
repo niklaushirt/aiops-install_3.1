@@ -27,13 +27,13 @@ spec:
             cpu: "50m"
             memory: "50Mi"
           limits:
-            cpu: "50m"
-            memory: "50Mi"
+            cpu: "250m"
+            memory: "250Mi"
         env:
           - name: PORT
             value : "22"
           - name: SSH_KEY
-            value : "22"
+            value : "YOUR SSH PUBLIC KEY"
 ---
 apiVersion: v1
 kind: Service

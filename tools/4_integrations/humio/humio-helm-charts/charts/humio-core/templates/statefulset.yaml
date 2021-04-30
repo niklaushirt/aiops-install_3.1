@@ -68,7 +68,7 @@ spec:
           command:
           - sh
           - -c
-          - kubectl get node ${NODE_NAME} -o jsonpath={.metadata.labels."failure-domain\.beta\.kubernetes\.io\/zone"} > /shared/zookeeper-prefix
+          - oc get node ${NODE_NAME} -o jsonpath={.metadata.labels."failure-domain\.beta\.kubernetes\.io\/zone"} > /shared/zookeeper-prefix
           env:
           - name: NODE_NAME
             valueFrom:
