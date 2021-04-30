@@ -563,6 +563,7 @@ When you have defined your Alerts and Notifier you can test them by scaling down
 ## Train Incident Similarity (big ugly HACK)
 ------------------------------------------------------------------------------
 
+
 ### Prerequisite - install old (and unsupported) model-train-console
 
 Run the following and make sure the Pod is running:
@@ -620,6 +621,14 @@ and paste/execute the code in the pod.
 
 This will train the three similar incident models for the demo applications.
 
+#### To come:
+❗ A more official way is in the works, in short:
+
+- Create Dummy SNOW integration (with Live data for initial AI training)
+- Create `Training Definition`
+- Stream normalized data into Kafka Topic `watsonaiops.incident`
+
+❗ This has not been tested and I just put this here for documentation!
 
 
 
