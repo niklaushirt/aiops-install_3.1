@@ -238,20 +238,6 @@ header1Begin "Post-Install - Independent from CP4WAIOPS"
             if [[ $INSTALL_DEMO == "true" ]]; 
             then
 
-                APP_INSTALLED=$(oc get ns bookinfo || true) 
-                if [[ $APP_INSTALLED =~ "Active" ]]; 
-                then
-                    __output "     ⭕ Bookinfo already installed... Skipping"
-                else
-                    header2Begin "Install Bookinfo"
-                        oc create ns bookinfo >/dev/null 2>&1
-                        oc apply -n bookinfo -f ./demo_install/bookinfo/bookinfo.yaml >/dev/null 2>&1
-                        oc apply -n default -f ./demo_install/bookinfo/bookinfo-create-load.yaml >/dev/null 2>&1
-
-                        __output "      ✅ OK"
-                    header2End
-                fi
-
                 APP_INSTALLED=$(oc get ns kubetoy || true) 
                 if [[ $APP_INSTALLED =~ "Active" ]]; 
                 then
@@ -276,6 +262,8 @@ header1Begin "Post-Install - Independent from CP4WAIOPS"
                         oc create ns robot-shop >/dev/null 2>&1
                         oc adm policy add-scc-to-user privileged -n robot-shop -z robot-shop >/dev/null 2>&1
                         oc create clusterrolebinding default-robotinfo1-admin --clusterrole=cluster-admin --serviceaccount=robot-shop:robot-shop >/dev/null 2>&1
+                        oc adm policy add-scc-to-user privileged -n robot-shop -z default >/dev/null 2>&1                                            ✘
+                        oc create clusterrolebinding default-robotinfo2-admin --clusterrole=cluster-admin --serviceaccount=robot-shop:default >/dev/null 2>&1
                         oc apply -f ./demo_install/robotshop/robot-all-in-one.yaml -n robot-shop >/dev/null 2>&1
                         oc apply -n robot-shop -f ./demo_install/robotshop/load-deployment.yaml >/dev/null 2>&1
                         
@@ -311,26 +299,6 @@ header1Begin "Post-Install - Independent from CP4WAIOPS"
                     fi
         header2End "Patch Ingress"
 
-
-
-
-
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # Install Gateway
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        header2Begin "Create Gateway"
-
-            header3Begin "Create Gateway for all Events Severity > 2"
-
-                cp ./yaml/gateway/gateway-generic-template.yaml /tmp/gateway-generic.yaml
-                ${SED} -i "s/<CP4WAIOPS_NAMESPACE>/$WAIOPS_NAMESPACE/" /tmp/gateway-generic.yaml
-                oc apply -n $WAIOPS_NAMESPACE -f /tmp/gateway-generic.yaml  >/dev/null 2>&1 || true
-                __output "      ✅ OK"
-            header3End
-
-        header2End "Create Gateway"
 
 
 
@@ -420,20 +388,6 @@ fi
         header2End "Register LDAP"
 
 
-
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # Installing Add-Ons that are dependent on Full Installation
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- if [[ $OVERRIDE_CHECKS == "false" ]]; 
-                    then
-        header2Begin "Install Checks"
-                checkInstallDone
-        header2End
-fi
-
-
         # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         # Create Strimzi Route
@@ -450,57 +404,82 @@ fi
 
 
 
+
+
         # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # Housekeeping
+        # Adapt Slack Welcome Message
         # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------    
-        header2Begin "Housekeeping"
+        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        header2Begin "Adapt Slack Welcome Message"
 
-            
-                header3Begin "Adapt Nginx Certs"
+            header3Begin "Patch Environment"
+                  oc set env deployment/$(oc get deploy -l app.kubernetes.io/component=chatops-slack-integrator -o jsonpath='{.items[*].metadata.name }') SLACK_WELCOME_COMMAND_NAME=/welcome >/dev/null 2>&1 || true
+                __output "      ✅ OK"
+            header3End
 
-                    PODS_PENDING=""
+        header2End "Adapt Slack Welcome Message"
 
-                    while  [[ $PODS_PENDING == "" ]]; do 
-                        PODS_PENDING=$(oc get pods -n $WAIOPS_NAMESPACE -l component=ibm-nginx | grep -v "No resources" || true)
-                        __output "🕦   Still checking..."
-                        sleep 5
-                    done
 
-                    # From here: https://github.ibm.com/up-and-running/watson-aiops/blob/master/docs/AI_Manager/Installation.md
 
-                    oc project  $WAIOPS_NAMESPACE 
+        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # Patch Resources for ROKS
+        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        header2Begin "Patch Resources for ROKS"
 
-NAMESPACE=$(oc project -q)
-ingress_pod=$(oc get secrets -n openshift-ingress | grep tls | grep -v router-metrics-certs-default | awk '{print $1}')
-oc get secret -n openshift-ingress -o 'go-template={{index .data "tls.crt"}}' ${ingress_pod} | base64 -d | base64 -b 0 > cert.crt
-oc get secret -n openshift-ingress -o 'go-template={{index .data "tls.key"}}' ${ingress_pod} | base64 -d | base64 -b 0 > cert.key
-echo -n "apiVersion: v1
-kind: Secret
-type: Opaque
-metadata:
-  name: openshift-tls-secret
-  namespace: $NAMESPACE
-data:
-  cert.crt: " > openshift-tls-secret.yaml
-cat cert.crt >> openshift-tls-secret.yaml
-echo >> openshift-tls-secret.yaml
-echo "  cert.key: " >> openshift-tls-secret.yaml
-cat cert.key >> openshift-tls-secret.yaml
-oc create -f openshift-tls-secret.yaml
+            header3Begin "Patch evtmanager-topology-merge"
 
-                    oc patch deployment ibm-nginx -p '{"spec":{"template":{"spec":{"volumes":[{"name":"external-tls-secret","secret":{"secretName": "openshift-tls-secret"}}]}}}}'
-                header3End
+               kubectl patch deployment evtmanager-topology-merge -n aiops --patch-file ./yaml/waiops/topology-merge-patch.yaml || true
+                __output "      ✅ OK"
+            header3End
 
-        header2End "Housekeeping"
+            header3Begin "Patch evtmanager-ibm-hdm-analytics-dev-inferenceservice"
+                kubectl patch deployment evtmanager-ibm-hdm-analytics-dev-inferenceservice -n aiops --patch-file ./yaml/waiops/evtmanager-inferenceservice-patch.yaml
+                __output "      ✅ OK"
+            header3End
+
+
+
+        header2End "Create Gateway"
+
+
+
+
+
+
+        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # Install Gateway
+        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        header2Begin "Create Gateway"
+
+            header3Begin "Create Gateway for all Events Severity > 2"
+
+                cp ./yaml/gateway/gateway-generic-template.yaml /tmp/gateway-generic.yaml
+                ${SED} -i "s/<CP4WAIOPS_NAMESPACE>/$WAIOPS_NAMESPACE/" /tmp/gateway-generic.yaml
+                oc apply -n $WAIOPS_NAMESPACE -f /tmp/gateway-generic.yaml || true
+                __output "      ✅ OK"
+            header3End
+
+            header3Begin "Adapt Gateway to be able to connect (HACK)"
+                kubectl apply -n aiops -f ./yaml/gateway/gateway_cr_cm.yaml || true
+                oc delete pod -n aiops $(oc get po -n aiops|grep event-gateway-generic|awk '{print$1}') || true
+                __output "      ✅ OK"
+            header3End
+
+
+
+        header2End "Create Gateway"
 
 
 
 header1End "Post-Install - Independent from CP4WAIOPS"
 
 
-
+checkInstallDone
 
 
 __output "----------------------------------------------------------------------------------------------------------------------------------------------------"

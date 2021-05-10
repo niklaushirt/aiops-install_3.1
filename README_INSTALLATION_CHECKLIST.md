@@ -3,7 +3,13 @@
 
 ## Prerequisites
 
-- [ ] Check/Install StorageClass
+- [ ] OpenShift requirements
+
+- [ ] Adapt Hosts file (Fyre only)
+
+- [ ] Storage Requirements
+
+- [ ] Docker Pull secret
 
 - [ ] Install Tooling
  
@@ -15,7 +21,13 @@
  
 - [ ] Start installation
 
+- [ ] Post-installation 
 
+- [ ] Re-running post-installation
+
+- [ ] Get Passwords and Credentials
+
+- [ ] Check status of installation
 
 ## HUMIO
 
@@ -34,66 +46,66 @@
    
 	- [ ] Modify DaemonSet
 
-- [ ] Configure Humio Notifier
- 
-- [ ] Create Alerts
- 
-	- [ ] BookinfoProblem
-   
-	- [ ] BookinfoRatingsDown
-   
-	- [ ] BookinfoReviewsProblem
-   
-	- [ ] KubetoyLivenessProbe
-   
-	- [ ] KubetoyAvailabilityProblem
-   
-	- [ ] RobotShopCataloguePodProblem
-   
-	- [ ] RobotShopCatalogueProblem
-
-	- [ ] RobotShopWebProblem
-
-	- [ ] RobotShopFrontendProblem
 
 
 
-## Train Incident Similarity (big ugly HACK)
+## Configure Applications and Topology
 
-⚠️ **This is officially unsupported!**
-
-- [ ] Install old model-train-console
-
-- [ ] Incidents Similarity Training
-
-
-
-## Connections from AI Manager (Ops Integration)
-
-- [ ] Create Humio Ops Integration on Bookinfo App
-
-- [ ] Create Humio Ops Integration on RobotShop App
- 
-
-
-
-## Configure Event Manager / ASM Topology
-
-
-
-- [ ] Create Kubernetes Observer for the Demo Applications
+- [ ] Create Kubernetes Observer
 
 - [ ] Create REST Observer to Load Topologies
 
 - [ ] Create Merge Rules for Kubernetes Observer
 
-- [ ] Load Merge Topologies for RobotShop and Bookinfo
+- [ ] Load Merge Topologies
+
+- [ ] Create AIOps Application
+
+
+
+## Configure Event Manager
 
 - [ ] Event Manager Webhooks
+
+- [ ] Create custom Filter and View in NOI (optional)
  
 - [ ] Create Templates (optional)
  
 - [ ] Create grouping Policy
+
+
+
+## Train Incident Similarity (big ugly HACK)
+
+- [ ] Train Log Anomaly
+
+- [ ] Train Event Grouping
+
+- [ ] Train Incident Similarity (⚠️ **This is officially unsupported!**)
+
+
+
+## Train Log Anomaly
+- [ ]  Prerequisites
+- [ ]  Create Humio Integration
+- [ ]  Create Kafka Training Integration
+- [ ]  Create Kafka Training Integration
+- [ ]  Train the model
+- [ ]  Enable Log Anomaly detection
+
+
+## Train Event Grouping
+- [ ]  Prerequisites
+- [ ]  Create Integration
+- [ ]  Create Training Definition
+- [ ]  Train the model
+- [ ]  Enable Event Grouping
+
+
+## Train Incident Similarity
+- [ ]  Create Dummy Service Now Integration
+- [ ]  Prerequisite - install old (and unsupported) model-train-console
+- [ ]  Incidents Similarity Training
 
 
 ## Configure Runbooks
@@ -120,9 +132,13 @@
  
 - [ ] Change the Slash Welcome Message (optional)
 
+- [ ] Create User OAUTH Token
+
 
 ## Some Polishing
  
+- [ ] Add LDAP Logins to CP4WAIOPS
+
 - [ ] Check if data is flowing
  
  

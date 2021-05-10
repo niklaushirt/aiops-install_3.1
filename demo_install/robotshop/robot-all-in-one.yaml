@@ -1,4 +1,14 @@
 ---
+# Source: robot-shop/templates/web-service.yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: web
+spec:
+  to:
+    kind: Service
+    name: web
+---
 # Source: robot-shop/templates/podsecuritypolicy.yaml
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
@@ -248,13 +258,13 @@ spec:
   selector:
     service: web
   
-  type: LoadBalancer
+  type: NodePort
 ---
 # Source: robot-shop/templates/cart-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cart-deployment
+  name: cart
   labels:
     service: cart
 spec:
@@ -267,8 +277,6 @@ spec:
       labels:
         service: cart
     spec:
-      
-      serviceAccountName: robot-shop
       
       containers:
       - name: cart
@@ -294,7 +302,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: catalogue-deployment
+  name: catalogue
   labels:
     service: catalogue
 spec:
@@ -307,8 +315,6 @@ spec:
       labels:
         service: catalogue
     spec:
-      
-      serviceAccountName: robot-shop
       
       containers:
       - name: catalogue
@@ -334,7 +340,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dispatch-deployment
+  name: dispatch
   labels:
     service: dispatch
 spec:
@@ -347,8 +353,6 @@ spec:
       labels:
         service: dispatch
     spec:
-      
-      serviceAccountName: robot-shop
       
       containers:
       - name: dispatch
@@ -373,7 +377,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mongodb-deployment
+  name: mongodb
   labels:
     service: mongodb
 spec:
@@ -386,8 +390,6 @@ spec:
       labels:
         service: mongodb
     spec:
-      
-      serviceAccountName: robot-shop
       
       containers:
       - name: mongodb
@@ -422,8 +424,6 @@ spec:
         service: mysql
     spec:
       
-      serviceAccountName: robot-shop
-      
       containers:
       - name: mysql
         image: robotshop/rs-mysql-db:latest
@@ -447,7 +447,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: payment-deployment
+  name: payment
   labels:
     service: payment
     stage: prod
@@ -463,8 +463,6 @@ spec:
         service: payment
         stage: prod
     spec:
-      
-      serviceAccountName: robot-shop
       
       containers:
       - name: payment
@@ -491,7 +489,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rabbitmq-deployment
+  name: rabbitmq
   labels:
     service: rabbitmq
 spec:
@@ -504,8 +502,6 @@ spec:
       labels:
         service: rabbitmq
     spec:
-      
-      serviceAccountName: robot-shop
       
       containers:
       - name: rabbitmq
@@ -527,7 +523,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ratings-deployment
+  name: ratings
   labels:
     service: ratings
 spec:
@@ -540,8 +536,6 @@ spec:
       labels:
         service: ratings
     spec:
-      
-      serviceAccountName: robot-shop
       
       containers:
       - name: ratings
@@ -570,7 +564,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: shipping-deployment
+  name: shipping
   labels:
     service: shipping
 spec:
@@ -583,8 +577,6 @@ spec:
       labels:
         service: shipping
     spec:
-      
-      serviceAccountName: robot-shop
       
       containers:
       - name: shipping
@@ -614,7 +606,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: user-deployment
+  name: user
   labels:
     service: user
 spec:
@@ -627,8 +619,6 @@ spec:
       labels:
         service: user
     spec:
-      
-      serviceAccountName: robot-shop
       
       containers:
       - name: user
@@ -655,7 +645,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web-deployment
+  name: web
   labels:
     service: web
 spec:
@@ -669,17 +659,10 @@ spec:
         service: web
     spec:
       
-      serviceAccountName: robot-shop
-      
       containers:
       - name: web
         image: robotshop/rs-web:latest
         imagePullPolicy: IfNotPresent
-        env:
-        - name: INSTANA_EUM_KEY
-          value: I_ZkS1dlTDKWUQof0NijFA
-        - name: INSTANA_EUM_REPORTING_URL
-          value: https://eum-orange-saas.instana.io
         ports:
         - containerPort: 8080
         resources:
@@ -710,8 +693,6 @@ spec:
         service: redis
     spec:
       
-      serviceAccountName: robot-shop
-      
       containers:
       - name: redis
         image: redis:4.0.6
@@ -738,13 +719,3 @@ spec:
         resources:
           requests:
             storage: 1Gi
----
-# Source: robot-shop/templates/web-service.yaml
-apiVersion: route.openshift.io/v1
-kind: Route
-metadata:
-  name: web
-spec:
-  to:
-    kind: Service
-    name: web

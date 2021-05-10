@@ -54,8 +54,9 @@
         export WAIOPS_SIZE=small
 
 
-
-
+        # Minimum number of Pods for Namespace
+        export WAIOPS_PODS_COUNT_EXPECTED=144
+        export CS_PODS_COUNT_EXPECTED=32
 
     # ---------------------------------------------------------------------------------------------------------------------------------------------------"
     # Add-ons

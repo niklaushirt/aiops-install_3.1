@@ -1,0 +1,197 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  annotations:
+  name: event-gateway-generic-emgwconfig
+  namespace: aiops
+data:
+  G_EVTMGR.props: >-
+    Gate.Reader.Server              : 'AGG_V'
+
+    Gate.Reader.CommonNames         : 'AGG_V'
+
+    Gate.Reader.Description         : 'AIManager Event Feed Gateway'
+
+    MessageLevel                    : 'WARN'
+
+    Gate.XMLGateway.DateFormat      : 'yyyy-MM-dd\'T\'HH:mm:ssZ'
+
+    Gate.Reader.IducFlushRate       : 5
+
+    # and run gateway
+
+
+    Gate.Reader.Username            : '${OMNIBUS_USER}'
+
+    Gate.Reader.Password            : '${OMNIBUS_PWD}' 
+
+    #
+
+    # Set memory limits
+
+    #
+
+    Gate.Java.Arguments             : '-Xmx1000m'
+
+    Gate.Java.Debug : TRUE
+
+    #
+
+    # Properties defining JSON messages over kafka
+
+    #
+
+    Gate.MapFile                    :
+    '$NCHOME/omnibus/gates/xml/field_filter.map'
+
+    Gate.Reader.TblReplicateDefFile : '$NCHOME/omnibus/gates/xml/row_filter.def'
+
+
+    Gate.XMLGateway.TransformerFile :
+    '$NCHOME/omnibus/java/conf/event_transformer.xml'
+
+    Gate.XMLGateway.TransportFile   :
+    '$NCHOME/omnibus/java/conf/transport.properties'
+
+    Gate.XMLGateway.TransportType   : 'KAFKA'
+
+    Gate.XMLGateway.MessageKey      : '@ServerSerial'
+
+    Gate.XMLGateway.DateFormat      : 'yyyy-MM-dd\'T\'HH:mm:ss'
+  event_transformer.xml: >-
+    <?xml version="1.0" encoding="UTF-8"?>
+
+    <tns:transformers
+    xmlns:tns="http://item.tivoli.ibm.com/omnibus/netcool/transformer"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <tns:transformer name="netcoolEvents" type="northbound"  endpoint="netcool" className="com.ibm.tivoli.netcool.integrations.transformer.XSLTTransformer">
+        <tns:property name="xsltFilename" type="java.lang.String" value="${OMNIHOME}/java/conf/netcool2json.xsl" description="XSLT file for converting Netcool events to JSON"/>
+      </tns:transformer>
+    </tns:transformers>
+  init.sh: |-
+    CA_CERTIFICATE=/opt/ibm/netcool/gateway/rootca
+    CA_NAME=AGG_V
+    KDB_PW=`head -c 32 /dev/urandom | base64`
+    NCO_SSL_SETTING=" "
+    writeOmniDotDat() {
+      if [ -s "${NCHOME}/etc/omni.dat" ];
+      then
+        rm ${NCHOME}/etc/omni.dat
+      fi
+      cat <<- EOF > ${NCHOME}/etc/omni.dat
+    [AGG_P]
+    {
+      Primary: ${OMNIBUS_PRIMARY_HOST} ${NCO_SSL_SETTING} ${OMNIBUS_PRIMARY_PORT}
+    }
+    [AGG_B]
+    {
+      Primary: ${OMNIBUS_BACKUP_HOST} ${NCO_SSL_SETTING} ${OMNIBUS_BACKUP_PORT}
+    }
+    [${OMNIBUS_VIRTUAL_PAIR_NAME}]
+    {
+      Primary: ${OMNIBUS_PRIMARY_HOST} ${NCO_SSL_SETTING} ${OMNIBUS_PRIMARY_PORT}
+      Backup: ${OMNIBUS_BACKUP_HOST} ${NCO_SSL_SETTING} ${OMNIBUS_BACKUP_PORT}
+    }
+    [G_EVTMGR]
+    {
+        Primary: 0.0.0.0 4300
+    }
+    EOF
+      echo "$(date) omni.dat is:"
+      cat ${NCHOME}/etc/omni.dat
+      ${NCHOME}/bin/nco_igen
+    }
+    createKeystore() {
+      # do we have a root CA cert for TLS'd ObjectServers?
+      if [ -s ${CA_CERTIFICATE} ]; then
+        echo "$(date) Enabling ssl for omni.dat"
+        NCO_SSL_SETTING=" ssl "
+        echo "$(date) Creating a key database"
+        ${NCHOME}/bin/nc_gskcmd -keydb -create -db ${NCHOME}/etc/security/keys/omni.kdb -pw ${KDB_PW} -stash -expire 366
+        echo "$(date) Importing certificate ($(basename ${CA_CERTIFICATE})) to the key database"
+        ${NCHOME}/bin/nc_gskcmd -cert -add -db ${NCHOME}/etc/security/keys/omni.kdb -pw ${KDB_PW} -label ${CA_NAME} -file ${CA_CERTIFICATE}
+      fi
+    }
+    initialize() {
+      # check if we have a certificate mounted and create keystore if needed
+      createKeystore
+      # write omni.dat with ssl options when cert is found
+      writeOmniDotDat
+    }
+    ncoping() {
+      while [ true ];do
+        echo -n "`date` ";
+        if ${NCHOME}/omnibus/bin/nco_ping ${OMNIBUS_VIRTUAL_PAIR_NAME}; then
+          break;
+        else
+          sleep 2;
+        fi;
+      done
+    }
+    addKafkaCertificate() {
+      if [ -s ${KAFKA_CERTIFICATE} ]; then
+        echo "$(date) Importing certificate KAFKA_CERTIFICATE to the key database"
+        chmod +w /opt/IBM/tivoli/netcool/platform/linux2x86/jre64_1.8.0/jre/lib/security/cacerts
+        ${NCHOME}/platform/linux2x86/jre64_1.8.0/jre/bin/keytool -noprompt -import -keystore /opt/IBM/tivoli/netcool/platform/linux2x86/jre64_1.8.0/jre/lib/security/cacerts -file ${KAFKA_CERTIFICATE} -alias "strimzi-kafka" -storepass changeit
+      fi
+    }
+    rungateway() {
+      sed "s/KAFKA_JAAS_PASSWORD/${KAFKA_JAAS_PASSWORD}/g" /opt/IBM/tivoli/netcool/omnibus/java/conf/producer-tmpl.properties >> /opt/IBM/tivoli/netcool/omnibus/java/conf/producer.properties
+      exec ${NCHOME}/omnibus/bin/nco_g_xml -name G_EVTMGR -messagelog stdout ${OVERRIDE_PROPS}
+    }
+  kafkaConnectionProperties.json: |-
+    {
+      "zookeeper_client" : {
+        "target" : "",
+        "properties" : "",
+        "java_sys_props" : "",
+        "topic_watch": true,
+        "broker_watch": true
+      },
+      "brokers" : "strimzi-cluster-kafka-bootstrap:9092",
+      "topics": "alerts-noi-1000-1000",
+      "kafka_client" : {
+        "properties" : "/opt/IBM/tivoli/netcool/omnibus/java/conf/producer.properties",
+        "java_sys_props" : ""
+      }
+    }
+  producer-tmpl.properties: >-
+    acks=1
+
+    retries=3
+
+    retry.backoff.ms=1000
+
+    security.protocol=PLAINTEXT
+
+    sasl.mechanism=PLAIN
+
+    ssl.truststore.location=/opt/IBM/tivoli/netcool/platform/linux2x86/jre64_1.8.0/jre/lib/security/cacerts
+
+    ssl.truststore.password=changeit
+
+    ssl.truststore.type=JKS
+
+    key.serializer=org.apache.kafka.common.serialization.StringSerializer
+
+    value.serializer=org.apache.kafka.common.serialization.StringSerializer
+
+    bootstrap.servers=strimzi-cluster-kafka-bootstrap:9092
+
+    sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule
+    required username=token password=KAFKA_JAAS_PASSWORD;
+  row_filter.def: |-
+    REPLICATE INSERTS
+       FROM TABLE 'alerts.status'
+       USING MAP 'StatusMap'
+       FILTER WITH '(Severity>2) AND AlertGroup=\'robot-shop\'';
+  transport.properties: >-
+    kafkaClientMode=PRODUCER
+
+    LivenessCriterion=TOPIC
+
+    LivenessCheckInterval=20
+
+    LivenessCheckTimeout=10
+
+    connectionPropertiesFile=/opt/IBM/tivoli/netcool/omnibus/java/conf/kafkaConnectionProperties.json

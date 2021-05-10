@@ -12,6 +12,14 @@ The working repo might contain some newer commits and fixes:
 | Date  | Description  | Files  | 
 |---|---|---|
 |  22 Apr 2021 | 3.1 Preview install  | This is experimental!  |
+|  27 Apr 2021 | Prerequisites  | `jq` and `kubectl` not needed anymore  |
+|  28 Apr 2021 | New CatalogSource  | CatalogSource adapted for AIOps Catalog  |
+|  29 Apr 2021 | Improved Topology Match  |  |
+|  30 Apr 2021 | Demo Events Injection  | New generic method to simulate Events |
+|  30 Apr 2021 | Hack for Incident Similarity Demo Training  |  ❗ Not officially supported  |
+|  03 Mar 2021 | Removed Bookinfo from Scripts  |  ❗RobotShop is the way forward  |
+|  04 Mar 2021 | Added training instructions  |  |
+|  07 Mar 2021 | Official beta version  |  |
 |   |   |   | 
 
 
@@ -24,8 +32,6 @@ Make sure you use the [INSTALLATION CHECKLIST](./README_INSTALLATION_CHECKLIST.m
 
 
 ![arch](pics/aiops-demo.png)
-
-
 
 
 

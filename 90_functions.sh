@@ -336,7 +336,7 @@ export INDENT=""
 
 
 
-            __output "   🔎 Check if Event Manager is ready."
+            __output "   🔎 Check if Event Manager Password is ready."
 
             EVT_MGR_PWD=$(oc get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d || true )     
             while  ([[ $EVT_MGR_PWD == "" ]]); do 
@@ -361,13 +361,16 @@ export INDENT=""
 
             __output "   🔎 Check if all pods in $WAIOPS_NAMESPACE are ready."
 
-            WAIOPS_PODS_COUNT_NOTREADY=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
+            WAIOPS_PODS_COUNT_NOTREADY=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true)
+            WAIOPS_PODS_COUNT_TOTAL=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
+ 
             #WAIOPS_PODS_COUNT_NOTREADY="   0"
-            while  ([[ ! $WAIOPS_PODS_COUNT_NOTREADY =~ " 0" ]]); do 
+
+            while  ([[ ! $(($WAIOPS_PODS_COUNT_NOTREADY)) == 0 ]] || [[  $(($WAIOPS_PODS_COUNT_TOTAL)) < $WAIOPS_PODS_COUNT_EXPECTED ]] ); do 
                 WAIOPS_PODS_COUNT_NOTREADY=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | grep "0/" | wc -l || true) 
                 WAIOPS_PODS_COUNT_TOTAL=$(oc get pods -n $WAIOPS_NAMESPACE | grep -v "Completed" | wc -l || true) 
                 
-                __output "      ⭕ CP4WAIOPS not ready ($(($WAIOPS_PODS_COUNT_TOTAL - $WAIOPS_PODS_COUNT_NOTREADY))/$(($WAIOPS_PODS_COUNT_TOTAL)))  (will be around 150 pods).. Waiting for 10 seconds...." && sleep 10; 
+                __output "      ⭕ CP4WAIOPS: $(($WAIOPS_PODS_COUNT_NOTREADY)) Pods not ready ($(($WAIOPS_PODS_COUNT_TOTAL - $WAIOPS_PODS_COUNT_NOTREADY))/$(($WAIOPS_PODS_COUNT_TOTAL)))  (will be around $WAIOPS_PODS_COUNT_EXPECTED pods).. Waiting for 10 seconds...." && sleep 10; 
             done
             __output "      ✅ OK"
             __output ""
@@ -397,13 +400,17 @@ export INDENT=""
 
             __output "   🔎 Check if all pods in common-services are ready."
 
+            CS_MONGO_3=$(oc get pods icp-mongodb-2 -n ibm-common-services -oyaml  | grep "phase: Running" || true) 
             CS_PODS_COUNT_NOTREADY=$(oc get pods -n ibm-common-services | grep -v "Completed" | grep "0/" | wc -l || true) 
+            CS_PODS_COUNT_TOTAL=$(oc get pods -n ibm-common-services | grep -v "Completed" | wc -l || true) 
+
             #WAIOPS_PODS_COUNT_NOTREADY="   0"
-            while  ([[ ! $CS_PODS_COUNT_NOTREADY =~ " 0" ]]); do 
+            while  ([[ ! $(($CS_PODS_COUNT_NOTREADY)) == 0 ]] || [[ $(($CS_PODS_COUNT_TOTAL)) < $CS_PODS_COUNT_EXPECTED ]] || [[ ! $CS_MONGO_3 =~ "Running" ]]); do 
                 CS_PODS_COUNT_NOTREADY=$(oc get pods -n ibm-common-services | grep -v "Completed" | grep "0/" | wc -l || true) 
                 CS_PODS_COUNT_TOTAL=$(oc get pods -n ibm-common-services | grep -v "Completed" | wc -l || true) 
+                CS_MONGO_3=$(oc get pods icp-mongodb-2 -n ibm-common-services -oyaml  | grep "phase: Running" || true) 
 
-                __output "      ⭕ Common Services not ready ($(($CS_PODS_COUNT_TOTAL - $CS_PODS_COUNT_NOTREADY))/$(($CS_PODS_COUNT_TOTAL)))  (will be around 33 pods). Waiting for 10 seconds...." && sleep 10; 
+                __output "      ⭕ Common Services: $(($CS_PODS_COUNT_NOTREADY)) Pods not ready ($(($CS_PODS_COUNT_TOTAL - $CS_PODS_COUNT_NOTREADY))/$(($CS_PODS_COUNT_TOTAL)))  (will be around $CS_PODS_COUNT_EXPECTED pods). Waiting for 10 seconds...." && sleep 10; 
             done
             __output "      ✅ OK"
             __output ""

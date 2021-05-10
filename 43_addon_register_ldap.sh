@@ -73,6 +73,7 @@ header3Begin "Register LDAP Users in Common Services"
 
  
         ALREADY_INSTALLED=$(cloudctl iam users | grep demo)
+        #ALREADY_INSTALLED="hello"
         if [[ $ALREADY_INSTALLED =~ "demo" ]];
         then
             __output "    ⭕ LDAP Users already registered! Skipping..."
