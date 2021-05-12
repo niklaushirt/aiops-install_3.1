@@ -144,6 +144,7 @@ In order to avoid errors with Docker Registry pull rate limits, you should add y
 This can occur especially with Rook/Ceph installation.
 
 * Go to Secrets in Namespace `openshift-config`
+* Open the `pull-secret`Secret
 * Select `Actions`/`Edit Secret` 
 * Scroll down and click `Add Credentials`
 * Enter your Docker credentials
