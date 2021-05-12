@@ -20,6 +20,7 @@ The working repo might contain some newer commits and fixes:
 |  03 Mar 2021 | Removed Bookinfo from Scripts  |  ❗RobotShop is the way forward  |
 |  04 Mar 2021 | Added training instructions  |  |
 |  07 Mar 2021 | Official beta version  |  |
+|  1 Mar 2021 | Added Quote of the Day demo app  | https://gitlab.com/quote-of-the-day/quote-of-the-day by Jim Conallen |
 |   |   |   | 
 
 
@@ -388,15 +389,15 @@ oc delete -n humio-logging pods -l k8s-app=humio-fluentbit
 
 ### Create Kubernetes Observer for the Demo Applications
 
-Do this for RobotShop
+Do this for RobotShop and QuoteOfTheDay
 
 * In CP4WAIOPS go into `Define` / `Data and tool integrations` / `Advanced` / `Manage ObserverJobs` / `Add a new Job`
 * Select `Kubernetes` / `Configure`
 * Choose “local”
-* Set Unique ID to “<app-namespace>” (robot-shop, ...)
+* Set Unique ID to “<app-namespace>” (robot-shop, qotd...)
 * Set Datacenter (I use "demo")
 * Set `Correlate` to `true`
-* Set Namespace to “<app-namespace>” (robot-shop, ...)
+* Set Namespace to “<app-namespace>” (robot-shop, qotd ...)
 * Set Provider to whatever you like (usually I set it to “listenJob” as well)
 * `Save`
 
@@ -425,6 +426,7 @@ Launch the following:
 
 ```bash
 ./tools/5_topology/create-merge-topology-robotshop.sh
+./tools/5_topology/create-merge-topology-qotd.sh
 
 ```
 
@@ -435,11 +437,24 @@ Please manually re-run the Kubernetes Observer to make sure that the merge has b
 
 ### Create AIOps Application
 
+#### Robotshop
+
 * In CP4WAIOPS go into `Operate` / `Application Management` 
 * Click `Create Application`
 * Select `robot-shop` namespace
 * Click `Add to Application`
 * Name your Application (RobotShop)
+* If you like check `Mark as favorite`
+* Click `Save`
+
+
+#### Quote of the Day
+
+* In CP4WAIOPS go into `Operate` / `Application Management` 
+* Click `Create Application`
+* Select `qotd` namespace
+* Click `Add to Application`
+* Name your Application (Quote of the Day)
 * If you like check `Mark as favorite`
 * Click `Save`
 
@@ -475,7 +490,7 @@ You have to define the following Webhooks in Event Manager (NOI):
 * `Administration` / `Integration with other Systems`
 * `Incoming` / `New Integration`
 * `Webhook`
-* Name it `Generic`
+* Name it `Demo Generic`
 * Jot down the WebHook URL
 * Click on `Optional event attributes`
 * Scroll down and click on the + sign for `URL`
@@ -548,6 +563,17 @@ Create a template for RobotShop:
 * Add tag `app:robotshop`
 * Save
 
+Create a template for QOTD:
+
+* Search for `qotd-web` (deployment)
+* Create Topology 3 Levels
+* Name the template (robotshop)
+* Select `Namespace` in `Group type`
+* Enter `qotd_` for `Name prefix`
+* Select `Application` 
+* Add tag `app:qotd`
+* Save
+
 
 
 ### Create grouping Policy
@@ -588,7 +614,7 @@ Then
 ---------------------------------------------------------------------------------------------------------------
 ## Training
 ------------------------------------------------------------------------------
-### Train Log Anomaly
+### Train Log Anomaly - RobotShop
 
 #### Prerequisites
 
@@ -606,14 +632,14 @@ Get it from Humio --> `Owl` in the top right corner / `Your Account` / `API Toke
 
 * In the CP4WAIOPS "Hamburger" Menu select `Operate`/`Data and tool integrations`
 * Under `Humio`, click on `Add Integration`
-* Name it `HumioRobot`
+* Name it `Humio`
 * Paste the URL from above (`Humio service URL`)
 * Paste the Token from above (`API key`)
 * In `Filters (optional)` put the following:
 
 	```yaml
-	"kubernetes.namespace_name" = robot-shop
-	| "kubernetes.container_name" = /web|ratings|catalogue/
+	"kubernetes.namespace_name" = /robot-shop|qotd/
+	| "kubernetes.container_name" != load | "kubernetes.container_name" != qotd-load
 	```
 * Click `Test Connection`
 * Leave `Data Flow` in the `**off**` position ❗
@@ -648,7 +674,7 @@ Get it from Humio --> `Owl` in the top right corner / `Your Account` / `API Toke
 
 #### Load Kafka Training Data
 
-First untip the file ./tools/8_training/2_logs/robotshop-12h.json.zip
+First unzip the file ./tools/8_training/2_logs/robotshop-12h.json.zip
 
 ```bash
 cd ./tools/8_training/2_logs/
@@ -661,7 +687,7 @@ cd -
 Run the script to inject training data:
 
 ```bash
-./tools/8_training/train-logs.sh
+./tools/8_training/train-logs-robotshop.sh
 ```
 This should not take more than 15-20 minutes.
 
@@ -675,7 +701,7 @@ oc exec -it $(oc get po |grep aimanager-aio-ai-platform-api-server|awk '{print$1
 bash-4.4$ curl -u elastic:$ES_PASSWORD -XGET https://elasticsearch-ibm-elasticsearch-ibm-elasticsearch-srv.aiops.svc.cluster.local:443/_cat/indices  --insecure | grep logtrain | sort
 ```
 
-You should get something like this:
+You should get something like this (for 20210505 and 20210506):
 
 ```bash
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
@@ -747,7 +773,279 @@ First we have to create some Events to train on.
 * Run the Event Generation for 2-3 minutes
 	
 	```bash
-	./tools/8_training/train-events.sh
+	./tools/8_training/train-events-robotshop.sh.sh
+	```
+
+#### Create Training Definition
+
+* In the CP4WAIOPS "Hamburger" Menu select `Operate`/`AI model management`
+* Select `Event grouping service`
+* Select `Create Training Definition`
+* Select `Add Data`
+* Select `Last 7 Days` but set the end date to tomorrow
+* Click `Next`
+* Name it "EventGrouping"
+* Click `Next`
+* Click `Create`
+
+
+#### Train the model
+
+* In the training definition click on `Actions` / `Start Training`
+
+After successful training you should get: 
+
+![](./pics/training2.png)
+
+The "Needs improvement" is no concern for the time being.
+
+* In the training definition click on `Actions` / `Deploy`
+
+#### Enable Event Grouping
+
+* In the CP4WAIOPS "Hamburger" Menu select `Operate`/`Data and tool integrations`
+* Under `Kafka`, click on `1 integration`
+* Select `noi-default`
+* Scroll down and select `Data feed for continuous AI training and anomaly detection`
+* Switch `Data Flow` to `on`
+
+
+
+
+
+
+
+
+### Train Incident Similarity
+
+
+ ❗ Big ugly HACK!
+ ⚠️ **This is officially unsupported!**
+
+#### Prerequisite - install old (and unsupported) model-train-console
+
+Run the following and make sure the Pod is running:
+
+```bash
+./tools/8_training/install-training-console.sh
+```
+
+Wait for the Pod to become available.
+
+
+#### Incidents Similarity Training
+
+
+Run the following:
+
+```bash
+./tools/8_training/train-incidents-robotshop.sh
+```
+
+This will:
+
+1. upload the training files for the application to the training pod
+1. output the code that you will have to run in the training pod and 
+1. open a shell in the training pod where you can run the commands from step 2.
+
+So just start the script and wait until you get to the prompt.
+
+Then copy the code a bit further up
+
+![](./pics/train0.png)
+
+
+and paste/execute the code in the pod.
+
+![](./pics/train1.png)
+
+
+This will train the three similar incident models for the demo applications.
+
+##### To come:
+❗ A more official way is in the works, in short:
+
+- Create Dummy SNOW integration (with Live data for initial AI training)
+- Create `Training Definition`
+- Stream normalized data into Kafka Topic `watsonaiops.incident`
+
+❗ This has not been tested and I just put this here for documentation!
+
+
+
+
+
+
+
+
+
+
+
+
+---
+### Train Log Anomaly - Quote of the Day
+
+#### Prerequisites
+
+##### Humio URL
+
+- Get the Humio Base URL from your browser
+- Add at the end `/api/v1/repositories/aiops/query`
+
+
+##### Accounts Token
+
+Get it from Humio --> `Owl` in the top right corner / `Your Account` / `API Token
+`
+#### Create Humio Integration
+
+If you havent' done this for Robotshop (this is only needed once)
+
+* In the CP4WAIOPS "Hamburger" Menu select `Operate`/`Data and tool integrations`
+* Under `Humio`, click on `Add Integration`
+* Name it `Humio`
+* Paste the URL from above (`Humio service URL`)
+* Paste the Token from above (`API key`)
+* In `Filters (optional)` put the following:
+
+	```yaml
+	"kubernetes.namespace_name" = /robot-shop|qotd/
+	| "kubernetes.container_name" != load | "kubernetes.container_name" != qotd-load
+	```
+* Click `Test Connection`
+* Leave `Data Flow` in the `**off**` position ❗
+* Select `Live data for continuous AI training and anomaly detection`
+* Click `Save`
+
+
+#### Create Kafka Training Integration
+
+If you havent' done this for Robotshop (this is only needed once)
+
+* In the CP4WAIOPS "Hamburger" Menu select `Operate`/`Data and tool integrations`
+* Under `Kafka`, click on `Add Integration`
+* Name it `HumioInject`
+* Select `Data Source` / `Logs`
+* Select `Mapping Type` / `Humio`
+* Paste the following in `Mapping` (the default is **incorrect**!:
+
+	```json
+	{
+	"codec": "humio",
+	"message_field": "@rawstring",
+	"log_entity_types": "kubernetes.namespace_name,kubernetes.container_hash,kubernetes.host,kubernetes.container_name,kubernetes.pod_name",
+	"instance_id_field": "kubernetes.container_name",
+	"rolling_time": 10,
+	"timestamp_field": "@timestamp"
+	}
+	```
+	
+* Toggle `Data Flow` to the `ON` position
+* Select `Data feed for initial AI Training`
+* Click `Save`
+
+
+#### Load Kafka Training Data
+
+First unzip the file ./tools/8_training/2_logs/QOTD-12h.json.zip
+
+```bash
+cd ./tools/8_training/2_logs/
+unzip ./QOTD-12h.json.zip
+cd -
+```
+
+
+
+Run the script to inject training data:
+
+```bash
+./tools/8_training/train-logs-qotd
+```
+This should not take more than 15-20 minutes.
+
+
+If you want to check if the training data has been loaded you can execute:
+
+```bash
+oc exec -it $(oc get po |grep aimanager-aio-ai-platform-api-server|awk '{print$1}') -- bash
+
+
+bash-4.4$ curl -u elastic:$ES_PASSWORD -XGET https://elasticsearch-ibm-elasticsearch-ibm-elasticsearch-srv.aiops.svc.cluster.local:443/_cat/indices  --insecure | grep logtrain | sort
+```
+
+You should get something like this (for 20210511):
+
+```bash
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  4264  100  4264    0     0  11462      0 --:--:-- --:--:-- --:--:-- 11431
+yellow open 1000-1000-20210511-logtrain         DiGVAYRDRg-tPx7OVoTgLg 1 1      6     0  15.5mb  15.5mb
+```
+
+
+#### Create Training Definition
+
+* In the CP4WAIOPS "Hamburger" Menu select `Operate`/`AI model management`
+* Select `Log anomaly detection`
+* Select `Create Training Definition`
+* Select `Add Data`
+* Select `05/05/04` (May 5th - dd/mm/yy) to `12/05/07` (May 12th) as date range (extend this to May 12th, to take into account the logs - created on May 11th)
+* Click `Next`
+* Name it "LogAnomaly"
+* Click `Next`
+* Click `Create`
+
+
+#### Train the model
+
+* In the training definition click on `Actions` / `Start Training`
+* This will start a precheck that should tell you after a while that you are ready for training
+* Click on `Actions` / `Start Training` again
+
+After successful training you should get: 
+
+![](./pics/training1.png)
+
+* In the training definition click on `Actions` / `Deploy`
+
+
+⚠️ If the training shows errors, please make sure that the date range of the training data is set to 21/05/04 to 21/05/07 (this is when the logs we're going to inject have been created)
+
+#### Enable Log Anomaly detection
+
+
+* In the CP4WAIOPS "Hamburger" Menu select `Operate`/`Data and tool integrations`
+* Under `Kafka`, click on `2 integrations`
+* Select `HumioInject`
+* Scroll down and select `Data feed for continuous AI training and anomaly detection`
+* Switch `Data Flow` to `on`
+* Click `Save`
+
+
+
+### Train Event Grouping
+
+
+
+#### Create Integration
+
+* In the CP4WAIOPS "Hamburger" Menu select `Operate`/`Data and tool integrations`
+* Under `Kafka`, click on `1 integration`
+* Select `noi-default`
+* Scroll down and select `Data feed for initial AI Training`
+* Toggle `Data Flow` to the `ON` position
+* Click `Save`
+
+#### Load Kafka Training Data
+
+First we have to create some Events to train on.
+
+* Adapt the file `./tools/8_training/train-events.sh` by pasting the Webhook URL from above (Generic Demo Webhook).
+* Run the Event Generation for 2-3 minutes
+	
+	```bash
+	./tools/8_training/train-events-qotd.sh
 	```
 
 #### Create Training Definition
@@ -809,7 +1107,7 @@ Wait for the Pod to become available.
 Run the following:
 
 ```bash
-./tools/8_training/train-incidents.sh
+./tools/8_training/train-incidents-qotd.sh
 ```
 
 This will:
@@ -840,7 +1138,6 @@ This will train the three similar incident models for the demo applications.
 - Stream normalized data into Kafka Topic `watsonaiops.incident`
 
 ❗ This has not been tested and I just put this here for documentation!
-
 
 
 
@@ -980,19 +1277,30 @@ Adapt the `aiops` namespace if you have changed it to something else then run:
 ```bash
 oc patch deployment ibm-nginx -p '{"spec":{"template":{"spec":{"volumes":[{"name":"external-tls-secret","secret":{"secretName": "openshift-tls-secret"}}]}}}}'
 rm openshift-tls-secret.yaml
-oc delete pod -n aiops $(oc get po -n aiops |grep aio-chatops-slack-integrator|awk '{print$1}') --force --grace-period=0
 ```
 
 Wait for the nginx pods to come up.
 ```bash
-oc get -n $NAMESPACE pods | grep nginx
+oc get -n aiops pods | grep nginx
 ```
 
 You must get two `nginx` pods running 1/1.
 
 
+#### If the integration is not working:
 
-Then I also had to run this:
+
+
+Restart the Slack integration:
+
+```bash
+oc delete pod -n aiops $(oc get po -n aiops |grep aio-chatops-slack-integrator|awk '{print$1}')
+
+oc get -n aiops pods | grep aio-chatops-slack-integrator
+```
+
+
+and/or run:
 
 ```bash
 export WAIOPS_NAMESPACE=aiops
@@ -1117,6 +1425,21 @@ You can monitor:
 # Check installation
 
 Launch the `./12_check-aiops-install.sh` script to check some elements of the installation
+
+---
+
+# TROUBLESHOOTING
+
+## Pods in Crashloop
+
+If the evtmanager-topology-merge and/or evtmanager-ibm-hdm-analytics-dev-inferenceservice are crashlooping, apply the following patches. I have only seen this happen on ROKS.
+
+```bash
+kubectl patch deployment evtmanager-topology-merge -n aiops --patch-file ./yaml/waiops/topology-merge-patch.yaml
+
+
+kubectl patch deployment evtmanager-ibm-hdm-analytics-dev-inferenceservice -n aiops --patch-file ./yaml/waiops/evtmanager-inferenceservice-patch.yaml
+```
 
 ---
 

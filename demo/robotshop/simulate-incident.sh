@@ -3,7 +3,7 @@ source ./01_config.sh
 
 banner 
 echo "--------------------------------------------------------------------------------------------------------------------------------"
-echo "Simulating Bookinfo Events"
+echo "Simulating RobotShop Events"
 echo "--------------------------------------------------------------------------------------------------------------------------------"
 
 
@@ -95,6 +95,6 @@ fi
 
 
 
-echo "Bookinfo Ratings outage simulation.... Done...."
+echo "RobotShop Ratings outage simulation.... Done...."
 
 

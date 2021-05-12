@@ -54,7 +54,8 @@ aimanager-aio-controller
 oc exec -it $(oc get po |grep aimanager-aio-ai-platform-api-server|awk '{print$1}') -- bash curl -u elastic:$ES_PASSWORD -XGET https://elasticsearch-ibm-elasticsearch-ibm-elasticsearch-srv.aiops.svc.cluster.local:443/_cat/indices  --insecure | grep logtrain | sort
 
 
-
+oc exec -it $(oc get po |grep aimanager-aio-ai-platform-api-server|awk '{print$1}') -- bash
+curl -u elastic:$ES_PASSWORD -XGET https://elasticsearch-ibm-elasticsearch-ibm-elasticsearch-srv.aiops.svc.cluster.local:443/_cat/indices  --insecure | grep logtrain | sort
 
 https://pages.github.ibm.com/watson-ai4it/zeno-connection-manager/#/Connections/getKDCConnections
 

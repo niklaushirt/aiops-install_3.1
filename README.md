@@ -20,9 +20,21 @@ The working repo might contain some newer commits and fixes:
 |  03 Mar 2021 | Removed Bookinfo from Scripts  |  ❗RobotShop is the way forward  |
 |  04 Mar 2021 | Added training instructions  |  |
 |  07 Mar 2021 | Official beta version  |  |
+|  1 Mar 2021 | Added Quote of the Day demo app  | https://gitlab.com/quote-of-the-day/quote-of-the-day by Jim Conallen |
 |   |   |   | 
 
 
+
+## Show it
+
+### Offline Click Through Demo
+
+If you need an easy and fast way to demo AIOps in an "almost real" way you can use the Click Through Demo built with PowerPoint.
+
+
+The file is [AIOps INTERACTIVE DEMO 3.1 2021](./AIOps_INTERACTIVE_DEMO_2021_3.1_V1.ppsx) in this repository.
+
+**NEW:** I have added a short [Demo Walkthrough](https://ibm.box.com/s/8kxbb50dt4vkari2gsiw0hrin9gi6ivp) video.
 
 
 ## Install it

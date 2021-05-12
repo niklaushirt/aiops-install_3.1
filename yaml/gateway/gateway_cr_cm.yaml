@@ -184,7 +184,7 @@ data:
     REPLICATE INSERTS
        FROM TABLE 'alerts.status'
        USING MAP 'StatusMap'
-       FILTER WITH '(Severity>2) AND AlertGroup=\'robot-shop\'';
+       FILTER WITH '(Severity>2) AND ((AlertGroup = \'robot-shop\') OR (AlertGroup = \'qotd\'))';
   transport.properties: >-
     kafkaClientMode=PRODUCER
 

@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qotd-usecase
+  namespace: qotd
+  labels:
+    app: qotd
+    tier: load
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qotd-usecase
+  template:
+    metadata:
+      labels:
+        app: qotd-usecase
+    spec:
+      containers:
+        - name: main
+          image: registry.gitlab.com/quote-of-the-day/qotd-usecase-generator:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3012
+              protocol: TCP
+          env:
+            - name: LOCAL_LOGGING
+              value: "false"
+            - name: QOTD_WEB_HOST
+              value: "qotd-web.qotd.svc.cluster.local:3000"
+            - name: QOTD_WEB_SVC
+              value: "qotd-web-svc.qotd.svc.cluster.local:8080"
+            - name: QOTD_QUOTE_HOST
+              value: "qotd-quote.qotd.svc.cluster.local:3001"
+            - name: QOTD_QUOTE_SVC
+              value: "qotd-quote-svc.qotd.svc.cluster.local:3001"
+            - name: QOTD_AUTHOR_HOST
+              value: "qotd-author.qotd.svc.cluster.local:3002"
+            - name: QOTD_AUTHOR_SVC
+              value: "qotd-author-svc.qotd.svc.cluster.local:3001"
+            - name: QOTD_IMAGE_HOST
+              value: "qotd-image.qotd.svc.cluster.local:3003"
+            - name: QOTD_IMAGE_SVC
+              value: "qotd-image-svc.qotd.svc.cluster.local:3003"
+            - name: QOTD_RATING_HOST
+              value: "qotd-rating.qotd.svc.cluster.local:3004"
+            - name: QOTD_RATING_SVC
+              value: "qotd-rating-svc.qotd.svc.cluster.local:3004"
+            - name: QOTD_PDF_HOST
+              value: "qotd-pdf.qotd.svc.cluster.local:3005"
+            - name: QOTD_PDF_SVC
+              value: "qotd-pdf-svc.qotd.svc.cluster.local:3005"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qotd-usecase
+  namespace: qotd
+  labels:
+    app: qotd
+    tier: load
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3012
+      targetPort: 3012
+      protocol: TCP
+      name: http
+  selector:
+    app: qotd-usecase
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: qotd-usecase
+  namespace: qotd
+  labels:
+    app: qotd
+    tier: load
+spec:
+  path: /
+  to:
+    kind: Service
+    name: qotd-usecase
+  port:
+    targetPort: http
+  tls:
+    termination: edge

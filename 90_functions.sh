@@ -248,6 +248,52 @@ export INDENT=""
 
 
 
+
+            if [[ $INSTALL_DEMO == "true" ]]; 
+            then
+                header2Begin "Demo Apps - Details"
+                        
+                            appURL=$(oc get routes -n robot-shop web  -o jsonpath="{['spec']['host']}")
+                            __output "    RobotShop:"
+                            __output "        APP URL:           http://$appURL/"
+    
+                            __output ""
+                            appURL=$(oc get routes -n qotd qotd-web  -o jsonpath="{['spec']['host']}")
+                            appURLLoad=$(oc get routes -n qotd qotd-load  -o jsonpath="{['spec']['host']}")
+                            appURLIncident=$(oc get routes -n qotd qotd-usecase  -o jsonpath="{['spec']['host']}")
+                            __output "    Quote of the Day:"
+                            __output "        APP      URL:      http://$appURL/"
+                            __output "        LOAD     URL:      http://$appURLLoad/"
+                            __output "        INCIDENT URL:      http://$appURLIncident/"
+
+
+                            __output ""
+                            appURL=$(oc get routes -n kubetoy kubetoy  -o jsonpath="{['spec']['host']}")
+                
+                            __output "    Kubetoy:"
+                            __output "        APP      URL:      http://$appURL/"
+                       
+
+                header2End "Demo Apps - Details"
+            fi
+
+
+
+         
+                header2Begin "Flink Task Manager"
+                        
+                            appURL=$(oc get routes -n aiops job-manager  -o jsonpath="{['spec']['host']}")
+                            __output "    Flink Task Manager:"
+                            __output "        APP URL:           https://$appURL/"
+    
+                  
+
+                header2End "Flink Task Manager"
+  
+
+
+
+
             MYFS_READY=$(oc get pods -n rook-ceph | grep "rook-ceph-mds-myfs" | grep "Running" | grep "1/1" || true) 
             if [[ $MYFS_READY =~ "Running" ]]; 
             then

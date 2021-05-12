@@ -18,4 +18,4 @@ spec:
   replicationTypes:
   - INSERTS
   virtualPairName: AGG_V
-  filter: (Severity>2) AND (AlertGroup = \'robot-shop\')
+  filter: (Severity>2) AND ((AlertGroup = \'robot-shop\') OR (AlertGroup = \'qotd\'))

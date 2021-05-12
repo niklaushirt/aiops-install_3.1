@@ -272,6 +272,25 @@ header1Begin "Post-Install - Independent from CP4WAIOPS"
                     header3End
                 fi
 
+
+                APP_INSTALLED=$(oc get ns qotd || true) 
+                if [[ $APP_INSTALLED =~ "Active" ]]; 
+                then
+                    __output "     ⭕ Quote of the Day already installed... Skipping"
+                else
+                    header2Begin "Install Quote of the Day"
+                    oc new-project qotd
+                    oc adm policy add-scc-to-user anyuid -z default
+                    oc apply -f ./demo_install/qotd/k8s
+                        
+                        __output "      ✅ OK"
+
+                    header3End
+                fi
+
+
+
+
             else
                 __output "     ❌ Demo Apps are not enabled... Skipping"
             fi
@@ -431,12 +450,12 @@ fi
 
             header3Begin "Patch evtmanager-topology-merge"
 
-               kubectl patch deployment evtmanager-topology-merge -n aiops --patch-file ./yaml/waiops/topology-merge-patch.yaml || true
+               oc patch deployment evtmanager-topology-merge -n aiops --patch-file ./yaml/waiops/topology-merge-patch.yaml || true
                 __output "      ✅ OK"
             header3End
 
             header3Begin "Patch evtmanager-ibm-hdm-analytics-dev-inferenceservice"
-                kubectl patch deployment evtmanager-ibm-hdm-analytics-dev-inferenceservice -n aiops --patch-file ./yaml/waiops/evtmanager-inferenceservice-patch.yaml
+                oc patch deployment evtmanager-ibm-hdm-analytics-dev-inferenceservice -n aiops --patch-file ./yaml/waiops/evtmanager-inferenceservice-patch.yaml
                 __output "      ✅ OK"
             header3End
 
@@ -465,7 +484,7 @@ fi
             header3End
 
             header3Begin "Adapt Gateway to be able to connect (HACK)"
-                kubectl apply -n aiops -f ./yaml/gateway/gateway_cr_cm.yaml || true
+                oc apply -n aiops -f ./yaml/gateway/gateway_cr_cm.yaml || true
                 oc delete pod -n aiops $(oc get po -n aiops|grep event-gateway-generic|awk '{print$1}') || true
                 __output "      ✅ OK"
             header3End

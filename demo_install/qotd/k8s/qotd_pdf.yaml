@@ -1,0 +1,108 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: qotd-pdf
+  namespace: qotd
+  labels:
+    app: qotd
+    tier: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qotd-pdf
+  template:
+    metadata:
+      labels:
+        app: qotd-pdf
+    spec:
+      volumes:
+        - name: settings
+          configMap:
+            name: qotd-pdf-factory-settings
+      restartPolicy: Always
+      containers:
+        - name: qotd-pdf
+          image: registry.gitlab.com/quote-of-the-day/qotd-pdf-service:latest
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: settings
+              mountPath: /app/data
+          ports:
+            - name: http
+              containerPort: 3005
+              protocol: TCP
+            - name: svc
+              containerPort: 8085
+              protocol: TCP
+          env:
+            - name: LOCAL_LOGGING
+              value: "false"
+            - name: ENABLE_INSTANA
+              value: "true"
+            - name: QUOTES_SVC
+              value: "qotd-quote.qotd.svc.cluster.local:3001"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3005
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "25m"
+              memory: "40Mi"
+            limits:
+              cpu: "200m"
+              memory: "200Mi"
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: qotd-pdf-factory-settings
+  namespace: qotd
+labels:
+    app: qotd
+    tier: api
+data:
+  factory_settings.json: |-
+    {
+        "api": {"mean": 100, "stdev": 200, "min":10,"max":400},
+        "cpu": {"mean": 0.35, "stdev": 0.5, "min":0,"max":1},
+        "mem": {"mean": 2548570, "stdev": 250000, "min":204857, "max":4718592}
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qotd-pdf
+  labels:
+    app: qotd
+    tier: api
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3005
+      targetPort: 3005
+      protocol: TCP
+      name: http
+  selector:
+    app: qotd-pdf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qotd-pdf-svc
+  labels:
+    app: qotd
+    tier: api
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8085
+      targetPort: 8085
+      protocol: TCP
+      name: svc
+  selector:
+    app: qotd-pdf
+
