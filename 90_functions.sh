@@ -253,22 +253,22 @@ export INDENT=""
             then
                 header2Begin "Demo Apps - Details"
                         
-                            appURL=$(oc get routes -n robot-shop web  -o jsonpath="{['spec']['host']}")
+                            appURL=$(oc get routes -n robot-shop web  -o jsonpath="{['spec']['host']}")|| true
                             __output "    RobotShop:"
                             __output "        APP URL:           http://$appURL/"
     
                             __output ""
-                            appURL=$(oc get routes -n qotd qotd-web  -o jsonpath="{['spec']['host']}")
-                            appURLLoad=$(oc get routes -n qotd qotd-load  -o jsonpath="{['spec']['host']}")
-                            appURLIncident=$(oc get routes -n qotd qotd-usecase  -o jsonpath="{['spec']['host']}")
+                            appURL=$(oc get routes -n qotd qotd-web  -o jsonpath="{['spec']['host']}")|| true
+                            appURLLoad=$(oc get routes -n qotd qotd-load  -o jsonpath="{['spec']['host']}")|| true
+                            appURLIncident=$(oc get routes -n qotd qotd-usecase  -o jsonpath="{['spec']['host']}")|| true
                             __output "    Quote of the Day:"
-                            __output "        APP      URL:      http://$appURL/"
-                            __output "        LOAD     URL:      http://$appURLLoad/"
-                            __output "        INCIDENT URL:      http://$appURLIncident/"
+                            __output "        APP      URL:      https://$appURL/"
+                            __output "        LOAD     URL:      https://$appURLLoad/"
+                            __output "        INCIDENT URL:      https://$appURLIncident/"
 
 
                             __output ""
-                            appURL=$(oc get routes -n kubetoy kubetoy  -o jsonpath="{['spec']['host']}")
+                            appURL=$(oc get routes -n kubetoy kubetoy  -o jsonpath="{['spec']['host']}")|| true
                 
                             __output "    Kubetoy:"
                             __output "        APP      URL:      http://$appURL/"

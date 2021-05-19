@@ -48,6 +48,7 @@ EOF"
         -H 'Cookie: d291eb4934d76f7f45764b830cdb2d63=90c3dffd13019b5bae8fd5a840216896' \
         -d $"${line}">/dev/null 2>&1
       echo "----"
+      sleep 2
     done < "$input"
 
 

@@ -18,14 +18,6 @@ export CONNECTION_NAME=$(jq '.[] | select(.connection_type=="humio") | .connecti
 
 
 
-echo "***************************************************************************************************************************************************"
-echo "  "
-echo "   🔎  Training for Log Anomaly"
-echo "  "
-echo "           Humio Connection    : $CONNECTION_NAME"
-echo "  "
-echo "***************************************************************************************************************************************************"
-  
 
   read -p "❗ Are you really, really, REALLY sure you want to reset the demo? [y,N] " DO_COMM
   if [[ $DO_COMM == "y" ||  $DO_COMM == "Y" ]]; then
@@ -35,6 +27,8 @@ echo "**************************************************************************
     exit 1
   fi
   
+
+
 
 echo ""
 echo ""
@@ -104,12 +98,7 @@ oc get kafkatopic -n $WAIOPS_NAMESPACE| grep logs-humio | awk '{print $1}' | xar
 echo " ✅ OK"
 
 
-echo ""
-echo ""
-echo "--------------------------------------------------------------------------------------------------------------------------------"
-echo "Delete Slack Channels"
-echo "--------------------------------------------------------------------------------------------------------------------------------"
-./reset-slack-no-interation.sh &
+
 
 echo ""
 echo ""
@@ -214,6 +203,15 @@ oc get kafkatopic -n $WAIOPS_NAMESPACE
 echo " ✅ OK"
 
 
+
+echo ""
+echo ""
+echo "--------------------------------------------------------------------------------------------------------------------------------"
+echo "Empty Slack Channels"
+echo "--------------------------------------------------------------------------------------------------------------------------------"
+./reset-slack-no-interation.sh &
+echo " ✅ OK: Running..."
+
 echo ""
 echo ""
 echo "--------------------------------------------------------------------------------------------------------------------------------"
@@ -306,9 +304,9 @@ echo "--------------------------------------------------------------------------
 
 
 
-oc delete pod $(oc get pods | grep log-anomaly-detector | awk '{print $1;}') --force --grace-period=0
-oc delete pod $(oc get pods | grep aimanager-aio-event-grouping | awk '{print $1;}') --force --grace-period=0
-oc delete pod $(oc get pods | grep flink-task-manager-0 | awk '{print $1;}') --force --grace-period=0
+oc delete pod $(oc get pods | grep log-anomaly-detector | awk '{print $1;}') --force --grace-period=0|| true
+oc delete pod $(oc get pods | grep aimanager-aio-event-grouping | awk '{print $1;}') --force --grace-period=0|| true
+oc delete pod $(oc get pods | grep flink-task-manager-0 | awk '{print $1;}') --force --grace-period=0|| true
 
 #echo " ✅ OK"
 

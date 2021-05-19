@@ -2,6 +2,15 @@
 source ./01_config.sh
 
 banner 
+
+echo ""
+echo "***************************************************************************************************************************************************"
+echo "***************************************************************************************************************************************************"
+echo ""
+echo " 🚀  CP4WAIOPS Simulate Ratings Outage for QOTD"
+echo ""
+echo "***************************************************************************************************************************************************"
+ 
 echo "--------------------------------------------------------------------------------------------------------------------------------"
 echo "Simulating QOTD Events"
 echo "--------------------------------------------------------------------------------------------------------------------------------"
@@ -20,7 +29,7 @@ else
 
 password=$(oc get secrets | grep omni-secret | awk '{print $1;}' | xargs oc get secret -o jsonpath --template '{.data.OMNIBUS_ROOT_PASSWORD}' | base64 --decode)
 oc get pods | grep ncoprimary-0 | awk '{print $1;}' | xargs -I{} oc exec {} -- bash -c "/opt/IBM/tivoli/netcool/omnibus/bin/nco_sql -server AGG_P -user root -passwd ${password} << EOF
-delete from alerts.status where AlertGroup='robot-shop';
+delete from alerts.status where AlertGroup='qotd';
 go
 exit
 EOF"
@@ -46,7 +55,10 @@ EOF"
 
 
 
-sleep 5
+    echo "--------------------------------------------------------------------------------------------------------------------------------"
+    echo "Preparing Logs"
+    echo "--------------------------------------------------------------------------------------------------------------------------------"
+
 
 
    echo "" > /tmp/qotdErrorLogs.json
@@ -56,10 +68,6 @@ sleep 5
       export my_timestamp=$(date +%s)000
       echo ${line} | gsed "s/@TIMESTAMP@/$my_timestamp/"  >> /tmp/qotdErrorLogs.json
     done < "$input"
-
-
-
-
 
 
     export LOGS_TOPIC=$(oc get KafkaTopic -n aiops | grep logs-humio| awk '{print $1;}')
@@ -75,10 +83,6 @@ sleep 5
       
     
     kafkacat -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512  -X sasl.username=token -X sasl.password=$sasl_password -b $BROKER -P -t $LOGS_TOPIC -l /tmp/qotdErrorLogs.json>/dev/null 2>&1
-
-
-
-
 
 
     echo "--------------------------------------------------------------------------------------------------------------------------------"

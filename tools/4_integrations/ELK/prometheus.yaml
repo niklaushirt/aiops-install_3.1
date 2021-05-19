@@ -1,0 +1,12 @@
+global:
+  resolve_timeout: 5m
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1m
+  receiver: 'web.hook'
+receivers:
+- name: 'web.hook'
+  webhook_configs:
+  - url: 'https://netcool-evtmanager.apps.sabine.coc-ibm.com/norml/webhook/prometheus/cfd95b7e-3bc7-4006-a4a8-a73a79c71255/1c0d1d1c-292d-4de0-94d5-4cc5168c0e22/lXrc_EgsyTD02Mgg5IIfXsWHw5eYT6Lookf57hgM7jE'

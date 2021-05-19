@@ -273,21 +273,7 @@ header1Begin "Post-Install - Independent from CP4WAIOPS"
                 fi
 
 
-                APP_INSTALLED=$(oc get ns qotd || true) 
-                if [[ $APP_INSTALLED =~ "Active" ]]; 
-                then
-                    __output "     ⭕ Quote of the Day already installed... Skipping"
-                else
-                    header2Begin "Install Quote of the Day"
-                    oc new-project qotd
-                    oc adm policy add-scc-to-user anyuid -z default
-                    oc apply -f ./demo_install/qotd/k8s
-                        
-                        __output "      ✅ OK"
-
-                    header3End
-                fi
-
+    
 
 
 
