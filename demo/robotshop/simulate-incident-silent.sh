@@ -5,6 +5,15 @@ banner
 
 echo "."
 
+if [[ $NETCOOL_WEBHOOK_GENERIC == "not_configured" ]] || [[ $NETCOOL_WEBHOOK_GENERIC == "" ]];
+then
+      echo "❗ Webhook not configured. Aborting..."
+      exit 1
+fi
+
+
+oc project $WAIOPS_NAMESPACE>/dev/null 2>&1
+
 ./robotshop/simulate-log-silent.sh &
 
 

@@ -12,11 +12,11 @@ echo "    - Slack Channels"
 echo "    - Netcool Events"
 echo "***************************************************************************************************************************************************"
 
-oc exec -it $(oc get po |grep aimanager-aio-controller|awk '{print$1}') -- curl -k -X GET https://localhost:9443/v2/connections/application_groups/1000/applications/1000/ > test.json
-export CONNECTION_ID=$(jq '.[] | select(.connection_type=="humio") | .connection_id' test.json | tr -d '"')
-export CONNECTION_NAME=$(jq '.[] | select(.connection_type=="humio") | .connection_config.display_name' test.json | tr -d '"') 
+oc exec -it $(oc get po |grep aimanager-aio-controller|awk '{print$1}') -- curl -k -X GET https://localhost:9443/v2/connections/application_groups/1000/applications/1000/ > tmp_connection.json
+export CONNECTION_ID=$(jq '.[] | select(.connection_type=="humio") | .connection_id' tmp_connection.json | tr -d '"')
+export CONNECTION_NAME=$(jq '.[] | select(.connection_type=="humio") | .connection_config.display_name' tmp_connection.json | tr -d '"') 
 
-
+rm -f tmp_connection.json
 
 
   read -p "❗ Are you really, really, REALLY sure you want to reset the demo? [y,N] " DO_COMM

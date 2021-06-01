@@ -1,0 +1,87 @@
+---
+# Source: ibm-watson-aiops-dev-install/templates/00-secure-gateway-acl-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aiops-dev-test-aiopsdev-secure-gateway
+  namespace: default
+  labels:
+    app.kubernetes.io/name: "aiopsDev"
+    helm.sh/chart: "ibm-watson-aiops-dev-install"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "aiops-dev-test"
+    release: "aiops-dev-test"
+    app.kubernetes.io/component: "secure-gateway"
+data:
+  gateway_acl.list: "acl allow :"
+---
+# Source: ibm-watson-aiops-dev-install/templates/70-secure-gateway-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aiops-dev-test-aiopsdev-secure-gateway
+  namespace: default
+  labels:
+    app.kubernetes.io/name: "aiopsDev"
+    helm.sh/chart: "ibm-watson-aiops-dev-install"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "aiops-dev-test"
+    release: "aiops-dev-test"
+    app.kubernetes.io/component: "secure-gateway"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 25
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "aiopsDev"
+      helm.sh/chart: "ibm-watson-aiops-dev-install"
+      app.kubernetes.io/managed-by: "Helm"
+      app.kubernetes.io/instance: "aiops-dev-test"
+      release: "aiops-dev-test"
+      app.kubernetes.io/component: "secure-gateway"
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: "aiopsDev"
+        helm.sh/chart: "ibm-watson-aiops-dev-install"
+        app.kubernetes.io/managed-by: "Helm"
+        app.kubernetes.io/instance: "aiops-dev-test"
+        release: "aiops-dev-test"
+        app.kubernetes.io/component: "secure-gateway"
+    spec:
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: beta.kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+      
+      containers:
+      - name: "secure-gateway"
+        image: ibmcom/secure-gateway-client:latest
+        envFrom:
+        - secretRef:
+            name: ibm-secure-gateway
+        command:
+        - node
+        - lib/secgwclient.js
+        args:
+        - $(GATEWAY_ID)
+        - --gateway=https://$(GATEWAY_URL)
+        - --sectoken=$(GATEWAY_TOKEN)
+        - --aclfile=/acl/gateway_acl.list
+        - --loglevel=DEBUG
+        - --noUI
+        volumeMounts:
+        - mountPath: /acl
+          name: acl
+      volumes:
+      - name: acl
+        configMap:
+          name: aiops-dev-test-aiopsdev-secure-gateway

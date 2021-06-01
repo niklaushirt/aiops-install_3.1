@@ -135,7 +135,7 @@ echo ""
 echo "***************************************************************************************************************************************************"
 
 
-oc project aiops
+oc project $WAIOPS_NAMESPACE
 oc exec -it $(oc get po |grep model-train-console|awk '{print$1}') bash
 
 

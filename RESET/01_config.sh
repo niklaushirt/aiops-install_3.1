@@ -13,8 +13,9 @@ export SLACK_REACTIVE=".*reactive.*"
 export SLACK_ROBOT=".*robotshop-in-progress.*"
 
 # SLACK TOKEN (User OAuth Token - must start with xoxp-*)
-# See documentation under "Create User OAUTH Token"
+# See documentation under "Create User OAUTH Token"  -  not_configured
 export SLACK_TOKEN=not_configured
+
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

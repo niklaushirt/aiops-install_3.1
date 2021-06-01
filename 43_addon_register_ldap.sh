@@ -86,7 +86,7 @@ header3Begin "Register LDAP Users in Common Services"
             #echo         cloudctl iam ldap-create "LDAP" --basedn "$BASE_DN" --server "ldap://openldap.default:389" --binddn "$BIND_DN" --binddn-password "$LDAP_ADMIN_PASSWORD" -t "Custom" --group-filter "(&(cn=%v)(objectclass=groupOfUniqueNames))" --group-id-map "*:cn" --group-member-id-map "groupOfUniqueNames:uniqueMember" --user-filter "(&(uid=%v)(objectclass=Person))" --user-id-map "*:uid"
 
             cloudctl iam ldap-create "LDAP" --basedn "$BASE_DN" --server "ldap://openldap.default:389" --binddn "$BIND_DN" --binddn-password "$LDAP_ADMIN_PASSWORD" -t "Custom" --group-filter "(&(cn=%v)(objectclass=groupOfUniqueNames))" --group-id-map "*:cn" --group-member-id-map "groupOfUniqueNames:uniqueMember" --user-filter "(&(uid=%v)(objectclass=Person))" --user-id-map "*:uid"
-            TEAM_ID=$(cloudctl iam teams | awk '{print $1}' | grep zen)  # | sed -n 2p)
+            TEAM_ID=$(cloudctl iam teams | awk '{print $1}'| sed -n 2p)
             __output "      ✅ OK"
 
             __output "---------------------------------------------------------------------------------------------------------------------------"

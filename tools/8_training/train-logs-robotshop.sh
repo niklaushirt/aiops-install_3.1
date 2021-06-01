@@ -24,9 +24,9 @@ echo "**************************************************************************
 export DATA_FILE="robotshop-12h.json"
 
 
-export LOGS_TOPIC=$(oc get KafkaTopic -n aiops | grep logs-humio| awk '{print $1;}')
-export sasl_password=$(oc get secret token -n aiops --template={{.data.password}} | base64 --decode)
-export BROKER=$(oc get routes strimzi-cluster-kafka-bootstrap -n aiops -o=jsonpath='{.status.ingress[0].host}{"\n"}'):443
+export LOGS_TOPIC=$(oc get KafkaTopic -n $WAIOPS_NAMESPACE | grep logs-humio| awk '{print $1;}')
+export sasl_password=$(oc get secret token -n $WAIOPS_NAMESPACE --template={{.data.password}} | base64 --decode)
+export BROKER=$(oc get routes strimzi-cluster-kafka-bootstrap -n $WAIOPS_NAMESPACE -o=jsonpath='{.status.ingress[0].host}{"\n"}'):443
       
 
 echo "***************************************************************************************************************************************************"
@@ -51,10 +51,10 @@ echo "**************************************************************************
 
 echo "***************************************************************************************************************************************************"
 echo "🛠️ Preparing Data"
-mkdir /tmp/training/  >/dev/null 2>&1  || true
-rm /tmp/training/x*
-cp ./tools/8_training/2_logs/$DATA_FILE /tmp/training/
-cd /tmp/training/
+mkdir /tmp/training-logs/  >/dev/null 2>&1  || true
+rm /tmp/training-logs/x*
+cp ./tools/8_training/2_logs/$DATA_FILE /tmp/training-logs/
+cd /tmp/training-logs/
 split -l 1500 $DATA_FILE
 export NUM_FILES=$(ls | wc -l)
 rm $DATA_FILE
@@ -79,7 +79,7 @@ echo "   Quit with Ctrl-Z"
 
 
 ACT_COUNT=0
-for FILE in /tmp/training/*; do 
+for FILE in /tmp/training-logs/*; do 
     if [[ $FILE =~ "x"  ]]; then
         ACT_COUNT=`expr $ACT_COUNT + 1`
         echo "Injecting file ($ACT_COUNT/$(($NUM_FILES))) - $FILE"

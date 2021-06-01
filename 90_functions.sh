@@ -127,8 +127,14 @@ export INDENT=""
                 header3Begin "CP4WAIOPS"
                         __output "    AIOPS:"
                         __output "        URL:      https://cpd-aiops.$CLUSTER_NAME"
-                        __output "        User:     $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_username}' | base64 -d && echo)"
-                        __output "        Password: $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d)"
+                        __output "        ---------------------------------------------------------------------------------------------"
+                        __output "          DEMO USER:"
+                        __output "            User:     demo"
+                        __output "            Password: P4ssw0rd!"
+                        __output "        ---------------------------------------------------------------------------------------------"
+                        __output "          ADMIN USER:"
+                        __output "            User:     $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_username}' | base64 -d && echo)"
+                        __output "            Password: $(oc -n ibm-common-services get secret platform-auth-idp-credentials -o jsonpath='{.data.admin_password}' | base64 -d)"
 
                 header3End
 
@@ -143,10 +149,14 @@ export INDENT=""
 
 
                 header3Begin "Event Manager"
+                        __output "---------------------------------------------------------------------------------------------"
+                        __output "    DEMO USER:"
+                        __output "        User:     demo"
+                        __output "        Password: P4ssw0rd!"
 
                         __output "---------------------------------------------------------------------------------------------"
                         __output "    ICPADMIN USER:"
-                        __output "        User:     icpadmin"
+                        __output "        User:     icpadmin"   
                         __output "        Password: $(oc get secret evtmanager-icpadmin-secret -o json -n $WAIOPS_NAMESPACE| grep ICP_ADMIN_PASSWORD  | cut -d : -f2 | cut -d '"' -f2 | base64 -d;)"
 
                         __output "---------------------------------------------------------------------------------------------"
@@ -193,21 +203,6 @@ export INDENT=""
 
 
 
-
-            header2Begin "LDAP Connection Details"
-                    
-                        __output "    OPENLDAP:"
-                        __output "        URL:      http://openldap-admin-default.$CLUSTER_NAME/"
-                        __output "        User:     cn=admin,dc=ibm,dc=com"
-                        __output "        Password: P4ssw0rd!"
-
-
-            header2End "LDAP Connection Details"
-
-
-
-
-
             header2Begin "OCP Connection Details"
                     
 
@@ -229,6 +224,41 @@ export INDENT=""
             header2End "OCP Connection Details"
 
 
+
+            if [[ $INSTALL_DEMO == "true" ]]; 
+            then
+                header2Begin "Demo Apps - Details"
+                        
+                            appURL=$(oc get routes -n robot-shop web  -o jsonpath="{['spec']['host']}")|| true
+                            __output "    RobotShop:"
+                            __output "        APP URL:           http://$appURL/"
+
+                            __output ""
+                            appURL=$(oc get routes -n kubetoy kubetoy  -o jsonpath="{['spec']['host']}")|| true
+                
+                            __output "    Kubetoy:"
+                            __output "        APP URL:           http://$appURL/"
+                       
+
+                header2End "Demo Apps - Details"
+            fi
+
+
+
+            header2Begin "LDAP Connection Details"
+                    
+                        __output "    OPENLDAP:"
+                        __output "        URL:      http://openldap-admin-default.$CLUSTER_NAME/"
+                        __output "        User:     cn=admin,dc=ibm,dc=com"
+                        __output "        Password: P4ssw0rd!"
+
+
+            header2End "LDAP Connection Details"
+
+
+
+
+
             if [[ $INSTALL_HUMIO == "true" ]]; 
             then
                 header2Begin "HUMIO Connection Details"
@@ -247,46 +277,14 @@ export INDENT=""
             fi
 
 
-
-
-            if [[ $INSTALL_DEMO == "true" ]]; 
-            then
-                header2Begin "Demo Apps - Details"
-                        
-                            appURL=$(oc get routes -n robot-shop web  -o jsonpath="{['spec']['host']}")|| true
-                            __output "    RobotShop:"
-                            __output "        APP URL:           http://$appURL/"
-    
-                            __output ""
-                            appURL=$(oc get routes -n qotd qotd-web  -o jsonpath="{['spec']['host']}")|| true
-                            appURLLoad=$(oc get routes -n qotd qotd-load  -o jsonpath="{['spec']['host']}")|| true
-                            appURLIncident=$(oc get routes -n qotd qotd-usecase  -o jsonpath="{['spec']['host']}")|| true
-                            __output "    Quote of the Day:"
-                            __output "        APP      URL:      https://$appURL/"
-                            __output "        LOAD     URL:      https://$appURLLoad/"
-                            __output "        INCIDENT URL:      https://$appURLIncident/"
-
-
-                            __output ""
-                            appURL=$(oc get routes -n kubetoy kubetoy  -o jsonpath="{['spec']['host']}")|| true
-                
-                            __output "    Kubetoy:"
-                            __output "        APP      URL:      http://$appURL/"
-                       
-
-                header2End "Demo Apps - Details"
-            fi
-
-
-
          
                 header2Begin "Flink Task Manager"
                         
-                            appURL=$(oc get routes -n aiops job-manager  -o jsonpath="{['spec']['host']}")
+                            appURL=$(oc get routes -n $WAIOPS_NAMESPACE job-manager  -o jsonpath="{['spec']['host']}")
                             __output "    Flink Task Manager:"
                             __output "        APP URL:           https://$appURL/"
-    
-                  
+                            __output ""
+                            __output "        In Chrome: if you get blocked just type "thisisunsafe" and it will continue (you don't get any visual feedback when typing!)"
 
                 header2End "Flink Task Manager"
   

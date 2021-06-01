@@ -41,7 +41,7 @@
         # WAIOPS Storage Class (ibmc-file-gold-gid, rook-cephfs, nfs-client, ...)
         #export WAIOPS_STORAGE_CLASS_FILE=rook-cephfs
         export WAIOPS_STORAGE_CLASS_FILE=ibmc-file-gold-gid
-        #export WAIOPS_AI_MGR_STORAGE_CLASS_FILE=nfs-client
+        #export WAIOPS_STORAGE_CLASS_FILE=nfs-client
         
 
         # WAIOPS Large Storage Class (ibmc-file-gold-gid, rook-cephfs, nfs-client, ...)
@@ -62,8 +62,8 @@
     # Add-ons
     # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 
-        # Install Humio and Fluentbit (not implemented yet)
-        export INSTALL_HUMIO=true
+        # Install Humio
+        export INSTALL_HUMIO=false
 
         # Install LDAP Server
         export INSTALL_LDAP=true

@@ -3,9 +3,7 @@
 
 ## ❗ THIS IS WORK IN PROGRESS
 Please drop me a note on Slack or by mail nikh@ch.ibm.com if you find glitches or problems.
-This version is up to date as of April 27th 2021.
-The working repo might contain some newer commits and fixes:
-[https://github.com/niklaushirt/aiops-install_3.1](https://github.com/niklaushirt/aiops-install_3.1)
+
 
 # Changes
 
@@ -21,8 +19,13 @@ The working repo might contain some newer commits and fixes:
 |  04 May 2021 | Added training instructions  |  |
 |  07 May 2021 | Official beta version  |  |
 |  19 May 2021 | Various improvements  |  |
+|  20 May 2021 | Updated instructions for Slack with Secure Gateway  |  |
+|  21 May 2021 | Minor bugfixes and documentation improvements |  |
+|  26 May 2021 | Pre-canned events and logs | No need to install and configure Humio unless you want live integration |
+|  27 May 2021 | Added ServiceNow Integration |  |
 |   |   |   | 
 
+> ❗This demo supports pre-canned events and logs, so you don't need to install and configure Humio.
 
 
 ---------------------------------------------------------------------------------------------------------------
@@ -39,6 +42,7 @@ The working repo might contain some newer commits and fixes:
 1. [Configure Event Manager](#configure-event-manager)
 1. [Configure Runbooks](#configure-runbooks)
 1. [Slack integration](#slack-integration)
+1. [Service Now integration](#service-now-integration)
 1. [Some Polishing](#some-polishing)
 1. [Check Installation](#check-installation)
 
@@ -87,7 +91,9 @@ You might get away with less if you don't install some components (Humio,...)
 
 
 
+
 ### Adapt Hosts file (Fyre only)
+
 
 When using IBM Fyre on Mac you have to adapt your Hosts file.
 
@@ -118,7 +124,6 @@ When using IBM Fyre on Mac you have to adapt your Hosts file.
 		EXAMPLE: 
 		9.30.91.173   cp-console.apps.dteocp-270003bu3k-vyvrs.cp.fyre.ibm.com api.dteocp-270003bu3k-vyvrs.cp.fyre.ibm.com
 	```
-
 
 
 ### Storage Requirements
@@ -172,7 +177,6 @@ You need the following tools installed in order to follow through this guide:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew install gnu-sed
 brew install kafkacat
-brew install kafka
 # brew install jq
 ```
 
@@ -237,9 +241,12 @@ export WAIOPS_STORAGE_CLASS_LARGE_BLOCK=ibmc-file-gold-gid
 
 **Optional Components**
 
+> ❗This demo supports pre-canned events and logs, so you don't need to install and configure Humio unless you want to do a live integration (only partially covered in this document).
+
+
 ```bash
 # Install Humio
-export INSTALL_HUMIO=true
+export INSTALL_HUMIO=false
 
 # Install LDAP Server
 export INSTALL_LDAP=true
@@ -314,8 +321,12 @@ At any moment you can run `./81_check-aiops-install.sh` to check on installation
 
 
 ---------------------------------------------------------------------------------------------------------------
-## HUMIO
+## HUMIO 
 ------------------------------------------------------------------------------
+
+### This is optional 
+
+> ❗This demo supports pre-canned events and logs, so you don't need to install and configure Humio unless you want to do a live integration (only partially covered in this document).
 
 > ❗Humio is being installed by the installation script.
 
@@ -503,7 +514,7 @@ Use this json:
 Fill out the following fields and save:
 
 * Severity: `severity`
-* Summary: `summary & " - " & nodename`
+* Summary: `summary`
 * Resource name: `nodename`
 * Event type: `alertgroup`
 * Url: `url`
@@ -519,10 +530,10 @@ Optionnally you can also add `Expiry Time` from `Optional event attributes` and 
 Duplicate `Default` filter and set to global.
 
 * Name: AIOPS
-* Logic: Any
+* Logic: **Any** (!)
 * Filter:
-	* Manager like 'Inbound Webhook' 
-	* Manager = ''
+	* AlertGroup = 'CEACorrelationKeyParent'
+	* AlertGroup = 'robot-shop'
 
 #### View
 
@@ -549,7 +560,7 @@ Create a template for RobotShop:
 * Select `Namespace` in `Group type`
 * Enter `robotshop_` for `Name prefix`
 * Select `Application` 
-* Add tag `app:robotshop`
+* Add tag `namespace:robot-shop`
 * Save
 
 
@@ -594,36 +605,6 @@ Then
 ## Training
 ------------------------------------------------------------------------------
 ### Train Log Anomaly - RobotShop
-
-#### Prerequisites
-
-##### Humio URL
-
-- Get the Humio Base URL from your browser
-- Add at the end `/api/v1/repositories/aiops/query`
-
-
-##### Accounts Token
-
-Get it from Humio --> `Owl` in the top right corner / `Your Account` / `API Token
-`
-#### Create Humio Integration
-
-* In the CP4WAIOPS "Hamburger" Menu select `Operate`/`Data and tool integrations`
-* Under `Humio`, click on `Add Integration`
-* Name it `Humio`
-* Paste the URL from above (`Humio service URL`)
-* Paste the Token from above (`API key`)
-* In `Filters (optional)` put the following:
-
-	```yaml
-	"kubernetes.namespace_name" = /robot-shop/
-	| "kubernetes.container_name" != load
-	```
-* Click `Test Connection`
-* Leave `Data Flow` in the `**off**` position ❗
-* Select `Live data for continuous AI training and anomaly detection`
-* Click `Save`
 
 
 #### Create Kafka Training Integration
@@ -727,6 +708,36 @@ After successful training you should get:
 * Select `HumioInject`
 * Scroll down and select `Data feed for continuous AI training and anomaly detection`
 * Switch `Data Flow` to `on`
+* Click `Save`
+
+#### Live Humio integration (disabled by default)
+
+##### Humio URL
+
+- Get the Humio Base URL from your browser
+- Add at the end `/api/v1/repositories/aiops/query`
+
+
+##### Accounts Token
+
+Get it from Humio --> `Owl` in the top right corner / `Your Account` / `API Token
+`
+##### Create Humio Integration
+
+* In the CP4WAIOPS "Hamburger" Menu select `Operate`/`Data and tool integrations`
+* Under `Humio`, click on `Add Integration`
+* Name it `Humio`
+* Paste the URL from above (`Humio service URL`)
+* Paste the Token from above (`API key`)
+* In `Filters (optional)` put the following:
+
+	```yaml
+	"kubernetes.namespace_name" = /robot-shop/
+	| "kubernetes.container_name" != load
+	```
+* Click `Test Connection`
+* Leave `Data Flow` in the `**off**` position ❗
+* Select `Live data for continuous AI training and anomaly detection`
 * Click `Save`
 
 
@@ -986,9 +997,17 @@ user:   root
 ## Slack integration
 ------------------------------------------------------------------------------
 
-### ❗NEEDS UPDATING
 
-### Refresh ingress certificates (otherwise Slack will not validate link)
+
+### Integration 
+
+You can find the documentation for Slack integration [here](./tools/3_slack/0_slack.md) 
+
+
+
+#### If the integration is not working:
+
+##### Refresh ingress certificates (if Slack does not validate link)
 
 Run the following:
 
@@ -1029,10 +1048,10 @@ oc get -n aiops pods | grep aio-chatops-slack-integrator
 
 ```
 
-You must get two `nginx` pods running 1/1.
+You must get two `nginx` and one `aio-chatops-slack-integrator` pods running 1/1.
 
 
-#### If the integration is not working:
+##### If the integration is still not working:
 
 
 ```bash
@@ -1050,62 +1069,45 @@ rm -f cert.crt cert.key
 
 
 
-
-### Integration 
-
-More details are [in the official documentation](https://www.ibm.com/docs/en/cloud-paks/cp-waiops/3.1.0?topic=integrations-configuring-slack-integration) 
-
-Or [here](./tree/master/tools/4_integrations/slack) 
-
-
-
-Thanks Robert Barron!
-
-
-### Create User OAUTH Token
-
-This is needed for the reset scripts in order to empty/reset the Slack channels.
-
-This is based on [Slack Cleaner2](https://github.com/sgratzl/slack_cleaner2).
-
-1. Go to [Your Slack App](https://api.slack.com/apps)
-1. Select 'OAuth & Permissions' in the sidebar
-1. Scroll down to **User Token Scope** and select all scopes you need according to list below
-1. Select 'Save changes'
-2. Redeploy App if needed
-
-
-#### User Token scopes
-- `channels:read`
-- `channels:history`
-- `chat:write`
-- `files:read`
-- `files:write`
-- `groups:history`
-- `groups:read`
-- `im:history`
-- `im:read`
-- `mpim:history`
-- `mpim:read`
-- `users:read`
-
-
-
-
-
-
-
-
-
-
-
-### Change the Slash Welcome Message (optional)
+### Change the Slack Slash Welcome Message (optional)
 
 If you want to change the welcome message
 
 ```bash
 oc set env deployment/$(oc get deploy -l app.kubernetes.io/component=chatops-slack-integrator -o jsonpath='{.items[*].metadata.name }') SLACK_WELCOME_COMMAND_NAME=/aiops-help
 ```
+
+
+---------------------------------------------------------------------------------------------------------------
+## Service Now integration
+------------------------------------------------------------------------------
+
+
+
+### Integration 
+
+1. Follow [this](./tools/9_servicenow/snow-Integrate.md) document to get and configure your Service Now Dev instance with CP4WAIOPS.
+	Stop at `Testing the ServiceNow Integration`. 
+	❗❗Don’t do the training as of yet.
+2. Import the Changes from ./tools/9_servicenow/import_change.xlsx
+	1. Select `Change - All` from the right-hand menu
+	2. Right Click on `Number`in the header column
+	3. Select Import
+	![](./pics/snow3.png)
+	3. Chose the ./tools/9_servicenow/import_change.xlsx file and click `Upload`
+	![](./pics/snow4.png)
+	3. Click on `Preview Imported Data`
+	![](./pics/snow5.png)
+	3. Click on `Complete Import` (if there are errors or warnings just ignore them and import anyway)
+	![](./pics/snow6.png)
+	
+	
+3. Import the Incidents from ./tools/9_servicenow/import_incidents.xlsx
+	1. Select `Incidents - All` from the right-hand menu
+	2. Proceed as for the Changes but for Incidents
+	
+4. Now you can finish configuring your Service Now Dev instance with CP4WAIOPS by [going back](./tools/9_servicenow/snow-Integrate.md#testing-the-servicenow-integration) and continue whre you left off at `Testing the ServiceNow Integration`. 
+
 
 
 
@@ -1133,8 +1135,6 @@ oc set env deployment/$(oc get deploy -l app.kubernetes.io/component=chatops-sla
 * Click Next
 * Click Create
 
-
-### Check if data is flowing
 
 
 ### Get Passwords and Credentials
@@ -1168,152 +1168,54 @@ Launch the `./12_check-aiops-install.sh` script to check some elements of the in
 If the evtmanager-topology-merge and/or evtmanager-ibm-hdm-analytics-dev-inferenceservice are crashlooping, apply the following patches. I have only seen this happen on ROKS.
 
 ```bash
-kubectl patch deployment evtmanager-topology-merge -n aiops --patch-file ./yaml/waiops/topology-merge-patch.yaml
+oc patch deployment evtmanager-topology-merge -n aiops --patch-file ./yaml/waiops/topology-merge-patch.yaml
 
 
-kubectl patch deployment evtmanager-ibm-hdm-analytics-dev-inferenceservice -n aiops --patch-file ./yaml/waiops/evtmanager-inferenceservice-patch.yaml
-```
-
----
-
-# Optional Stuff
-
-## Create Humio Live Alerts (Optional)
-
-❗ You'll have to retrain the Event Grouping on those Events
-
-
-### Create Humio Webhook
-
-* `Administration` / `Integration with other Systems`
-* `Incoming` / `New Integration`
-* Humio
-
-Name it `Humio` and jot down the WebHook URL.
-
-
-
-### Configure Humio Notifier 
-
-**In Humio:**
-
-Go to:
-
-* `aiops` repository
-* `Alerts` / `Notifiers` 
-* `New Notifier` with the Noi Webhook URL from [above](#humio-webhook) and Skip Cert Validation
-
-
-### Create Alerts
-
-
-
-Click on Alerts -> `+ New Alert`
-
-Create the following Alerts as shown in the picture
-
-![](./pics/humio2.png)
-
-![](./pics/humio1.png)
-
-❗**IMPORTANT**: Number `2` is especially important because otherwise the messages pushed to NOI get too big and NOI cannot ingest them.
-
-
-
-#### RobotRatingsProblem
-
-```yaml
-"kubernetes.namespace_name" = "robot-shop"
-| "kubernetes.container_name" = ratings
-| @rawstring = /Database::getConnection\(\) must be an instance of PDO, null returned/i
-
-Last 5s
-
-resource.name=\"ratings\" severity= Major resource.hostname=ratings-deployment type.eventType=\"robotshop\"
-
-Notification Frequency: 1 min
+oc patch deployment evtmanager-ibm-hdm-analytics-dev-inferenceservice -n aiops --patch-file ./yaml/waiops/evtmanager-inferenceservice-patch.yaml
 ```
 
 
-#### RobotShopWebProblem
-
-```yaml
-"kubernetes.namespace_name" = "robot-shop"
-| "kubernetes.container_name" = ratings
-| @rawstring = /ERROR: Database error SQLSTATE/i
-
-Last 5s
-
-resource.name=\"catalogue\" severity=Minor resource.hostname=catalogue-deployment type.eventType=\"robotshop\"
-
-Notification Frequency: 1 min
-```
-
-#### RobotShopFrontendProblem
-
-```yaml
-"kubernetes.namespace_name" = "robot-shop"
-| "kubernetes.container_name" = ratings
-| @rawstring = /Connection refused/i
-
-Last 5s
-
-resource.name=\"web\" severity=Minor resource.hostname=web-deployment type.eventType=\"robotshop\"
-
-Notification Frequency: 1 min
-```
+## Check if data is flowing
 
 
-> You can test by creating a Notifier with https://webhook.site/
+### Check Log injection
 
+To check if logs are being injected through the demo script:
 
-### Check Alerts
+1. Launch 
 
-When you have defined your Alerts and Notifier you can test them by scaling down the pod:
-
-1. Scale down:
-
-
-	Robotshop
-	
 	```bash
-	oc scale --replicas=0  deployment ratings -n robot-shop
+	./82_monitor_kafka.sh
 	```
+2. Select option 4
 
+You should see data coming in.
 
-2. Check Alerts:
+### Check Events injection
 
-	You should get some log lines matching the alert filter:
-	
-	![](./pics/humio3.png)
-	
-	If not, either you don't receive logs or your filters/alert definitions are wrong.
-	
-2. Check Notifications:
+To check if events are being injected through the demo script:
 
-	You should get "Last triggered: ..." for each Alert:
-	
-	![](./pics/humio4.png)
-	
-	If not, your Notifier is incorrectly defined. Check the NOI Webhook URL.
+1. Launch 
 
-3. Restore apps:
-
-	Don't forget to scale them back up:
-	
-
-	
-	Robotshop
-	
 	```bash
-	oc scale --replicas=0  deployment catalogue -n robot-shop
-	oc delete pod -n robot-shop $(oc get po -n robot-shop|grep catalogue|awk '{print$1}') --force --grace-period=0
-	oc delete pod -n robot-shop $(oc get po -n robot-shop|grep user|awk '{print$1}') --force --grace-period=0
-	
+	./82_monitor_kafka.sh
 	```
+2. Select option 3
 
+You should see data coming in.
 
+### Check Stories being generated
 
+To check if stories are being generated:
+
+1. Launch 
+
+	```bash
+	./82_monitor_kafka.sh
+	```
+2. Select option 2
+
+You should see data being generated.
 
 
 

@@ -436,12 +436,12 @@ fi
 
             header3Begin "Patch evtmanager-topology-merge"
 
-               oc patch deployment evtmanager-topology-merge -n aiops --patch-file ./yaml/waiops/topology-merge-patch.yaml || true
+               oc patch deployment evtmanager-topology-merge -n $WAIOPS_NAMESPACE --patch-file ./yaml/waiops/topology-merge-patch.yaml || true
                 __output "      ✅ OK"
             header3End
 
             header3Begin "Patch evtmanager-ibm-hdm-analytics-dev-inferenceservice"
-                oc patch deployment evtmanager-ibm-hdm-analytics-dev-inferenceservice -n aiops --patch-file ./yaml/waiops/evtmanager-inferenceservice-patch.yaml
+                oc patch deployment evtmanager-ibm-hdm-analytics-dev-inferenceservice -n $WAIOPS_NAMESPACE --patch-file ./yaml/waiops/evtmanager-inferenceservice-patch.yaml || true
                 __output "      ✅ OK"
             header3End
 
@@ -470,8 +470,8 @@ fi
             header3End
 
             header3Begin "Adapt Gateway to be able to connect (HACK)"
-                oc apply -n aiops -f ./yaml/gateway/gateway_cr_cm.yaml || true
-                oc delete pod -n aiops $(oc get po -n aiops|grep event-gateway-generic|awk '{print$1}') || true
+                oc apply -n $WAIOPS_NAMESPACE -f ./yaml/gateway/gateway_cr_cm.yaml || true
+                oc delete pod -n $WAIOPS_NAMESPACE $(oc get po -n $WAIOPS_NAMESPACE|grep event-gateway-generic|awk '{print$1}') || true
                 __output "      ✅ OK"
             header3End
 

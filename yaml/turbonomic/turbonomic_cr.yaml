@@ -12,7 +12,7 @@ spec:
   # This is a YAML-formatted file.
   # Declare variables to be passed into your templates.
 
-  # Any changes run : kubectl apply -f deploy/crds/charts_v1alpha1_xl_cr.yaml -n turbonomic
+  # Any changes run : oc apply -f deploy/crds/charts_v1alpha1_xl_cr.yaml -n turbonomic
 
   # Global settings
   global:
