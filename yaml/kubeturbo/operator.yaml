@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeturbo-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: kubeturbo-operator
+  template:
+    metadata:
+      labels:
+        name: kubeturbo-operator
+    spec:
+      serviceAccountName: kubeturbo-operator
+      containers:
+        - name: kubeturbo-operator
+          # Replace this with the built image name
+          image: turbonomic/kubeturbo-operator:8.2
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              value: ""
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "kubeturbo-operator"

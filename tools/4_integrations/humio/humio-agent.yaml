@@ -14,6 +14,7 @@ humio-fluentbit:
     [INPUT]
         Name             tail
         Path             /var/log/containers/*bookinfo_*.log
+        Exclude_Path     /var/log/containers/*robot-shop_load-gen*.log
         Parser           docker
         Tag              kube.*
         Refresh_Interval 5

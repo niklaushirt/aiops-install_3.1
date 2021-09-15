@@ -1,0 +1,2 @@
+{"_index":"dataset","_type":"_doc","_id":"yz9IHnoBiVSGW74z84Ls","_score":1,"_source":{"startTimestamp":"2021-06-11T00:00:00.000Z","endTimestamp":"2021-06-18T00:00:00.000Z","connections":"","exclusionStartTimestamps":[],"exclusionEndTimestamps":[],"notes":"","referenced":false}}
+{"_index":"dataset","_type":"_doc","_id":"10GzN3oBiVSGW74z4wGr","_score":1,"_source":{"startTimestamp":"2021-03-25T00:00:00.000Z","endTimestamp":"2021-06-23T00:00:00.000Z","connections":"","exclusionStartTimestamps":[],"exclusionEndTimestamps":[],"notes":"","referenced":false}}

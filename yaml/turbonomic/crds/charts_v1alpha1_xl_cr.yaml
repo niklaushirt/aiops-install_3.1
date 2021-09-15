@@ -1,0 +1,27 @@
+apiVersion: charts.helm.k8s.io/v1
+kind: Xl
+metadata:
+  name: xl-release
+spec:
+  global:
+    logtostdout: true
+    storageClassName: ibmc-block-gold
+    repository: turbonomic
+    tag: 8.2.3
+    externalArangoDBName: arango.turbo.svc.cluster.local
+  vcenter:
+    enabled: true
+  instana:
+    enabled: true
+  azure:
+    enabled: true
+  kubeturbo:
+    enabled: true
+  gcp:
+    enabled: true
+  aws:
+    enabled: true
+  nginxingress:
+    enabled: false
+  openshiftingress:
+    enabled: true

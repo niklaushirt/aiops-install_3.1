@@ -25,7 +25,7 @@ export GODEBUG=asyncpreemptoff=1
 set -o errexit
 set -o pipefail
 #set -o xtrace
-source ./99_config-global.sh
+source ./tools/0_global/99_config-global.sh
 
 export SCRIPT_PATH=$(pwd)
 export LOG_PATH=""
@@ -97,8 +97,8 @@ header2Begin "Prerequisites Checks"
 
         getClusterFQDN
 
-        check_and_install_oc
-        check_and_install_helm
+        check_oc
+        check_helm
 
         checkKubeconfigIsSet
         

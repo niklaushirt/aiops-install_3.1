@@ -15,7 +15,7 @@ pip3 install slack-cleaner2
 In your Slack app
 
 1. In the `OAuth & Permissions` get the `User OAuth Token` (not the Bot User OAuth Token this time!) and jot it down
-2. Modify the file `./RESET/01_config.sh` and replace `not_configured` with the token 
+2. Modify the file `00_config-secrets.sh` and replace `not_configured` with the token 
 
 
 

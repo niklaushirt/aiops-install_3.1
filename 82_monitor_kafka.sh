@@ -10,8 +10,8 @@
 # DO NOT EDIT BELOW
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-source ./99_config-global.sh
-
+source ./tools/0_global/99_config-global.sh
+export LOG_TYPE=humio   # humio, elk, splunk, ...
 
 
 
@@ -72,7 +72,7 @@ menu_option_2() {
   
   echo "	Press CTRL-C to stop "
 
-  kafkacat -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512 -X sasl.username=token -X sasl.password=$sasl_password -b $BROKER -o -10 -C -t derived-stories 
+  ${KAFKACAT_EXE} -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512 -X sasl.username=token -X sasl.password=$sasl_password -b $BROKER -o -10 -C -t derived-stories 
 
 }
 
@@ -87,7 +87,7 @@ menu_option_3() {
   
   echo "	Press CTRL-C to stop "
 
-  kafkacat -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512 -X sasl.username=token -X sasl.password=$sasl_password -b $BROKER -o -10 -C -t alerts-noi-1000-1000
+  ${KAFKACAT_EXE} -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512 -X sasl.username=token -X sasl.password=$sasl_password -b $BROKER -o -10 -C -t alerts-noi-1000-1000
 
 }
 
@@ -102,7 +102,7 @@ menu_option_4() {
   
   echo "	Press CTRL-C to stop "
 
-  kafkacat -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512 -X sasl.username=token -X sasl.password=$sasl_password -b $BROKER -o -10 -C -t $LOGS_TOPIC 
+  ${KAFKACAT_EXE} -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512 -X sasl.username=token -X sasl.password=$sasl_password -b $BROKER -o -10 -C -t $LOGS_TOPIC 
 
 }
 
@@ -117,7 +117,7 @@ menu_option_9() {
   
   read -p "Copy Paste Topic from above: " MY_TOPIC
 
-  kafkacat -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512 -X sasl.username=token -X sasl.password=$sasl_password -b $BROKER -o -10 -C -t $MY_TOPIC
+  ${KAFKACAT_EXE} -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512 -X sasl.username=token -X sasl.password=$sasl_password -b $BROKER -o -10 -C -t $MY_TOPIC
 }
 
 
@@ -129,17 +129,18 @@ clear
 
 echo "***************************************************************************************************************************************************"
 echo "***************************************************************************************************************************************************"
-echo " 🚀 AI OPS DEBUG"
+echo " 🚀 AI OPS DEBUG - Kafka"
 echo "***************************************************************************************************************************************************"
 
 echo "  Initializing......"
+get_kafkacat
 
 
 
 echo "***************************************************************************************************************************************************"
 echo "  "
 
-export LOGS_TOPIC=$(oc get KafkaTopic -n aiops | grep logs-humio| awk '{print $1;}')
+export LOGS_TOPIC=$(oc get kafkatopics.kafka.strimzi.io -n $WAIOPS_NAMESPACE | grep logs-$LOG_TYPE| awk '{print $1;}')
 
 
 until [ "$selection" = "0" ]; do

@@ -1,0 +1,47 @@
+spec:
+  install:
+    spec:
+      deployments:
+        - name: iaf-operator-controller-manager
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app.kubernetes.io/component: iaf-operator
+                app.kubernetes.io/instance: iaf-operator
+                app.kubernetes.io/managed-by: olm
+                app.kubernetes.io/name: iaf-operator
+                name: iaf-operator
+            template:
+              spec:
+                containers:
+                  - resources:
+                      limits:
+                        cpu: 300m
+                        memory: 500Mi
+                      requests:
+                        cpu: 100m
+                        memory: 160Mi
+                    readinessProbe:
+                      failureThreshold: 301
+                      httpGet:
+                        path: /readyz
+                        port: 5555
+                        scheme: HTTP
+                      initialDelaySeconds: 20
+                      periodSeconds: 30
+                      successThreshold: 1
+                      timeoutSeconds: 10
+                    name: manager
+                    command:
+                      - /manager
+                    livenessProbe:
+                      failureThreshold: 300
+                      httpGet:
+                        path: /healthz
+                        port: 5555
+                        scheme: HTTP
+                      initialDelaySeconds: 180
+                      periodSeconds: 30
+                      successThreshold: 1
+                      timeoutSeconds: 10

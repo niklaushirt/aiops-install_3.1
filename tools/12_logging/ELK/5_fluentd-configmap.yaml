@@ -1,0 +1,172 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: fluentd
+  namespace: openshift-logging
+data:
+  fluent.conf: "## CLO GENERATED CONFIGURATION ###\n# This file is a copy of the fluentd configuration entrypoint\n# which should normally be supplied in a configmap.\n\n<system>\n  log_level \"#{ENV['LOG_LEVEL'] || 'warn'}\"\n</system>\n\n# In each section below, pre- and post- includes don't include anything initially;\n# they exist to enable future additions to openshift conf as needed.\n\n## sources\n## ordered so that syslog always runs last...\n<source>\n  @type prometheus\n  bind \"#{ENV['POD_IP']}\"\n  <ssl>\n    enable true\n    certificate_path \"#{ENV['METRICS_CERT'] || '/etc/fluent/metrics/tls.crt'}\"\n    private_key_path \"#{ENV['METRICS_KEY'] || '/etc/fluent/metrics/tls.key'}\"\n  </ssl>\n</source>\n\n<source>\n  @type prometheus_monitor\n  <labels>\n    hostname ${hostname}\n  </labels>\n</source>\n\n# excluding prometheus_tail_monitor\n# since it leaks namespace/pod info\n# via file paths\n\n# This is considered experimental by the repo\n<source>\n  @type prometheus_output_monitor\n  <labels>\n    hostname ${hostname}\n  </labels>\n</source>\n#journal logs to gather node\n<source>\n  @type systemd\n  @id systemd-input\n  @label @MEASURE\n  path '/var/log/journal'\n  <storage>\n    @type local\n    persistent true\n    # NOTE: if this does not end in .json, fluentd will think it\n    # is the name of a directory - see fluentd storage_local.rb\n    path '/var/log/journal_pos.json'\n  </storage>\n  matches \"#{ENV['JOURNAL_FILTERS_JSON'] || '[]'}\"\n  tag journal\n  read_from_head \"#{if (val = ENV.fetch('JOURNAL_READ_FROM_HEAD','')) && (val.length > 0); val; else 'false'; end}\"\n</source>\n# container logs\n<source>\n  @type tail\n  @id container-input\n  path \"/var/log/containers/*robot-shop*.log\"\n  exclude_path [\"/var/log/containers/fluentd-*_openshift-logging_*.log\", \"/var/log/containers/elasticsearch-*_openshift-logging_*.log\", \"/var/log/containers/kibana-*_openshift-logging_*.log\"]\n  pos_file \"/var/log/es-containers.log.pos\"\n  refresh_interval 5\n  rotate_wait 5\n  tag kubernetes.*\n  read_from_head \"true\"\n  @label @MEASURE\n  <parse>\n    @type multi_format\n    <pattern>\n      format json\n      time_format '%Y-%m-%dT%H:%M:%S.%N%Z'\n      keep_time_key true\n    </pattern>\n    <pattern>\n      format regexp\n      expression /^(?<time>[^\\s]+) (?<stream>stdout|stderr)( (?<logtag>.))? (?<log>.*)$/\n      time_format '%Y-%m-%dT%H:%M:%S.%N%:z'\n      keep_time_key true\n    </pattern>\n  </parse>\n</source>\n\n<label @MEASURE>\n  <filter **>\n    @type record_transformer\n    enable_ruby\n    <record>\n      msg_size ${record.to_s.length}\n    </record>\n  </filter>\n  <filter **>\n    @type prometheus\n    <metric>\n      name cluster_logging_collector_input_record_total\n      type counter\n      desc The total number of incoming records\n      <labels>\n        tag ${tag}\n        hostname ${hostname}\n      </labels>\n    </metric>\n  </filter>\n  <filter **>\n    @type prometheus\n    <metric>\n      name cluster_logging_collector_input_record_bytes\n      type counter\n      desc The total bytes of incoming records\n      key msg_size\n      <labels>\n        tag ${tag}\n        hostname ${hostname}\n      </labels>\n    </metric>\n  </filter>\n  <filter **>\n    @type record_transformer\n    remove_keys msg_size\n  </filter>\n  <match journal>\n    @type relabel\n    @label @INGRESS\n  </match>\n  <match *audit.log>\n    @type relabel\n    @label @INGRESS\n   </match>\n  <match kubernetes.**>\n    @type relabel\n    @label @CONCAT\n  </match>\n</label>\n\n<label @CONCAT>\n  <filter kubernetes.**>\n    @type concat\n    key log\n    partial_key logtag\n    partial_value P\n    separator ''\n  </filter>\n  <match kubernetes.**>\n    @type relabel\n    @label @INGRESS\n  </match>\n</label>\n\n#syslog input config here\n\n<label @INGRESS>\n\n  ## filters\n  <filter journal>\n    @type grep\n    <exclude>\n      key PRIORITY\n      pattern ^7$\n    </exclude>\n  </filter>\n\n  <match journal>\n    @type rewrite_tag_filter\n    # skip to @INGRESS label section\n    @label @INGRESS\n\n    # see if this is a kibana container for special log handling\n    # looks like this:\n    # k8s_kibana.a67f366_logging-kibana-1-d90e3_logging_26c51a61-2835-11e6-ad29-fa163e4944d5_f0db49a2\n    # we filter these logs through the kibana_transform.conf filter\n    <rule>\n      key CONTAINER_NAME\n      pattern ^k8s_kibana\\.\n      tag kubernetes.journal.container.kibana\n    </rule>\n\n    <rule>\n      key CONTAINER_NAME\n      pattern ^k8s_[^_]+_logging-eventrouter-[^_]+_\n      tag kubernetes.journal.container._default_.kubernetes-event\n    </rule>\n\n    # mark logs from default namespace for processing as k8s logs but stored as system logs\n    <rule>\n      key CONTAINER_NAME\n      pattern ^k8s_[^_]+_[^_]+_default_\n      tag kubernetes.journal.container._default_\n    </rule>\n\n    # mark logs from kube-* namespaces for processing as k8s logs but stored as system logs\n    <rule>\n      key CONTAINER_NAME\n      pattern ^k8s_[^_]+_[^_]+_kube-(.+)_\n      tag kubernetes.journal.container._kube-$1_\n    </rule>\n\n    # mark logs from openshift-* namespaces for processing as k8s logs but stored as system logs\n    <rule>\n      key CONTAINER_NAME\n      pattern ^k8s_[^_]+_[^_]+_openshift-(.+)_\n      tag kubernetes.journal.container._openshift-$1_\n    </rule>\n\n    # mark logs from openshift namespace for processing as k8s logs but stored as system logs\n    <rule>\n      key CONTAINER_NAME\n      pattern ^k8s_[^_]+_[^_]+_openshift_\n      tag kubernetes.journal.container._openshift_\n    </rule>\n\n    # mark fluentd container logs\n    <rule>\n      key CONTAINER_NAME\n      pattern ^k8s_.*fluentd\n      tag kubernetes.journal.container.fluentd\n    </rule>\n\n    # this is a kubernetes container\n    <rule>\n      key CONTAINER_NAME\n      pattern ^k8s_\n      tag kubernetes.journal.container\n    </rule>\n\n    # not kubernetes - assume a system log or system container log\n    <rule>\n      key _TRANSPORT\n      pattern .+\n      tag journal.system\n    </rule>\n  </match>\n\n  <filter kubernetes.**>\n    @type kubernetes_metadata\n    kubernetes_url 'https://kubernetes.default.svc'\n    cache_size '1000'\n    watch 'false'\n    use_journal 'nil'\n    ssl_partial_chain 'true'\n  </filter>\n\n  <filter kubernetes.journal.**>\n    @type parse_json_field\n    merge_json_log 'false'\n    preserve_json_log 'true'\n    json_fields 'log,MESSAGE'\n  </filter>\n\n  <filter kubernetes.var.log.containers.**>\n    @type parse_json_field\n    merge_json_log 'false'\n    preserve_json_log 'true'\n    json_fields 'log,MESSAGE'\n  </filter>\n\n  <filter kubernetes.var.log.containers.eventrouter-** kubernetes.var.log.containers.cluster-logging-eventrouter-**>\n    @type parse_json_field\n    merge_json_log true\n    preserve_json_log true\n    json_fields 'log,MESSAGE'\n  </filter>\n\n  <filter **kibana**>\n    @type record_transformer\n    enable_ruby\n    <record>\n      log ${record['err'] || record['msg'] || record['MESSAGE'] || record['log']}\n    </record>\n    remove_keys req,res,msg,name,level,v,pid,err\n  </filter>\n\n  <filter k8s-audit.log**>\n    @type record_modifier\n    <record>\n      k8s_audit_level ${record['level']}\n      level info\n    </record>\n  </filter>\n  <filter openshift-audit.log**>\n    @type record_modifier\n    <record>\n      openshift_audit_level ${record['level']}\n      level info\n    </record>\n  </filter>\n\n  <filter **>\n    @type viaq_data_model\n    elasticsearch_index_prefix_field 'viaq_index_name'\n    default_keep_fields CEE,time,@timestamp,aushape,ci_job,collectd,docker,fedora-ci,file,foreman,geoip,hostname,ipaddr4,ipaddr6,kubernetes,level,message,namespace_name,namespace_uuid,offset,openstack,ovirt,pid,pipeline_metadata,rsyslog,service,systemd,tags,testcase,tlog,viaq_msg_id\n    extra_keep_fields ''\n    keep_empty_fields 'message'\n    use_undefined false\n    undefined_name 'undefined'\n    rename_time true\n    rename_time_if_missing false\n    src_time_name 'time'\n    dest_time_name '@timestamp'\n    pipeline_type 'collector'\n    undefined_to_string 'false'\n    undefined_dot_replace_char 'UNUSED'\n    undefined_max_num_fields '-1'\n    process_kubernetes_events 'false'\n    <formatter>\n      tag \"system.var.log**\"\n      type sys_var_log\n      remove_keys host,pid,ident\n    </formatter>\n    <formatter>\n      tag \"journal.system**\"\n      type sys_journal\n      remove_keys log,stream,MESSAGE,_SOURCE_REALTIME_TIMESTAMP,__REALTIME_TIMESTAMP,CONTAINER_ID,CONTAINER_ID_FULL,CONTAINER_NAME,PRIORITY,_BOOT_ID,_CAP_EFFECTIVE,_CMDLINE,_COMM,_EXE,_GID,_HOSTNAME,_MACHINE_ID,_PID,_SELINUX_CONTEXT,_SYSTEMD_CGROUP,_SYSTEMD_SLICE,_SYSTEMD_UNIT,_TRANSPORT,_UID,_AUDIT_LOGINUID,_AUDIT_SESSION,_SYSTEMD_OWNER_UID,_SYSTEMD_SESSION,_SYSTEMD_USER_UNIT,CODE_FILE,CODE_FUNCTION,CODE_LINE,ERRNO,MESSAGE_ID,RESULT,UNIT,_KERNEL_DEVICE,_KERNEL_SUBSYSTEM,_UDEV_SYSNAME,_UDEV_DEVNODE,_UDEV_DEVLINK,SYSLOG_FACILITY,SYSLOG_IDENTIFIER,SYSLOG_PID\n    </formatter>\n    <formatter>\n      tag \"kubernetes.journal.container**\"\n      type k8s_journal\n      remove_keys 'log,stream,MESSAGE,_SOURCE_REALTIME_TIMESTAMP,__REALTIME_TIMESTAMP,CONTAINER_ID,CONTAINER_ID_FULL,CONTAINER_NAME,PRIORITY,_BOOT_ID,_CAP_EFFECTIVE,_CMDLINE,_COMM,_EXE,_GID,_HOSTNAME,_MACHINE_ID,_PID,_SELINUX_CONTEXT,_SYSTEMD_CGROUP,_SYSTEMD_SLICE,_SYSTEMD_UNIT,_TRANSPORT,_UID,_AUDIT_LOGINUID,_AUDIT_SESSION,_SYSTEMD_OWNER_UID,_SYSTEMD_SESSION,_SYSTEMD_USER_UNIT,CODE_FILE,CODE_FUNCTION,CODE_LINE,ERRNO,MESSAGE_ID,RESULT,UNIT,_KERNEL_DEVICE,_KERNEL_SUBSYSTEM,_UDEV_SYSNAME,_UDEV_DEVNODE,_UDEV_DEVLINK,SYSLOG_FACILITY,SYSLOG_IDENTIFIER,SYSLOG_PID'\n    </formatter>\n    <formatter>\n      tag \"kubernetes.var.log.containers.eventrouter-** kubernetes.var.log.containers.cluster-logging-eventrouter-** k8s-audit.log** openshift-audit.log**\"\n      type k8s_json_file\n      remove_keys log,stream,CONTAINER_ID_FULL,CONTAINER_NAME\n      process_kubernetes_events 'true'\n    </formatter>\n    <formatter>\n      tag \"kubernetes.var.log.containers**\"\n      type k8s_json_file\n      remove_keys log,stream,CONTAINER_ID_FULL,CONTAINER_NAME\n    </formatter>\n    <elasticsearch_index_name>\n      enabled 'true'\n      tag \"journal.system** system.var.log** **_default_** **_kube-*_** **_openshift-*_** **_openshift_**\"\n      name_type static\n      static_index_name infra-write\n    </elasticsearch_index_name>\n    <elasticsearch_index_name>\n      enabled 'true'\n      tag \"linux-audit.log** k8s-audit.log** openshift-audit.log**\"\n      name_type static\n      static_index_name audit-write\n    </elasticsearch_index_name>\n    <elasticsearch_index_name>\n      enabled 'true'\n      tag \"**\"\n      name_type static\n      static_index_name app-write\n    </elasticsearch_index_name>\n  </filter>\n\n  <filter **>\n    @type elasticsearch_genid_ext\n    hash_id_key viaq_msg_id\n    alt_key kubernetes.event.metadata.uid\n    alt_tags 'kubernetes.var.log.containers.logging-eventrouter-*.** kubernetes.var.log.containers.eventrouter-*.** kubernetes.var.log.containers.cluster-logging-eventrouter-*.** kubernetes.journal.container._default_.kubernetes-event'\n  </filter>\n\n  # Relabel specific source tags to specific intermediary labels for copy processing\n  # Earlier matchers remove logs so they don't fall through to later ones.\n  # A log source matcher may be null if no pipeline wants that type of log.\n  <match **_default_** **_kube-*_** **_openshift-*_** **_openshift_** journal.** system.var.log**>\n    @type relabel\n    @label @_INFRASTRUCTURE\n  </match>\n  <match kubernetes.**>\n    @type relabel\n    @label @_APPLICATION\n  </match>\n  <match linux-audit.log** k8s-audit.log** openshift-audit.log**>\n    @type null\n  </match>\n\n  <match **>\n    @type stdout\n  </match>\n\n</label>\n\n# Relabel specific sources (e.g. logs.apps) to multiple pipelines\n<label @_APPLICATION>\n  <match **>\n    @type copy\n    <store>\n      @type relabel\n      @label @PIPELINE_0_\n    </store>\n  </match>\n</label>\n<label @_INFRASTRUCTURE>\n  <match **>\n    @type copy\n    <store>\n      @type relabel\n      @label @PIPELINE_0_\n    </store>\n  </match>\n</label>\n\n\n# Relabel specific pipelines to multiple, outputs (e.g. ES, kafka stores)\n<label @PIPELINE_0_>\n  <match **>\n    @type copy\n    <store>\n      @type relabel\n      @label @DEFAULT\n    </store>\n  </match>\n</label>\n\n# Ship logs to specific outputs\n<label @DEFAULT>\n  <filter **>\n    @type record_modifier\n\tremove_keys structured\n  </filter>\n  #flatten labels to prevent field explosion in ES\n  <filter ** >\n    @type record_transformer\n    enable_ruby true\n    <record>\n      kubernetes ${!record['kubernetes'].nil? ? record['kubernetes'].merge({\"flat_labels\": (record['kubernetes']['labels']||{}).map{|k,v| \"#{k}=#{v}\"}}) : {} }\n    </record>\n    remove_keys $.kubernetes.labels\n  </filter>\n  <match retry_default>\n    @type copy\n    <store>\n      @type elasticsearch\n      @id retry_default\n      host elasticsearch.openshift-logging.svc\n      port 9200\n      verify_es_version_at_startup false\n      scheme https\n      ssl_version TLSv1_2\n      target_index_key viaq_index_name\n      id_key viaq_msg_id\n      remove_keys viaq_index_name\n      client_key '/var/run/ocp-collector/secrets/fluentd/tls.key'\n      client_cert '/var/run/ocp-collector/secrets/fluentd/tls.crt'\n      ca_file '/var/run/ocp-collector/secrets/fluentd/ca-bundle.crt'\n      type_name _doc\n      http_backend typhoeus\n      write_operation create\n      reload_connections 'true'\n      # https://github.com/uken/fluent-plugin-elasticsearch#reload-after\n      reload_after '200'\n      # https://github.com/uken/fluent-plugin-elasticsearch#sniffer-class-name\n      sniffer_class_name 'Fluent::Plugin::ElasticsearchSimpleSniffer'\n      reload_on_failure false\n      # 2 ^ 31\n      request_timeout 2147483648\n      <buffer>\n        @type file\n        path '/var/lib/fluentd/retry_default'\n        flush_mode interval\n        flush_interval 1s\n        flush_thread_count 2\n        flush_at_shutdown true\n        retry_type exponential_backoff\n        retry_wait 1s\n        retry_max_interval 60s\n        retry_forever true\n        queued_chunks_limit_size \"#{ENV['BUFFER_QUEUE_LIMIT'] || '32' }\"\n        total_limit_size \"#{ENV['TOTAL_LIMIT_SIZE'] ||  8589934592 }\" #8G\n        chunk_limit_size \"#{ENV['BUFFER_SIZE_LIMIT'] || '8m'}\"\n        overflow_action block\n      </buffer>\n    </store>\n  </match>\n  <match **>\n    @type copy\n    <store>\n      @type elasticsearch\n      @id default\n      host elasticsearch.openshift-logging.svc\n      port 9200\n      verify_es_version_at_startup false\n      scheme https\n      ssl_version TLSv1_2\n      target_index_key viaq_index_name\n      id_key viaq_msg_id\n      remove_keys viaq_index_name\n      client_key '/var/run/ocp-collector/secrets/fluentd/tls.key'\n      client_cert '/var/run/ocp-collector/secrets/fluentd/tls.crt'\n      ca_file '/var/run/ocp-collector/secrets/fluentd/ca-bundle.crt'\n      type_name _doc\n      retry_tag retry_default\n      http_backend typhoeus\n      write_operation create\n      reload_connections 'true'\n      # https://github.com/uken/fluent-plugin-elasticsearch#reload-after\n      reload_after '200'\n      # https://github.com/uken/fluent-plugin-elasticsearch#sniffer-class-name\n      sniffer_class_name 'Fluent::Plugin::ElasticsearchSimpleSniffer'\n      reload_on_failure false\n      # 2 ^ 31\n      request_timeout 2147483648\n      <buffer>\n        @type file\n        path '/var/lib/fluentd/default'\n        flush_mode interval\n        flush_interval 1s\n        flush_thread_count 2\n        flush_at_shutdown true\n        retry_type exponential_backoff\n        retry_wait 1s\n        retry_max_interval 60s\n        retry_forever true\n        queued_chunks_limit_size \"#{ENV['BUFFER_QUEUE_LIMIT'] || '32' }\"\n        total_limit_size \"#{ENV['TOTAL_LIMIT_SIZE'] ||  8589934592 }\" #8G\n        chunk_limit_size \"#{ENV['BUFFER_SIZE_LIMIT'] || '8m'}\"\n        overflow_action block\n      </buffer>\n    </store>\n  </match>\n</label>\n\n"
+  run.sh: >+
+
+    #!/bin/bash
+
+
+    CFG_DIR=/etc/fluent/configs.d
+
+
+    fluentdargs="--no-supervisor"
+
+    # find the sniffer class file
+
+    sniffer=$( gem contents fluent-plugin-elasticsearch|grep
+    elasticsearch_simple_sniffer.rb )
+
+    if [ -z "$sniffer" ] ; then
+        sniffer=$( rpm -ql rubygem-fluent-plugin-elasticsearch|grep elasticsearch_simple_sniffer.rb )
+    fi
+
+    if [ -n "$sniffer" -a -f "$sniffer" ] ; then
+        fluentdargs="$fluentdargs -r $sniffer"
+    fi
+
+
+    set -e
+
+    fluentdargs="--suppress-config-dump $fluentdargs"
+
+
+
+    issue_deprecation_warnings() {
+        : # none at the moment
+    }
+
+
+    IPADDR4=${NODE_IPV4:-$( /usr/sbin/ip -4 addr show dev eth0 | grep inet | sed
+    -e "s/[ \t]*inet \([0-9.]*\).*/\1/" )}
+
+    IPADDR6=${NODE_IPV6:-$( /usr/sbin/ip -6 addr show dev eth0 | grep inet | sed
+    -e "s/[ \t]*inet6 \([a-z0-9::]*\).*/\1/" | grep -v ^fe80 | grep -v ^::1 ||
+    echo "")}
+
+
+    export IPADDR4 IPADDR6
+
+
+    # Check bearer_token_file for fluent-plugin-kubernetes_metadata_filter.
+
+    if [ ! -s /var/run/secrets/kubernetes.io/serviceaccount/token ] ; then
+        echo "ERROR: Bearer_token_file (/var/run/secrets/kubernetes.io/serviceaccount/token) to access the Kubernetes API server is missing or empty."
+        exit 1
+    fi
+
+
+    # If FILE_BUFFER_PATH exists and it is not a directory, mkdir fails with the
+    error.
+
+    FILE_BUFFER_PATH=/var/lib/fluentd
+
+    mkdir -p $FILE_BUFFER_PATH
+
+    FLUENT_CONF=$CFG_DIR/user/fluent.conf
+
+    if [ ! -f "$FLUENT_CONF" ] ; then
+        echo "ERROR: The configuration $FLUENT_CONF does not exist"
+        exit 1
+    fi
+
+
+    ###
+
+    # Calculate the max allowed for each output buffer given the number of
+
+    # buffer file paths
+
+    ###
+
+
+    NUM_OUTPUTS=$(grep "path.*'$FILE_BUFFER_PATH" $FLUENT_CONF | wc -l)
+
+    if [ $NUM_OUTPUTS -eq 0 ]; then
+        # Reset to default single output if log forwarding outputs all invalid
+        NUM_OUTPUTS=1
+    fi
+
+
+    # Get the available disk size.
+
+    DF_LIMIT=$(df -B1 $FILE_BUFFER_PATH | grep -v Filesystem | awk '{print $2}')
+
+    DF_LIMIT=${DF_LIMIT:-0}
+
+    if [ $DF_LIMIT -eq 0 ]; then
+        echo "ERROR: No disk space is available for file buffer in $FILE_BUFFER_PATH."
+        exit 1
+    fi
+
+
+    # Default to 15% of disk which is approximately 18G
+
+    ALLOWED_PERCENT_OF_DISK=${ALLOWED_PERCENT_OF_DISK:-15}
+
+    if [ $ALLOWED_PERCENT_OF_DISK -gt 100 ] || [ $ALLOWED_PERCENT_OF_DISK -le 0
+    ] ; then
+      ALLOWED_PERCENT_OF_DISK=15
+      echo ALLOWED_PERCENT_OF_DISK is out of the allowed range. Setting to ${ALLOWED_PERCENT_OF_DISK}%
+    fi
+
+    # Determine allowed total given the number of outputs we have.
+
+    ALLOWED_DF_LIMIT=$(expr $DF_LIMIT \* $ALLOWED_PERCENT_OF_DISK / 100) || :
+
+
+    # TOTAL_LIMIT_SIZE per buffer
+
+    TOTAL_LIMIT_SIZE=$(expr $ALLOWED_DF_LIMIT / $NUM_OUTPUTS) || :
+
+    echo "Setting each total_size_limit for $NUM_OUTPUTS buffers to
+    $TOTAL_LIMIT_SIZE bytes"
+
+    export TOTAL_LIMIT_SIZE
+
+
+    ##
+
+    # Calculate the max number of queued chunks given the size of each chunk
+
+    # and the max allowed space per buffer
+
+    ##
+
+    BUFFER_SIZE_LIMIT=$(echo ${BUFFER_SIZE_LIMIT:-8388608})
+
+    BUFFER_QUEUE_LIMIT=$(expr $TOTAL_LIMIT_SIZE / $BUFFER_SIZE_LIMIT)
+
+    echo "Setting queued_chunks_limit_size for each buffer to
+    $BUFFER_QUEUE_LIMIT"
+
+    export BUFFER_QUEUE_LIMIT
+
+    echo "Setting chunk_limit_size for each buffer to $BUFFER_SIZE_LIMIT"
+
+    export BUFFER_SIZE_LIMIT
+
+
+    issue_deprecation_warnings
+
+
+    # this should be the last thing before launching fluentd so as not to use
+
+    # jemalloc with any other processes
+
+    if type -p jemalloc-config > /dev/null 2>&1 ; then
+        export LD_PRELOAD=$( jemalloc-config --libdir )/libjemalloc.so.$( jemalloc-config --revision )
+        export LD_BIND_NOW=1 # workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1544815
+    fi
+
+    if [ -f /var/log/openshift-apiserver/audit.log.pos ] ; then
+      #https://bugzilla.redhat.com/show_bug.cgi?id=1867687
+      mv /var/log/openshift-apiserver/audit.log.pos /var/log/oauth-apiserver.audit.log
+    fi
+
+
+    exec fluentd $fluentdargs
+

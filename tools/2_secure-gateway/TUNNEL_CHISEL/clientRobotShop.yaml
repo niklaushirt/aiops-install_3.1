@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tunnel-robot-shop-deployment
+  namespace: default
+  labels:
+    app: tunnel-robot-shop-app
+spec:
+    selector:
+      matchLabels:
+        app: tunnel-robot-shop
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: tunnel-robot-shop
+      spec:
+        containers:
+        - name: tunnel-robot-shop
+          image: docker.io/jpillora/chisel:latest
+          imagePullPolicy: IfNotPresent
+          args:
+          - 'client'
+          # ⬇️ Use username `foo` and password `bar` to authenticate with Chisel server.
+          - '--auth=admin:P4ssw0rd'
+          # ⬇️ Domain & port of Chisel server. Port defaults to 8080 on server, but must be manually set on client.
+          - '91.121.172.228:8080'
+          # ⬇️ Reverse tunnel-robot-shop traffic from the chisel server to the web server container, identified in Docker using DNS by its service name `webserver`.
+          - 'R:8888:web.robot-shop:8080'
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "128m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"

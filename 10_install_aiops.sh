@@ -1,9 +1,9 @@
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
-# Installing Script for all CP4WAIOPS 3.1 components
+# Installing Script for all CP4WAIOPS V3.1.1 components
 #
-# V3.1 
+# V3.1.1 
 #
 # ©2021 nikh@ch.ibm.com
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
@@ -25,7 +25,7 @@ export GODEBUG=asyncpreemptoff=1
 set -o errexit
 set -o pipefail
 #set -o xtrace
-source ./99_config-global.sh
+source ./tools/0_global/99_config-global.sh
 
 export SCRIPT_PATH=$(pwd)
 export LOG_PATH=""
@@ -36,7 +36,7 @@ banner
 __output "***************************************************************************************************************************************************"
 __output "***************************************************************************************************************************************************"
 __output "  "
-__output "  CloudPak for Watson AI OPS 3.1"
+__output "  CloudPak for Watson AI OPS V3.1.1"
 __output "  "
 __output "***************************************************************************************************************************************************"
 __output "  "
@@ -53,8 +53,6 @@ __output "  "
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 header1Begin "Initializing"
-
-
 
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -117,18 +115,16 @@ header2Begin "Prerequisites Checks"
         getClusterFQDN
         
         #getHosts
-
-        #check_and_install_jq
-        check_and_install_cloudctl
-        #check_and_install_kubectl
-        check_and_install_oc
-        check_and_install_helm
+        check_oc
+        check_helm
         checkHelmExecutable
-        #check_and_install_yq
-        #dockerRunning
-        #checkOpenshiftReachable
+        checkOpenshiftReachable
         checkKubeconfigIsSet
-        #checkRegistryCredentials
+        check_jq
+        check_kafkacat
+        check_elasticdump
+        check_cloudctl
+
         
 
 header2End
@@ -136,7 +132,7 @@ header2End
 
 
 
-header2Begin "CloudPak for Watson AI OPS  3.1 (CP4WAIOPS) will be installed in Cluster '$CLUSTER_NAME'"
+header2Begin "CloudPak for Watson AI OPS  V3.1.1 (CP4WAIOPS) will be installed in Cluster '$CLUSTER_NAME'"
 
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
@@ -164,13 +160,11 @@ header2End
 
 
 
-header2Begin "CloudPak for Watson AI OPS  3.1 (CP4WAIOPS) will be installed with the following features:"
+header2Begin "CloudPak for Watson AI OPS  V3.1.1 (CP4WAIOPS) will be installed with the following features:"
 printComponentsInstall
 header2End
 
 header1End "Initializing"
-
-
 
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -195,7 +189,7 @@ header1Begin "Install Prerequisites"
             then 
                  __output "     ⭕ You are on ROKS... Skipping"
             else
-                oc delete pod -n openshift-image-registry $(oc get po -n openshift-image-registry|grep image-registry|awk '{print$1}') >/dev/null 2>&1 
+                oc delete pod -n openshift-image-registry $(oc get po -n openshift-image-registry|grep image-registry|awk '{print$1}') >$log_output_path 2>&1 
                 __output "      ✅ OK"
             fi
 
@@ -206,32 +200,49 @@ header1Begin "Install Prerequisites"
         header2Begin "Install Operators" 
 
             header3Begin "Patch OCP Registry"    
-                oc patch configs.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge >/dev/null 2>&1
+                oc patch configs.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge >$log_output_path 2>&1
                 __output "      ✅ OK"
             header3End
 
 
 
             header3Begin "Create Namespace $WAIOPS_NAMESPACE"    
-                oc create ns $WAIOPS_NAMESPACE >/dev/null 2>&1 || true 
+                oc create ns $WAIOPS_NAMESPACE >$log_output_path 2>&1 || true 
                 __output "      ✅ OK"
             header3End
 
 
 
             header3Begin "Create Pull Secret"
-                oc create secret docker-registry 'ibm-entitlement-key' --docker-server=$ENTITLED_REGISTRY --docker-username=$ENTITLED_REGISTRY_USER --docker-password=$ENTITLED_REGISTRY_KEY --namespace=$WAIOPS_NAMESPACE >/dev/null 2>&1 || true 
+                oc create secret docker-registry 'ibm-entitlement-key' --docker-server=$ENTITLED_REGISTRY --docker-username=$ENTITLED_REGISTRY_USER --docker-password=$ENTITLED_REGISTRY_KEY --namespace=$WAIOPS_NAMESPACE >$log_output_path 2>&1 || true 
                 #oc create secret docker-registry custom-pull-secret --docker-server=hyc-katamari-cicd-team-docker-local.artifactory.swg-devops.com --docker-username=<user_id> --docker-password=<artifactory_token>
                 #oc create secret generic ibm-entitlement-key --from-file=.dockercfg=./yaml/waiops/secret.json --type=kubernetes.io/dockercfg
                 __output "      ✅ OK"
             header3End
 
 
+            header3Begin "Patch builder service account"
+                INTERNAL=$(oc get secret -n $WAIOPS_NAMESPACE | grep '^builder-dockercfg' | cut -f1 -d ' ')
+                BASE=$(oc get secret ibm-entitlement-key -n $WAIOPS_NAMESPACE -o json | jq ".data[]" | sed -e 's/^"//' -e 's/"$//' | base64 -d | sed -e 's/}}$/,/')
+                ADDITIONAL=$(oc get secret $INTERNAL -n $WAIOPS_NAMESPACE -o json | jq ".data[]" | sed -e 's/^"//' -e 's/"$//' | base64 -d | sed -e 's/^{//')
+                echo $BASE$ADDITIONAL} > builder-secret.tmp
+                oc create secret generic merged-secret --type=kubernetes.io/dockerconfigjson --from-file=.dockerconfigjson=builder-secret.tmp -n $WAIOPS_NAMESPACE || true
+                rm builder-secret.tmp
+                oc patch serviceaccount builder  -p '{"secrets": [{"name": "merged-secret"}]}' -n $WAIOPS_NAMESPACE || true
+            header3End
+
+
+
+
             header3Begin "Adjust OCP Stuff"
-                oc adm policy add-role-to-user cpd-admin-role $(oc whoami) --role-namespace=$WAIOPS_NAMESPACE -n $WAIOPS_NAMESPACE >/dev/null 2>&1
-                oc project $WAIOPS_NAMESPACE >/dev/null 2>&1
+                oc adm policy add-role-to-user cpd-admin-role $(oc whoami) --role-namespace=$WAIOPS_NAMESPACE -n $WAIOPS_NAMESPACE >$log_output_path 2>&1
+                oc project $WAIOPS_NAMESPACE >$log_output_path 2>&1
                 __output "      ✅ OK"
             header3End
+
+
+
+
 
 
 
@@ -243,7 +254,7 @@ header1Begin "Install Prerequisites"
                 then
                     __output "     ⭕ CatalogSource already installed... Skipping"
                 else
-                    oc apply -f ./yaml/waiops/cat-ibm-operator.yaml >/dev/null 2>&1
+                    oc apply -f ./yaml/waiops/cat-ibm-operator.yaml >$log_output_path 2>&1
                     __output "      ✅ OK"
                 fi
             header3End
@@ -258,7 +269,7 @@ header1Begin "Install Prerequisites"
                 then
                     __output "     ⭕ CatalogSource already installed... Skipping"
                 else
-                    oc apply -f ./yaml/waiops/cat-ibm-aiops.yaml >/dev/null 2>&1
+                    oc apply -f ./yaml/waiops/cat-ibm-aiops.yaml >$log_output_path 2>&1
 
                         #__output " 🔧 Restart Marketplace (HACK)"
                         #oc delete pod -n openshift-marketplace -l name=marketplace-operator 2>&1
@@ -278,7 +289,7 @@ header1Begin "Install Prerequisites"
                 then
                     __output "     ⭕ CatalogSource already installed... Skipping"
                 else
-                    oc apply -f ./yaml/waiops/cat-ibm-common-services.yaml >/dev/null 2>&1
+                    oc apply -f ./yaml/waiops/cat-ibm-common-services.yaml >$log_output_path 2>&1
 
                     __output "      ✅ OK"
                     __output "  "
@@ -297,7 +308,7 @@ header1Begin "Install Prerequisites"
                 then
                     __output "     ⭕ Subscription already installed... Skipping"
                 else
-                    oc apply -n openshift-operators -f ./yaml/waiops/sub-ibm-aiops-orchestrator.yaml >/dev/null 2>&1 || true
+                    oc apply -n openshift-operators -f ./yaml/waiops/sub-ibm-aiops-orchestrator.yaml >$log_output_path 2>&1 || true
                     #progressbar 120
                     
                     __output "      ✅ OK"
@@ -305,6 +316,7 @@ header1Begin "Install Prerequisites"
 
             header3End
         header2End
+
 
 
 
@@ -322,27 +334,28 @@ header1Begin "Install Prerequisites"
 
                 fi
 
-                oc label --overwrite namespace $WAIOPS_NAMESPACE ns=$WAIOPS_NAMESPACE >/dev/null 2>&1  || true
+                oc label --overwrite namespace $WAIOPS_NAMESPACE ns=$WAIOPS_NAMESPACE >$log_output_path 2>&1  || true
 
             header3End
         header2End 
 
 
+
         header2Begin "Install Knative"
   
             header3Begin "Create Namespace knative-serving"    
-                oc create ns knative-serving >/dev/null 2>&1 || true
+                oc create ns knative-serving >$log_output_path 2>&1 || true
                 __output "      ✅ OK"
             header3End
 
 
             header3Begin "Create Namespace knative-eventing"    
-                oc create ns knative-eventing >/dev/null 2>&1 || true
+                oc create ns knative-eventing >$log_output_path 2>&1 || true
                 __output "      ✅ OK"
             header3End
 
             header3Begin "Create Namespace openshift-serverless"    
-                oc create ns openshift-serverless >/dev/null 2>&1 || true
+                oc create ns openshift-serverless >$log_output_path 2>&1 || true
                 __output "      ✅ OK"
             header3End
 
@@ -390,7 +403,7 @@ header1Begin "Install Prerequisites"
                     __output "     ⭕ Knative Eventing  already installed... Skipping"
                 else
                     oc apply -n knative-eventing -f ./yaml/knative/knative-eventing.yaml
-                    oc annotate service.serving.knative.dev/kn-cli -n knative-serving serving.knative.openshift.io/disableRoute=true >/dev/null 2>&1 || true
+                    oc annotate service.serving.knative.dev/kn-cli -n knative-serving serving.knative.openshift.io/disableRoute=true >$log_output_path 2>&1 || true
 
                     __output "      ✅ OK"
                 fi
@@ -403,6 +416,8 @@ header1Begin "Install Prerequisites"
 
 
 header1End "Install Prerequisites"
+
+
 
 
 header1Begin "Waiting for Prerequisites to be ready"
@@ -476,7 +491,7 @@ __output "----------------------------------------------------------------------
 __output "----------------------------------------------------------------------------------------------------------------------------------------------------"
 __output "----------------------------------------------------------------------------------------------------------------------------------------------------"
 __output " 🚀 Launching Post Install"
-__output "  If there are any errors it is safe to relaunch this script manually (./1_postinstall_aiops.sh)"
+__output "  If there are any errors it is safe to relaunch this script manually (./11_postinstall_aiops.sh)"
 __output ""
 __output "----------------------------------------------------------------------------------------------------------------------------------------------------"
 __output "----------------------------------------------------------------------------------------------------------------------------------------------------"

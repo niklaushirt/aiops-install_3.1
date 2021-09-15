@@ -1,0 +1,16 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: ibm-automation-eventprocessing-v1.2-ibm-operator-catalog-openshift-marketplace
+  namespace: openshift-operators
+spec:
+  config:
+    resources:
+      limits:
+        cpu: 201m
+        memory: 300Mi
+      requests:
+        cpu: 150m
+        memory: 200Mi
+  name: ibm-automation-eventprocessing
+

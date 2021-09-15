@@ -1,0 +1,293 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: iaf-eventprocessing-operator-controller-manager
+  namespace: openshift-operators
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller-manager
+      app.kubernetes.io/instance: iaf-eventprocessing-operator
+      app.kubernetes.io/managed-by: olm
+      app.kubernetes.io/name: eventprocessing-operator
+      name: iaf-eventprocessing-operator
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/component: controller-manager
+        app.kubernetes.io/instance: iaf-eventprocessing-operator
+        app.kubernetes.io/managed-by: olm
+        app.kubernetes.io/name: eventprocessing-operator
+        name: iaf-eventprocessing-operator
+      annotations:
+        olm.skipRange: '>=1.0.1 <1.1.0'
+        operators.operatorframework.io/builder: operator-sdk-v1.2.0
+        operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
+        certified: 'false'
+        olm.targetNamespaces: ''
+        operatorframework.io/properties: >-
+          {"properties":[{"type":"olm.gvk","value":{"group":"eventprocessing.automation.ibm.com","kind":"EventProcessingTask","version":"v1alpha1"}},{"type":"olm.gvk","value":{"group":"eventprocessing.automation.ibm.com","kind":"EventProcessor","version":"v1beta1"}},{"type":"olm.package","value":{"packageName":"ibm-automation-eventprocessing","version":"1.1.0"}}]}
+        operators.operatorframework.io/operator-type: non-standalone
+        support: IBM
+        alm-examples: |-
+          [
+            {
+              "apiVersion": "eventprocessing.automation.ibm.com/v1alpha1",
+              "kind": "EventProcessingTask",
+              "metadata": {
+                "annotations": {
+                  "com.ibm.automation.cartridge": "iafdemo"
+                },
+                "name": "sample-processing-task-100"
+              },
+              "spec": {
+                "args": [
+                  "-j",
+                  "/opt/flink/examples/streaming/WordCount.jar",
+                  "-q",
+                  "?program-args=--input /opt/flink/LICENSE"
+                ],
+                "command": [
+                  "/curl-helper.sh"
+                ],
+                "image": "cp.icr.io/cp/iaf-flink@sha256:b97f7994d94c03eee5c0242cf833ede7aaf013375f5260e29b97c5c0dbed406e",
+                "license": {
+                  "accept": true
+                },
+                "processorName": "eventprocessor-sample-100",
+                "restartPolicy": "Never",
+                "version": "1.0.0"
+              }
+            },
+            {
+              "apiVersion": "eventprocessing.automation.ibm.com/v1alpha1",
+              "kind": "EventProcessingTask",
+              "metadata": {
+                "annotations": {
+                  "com.ibm.automation.cartridge": "iafdemo"
+                },
+                "name": "sample-processing-task-200"
+              },
+              "spec": {
+                "args": [
+                  "-j",
+                  "/opt/flink/examples/streaming/WordCount.jar",
+                  "-q",
+                  "?program-args=--input /opt/flink/LICENSE"
+                ],
+                "command": [
+                  "/curl-helper.sh"
+                ],
+                "image": "cp.icr.io/cp/iaf-flink@sha256:b97f7994d94c03eee5c0242cf833ede7aaf013375f5260e29b97c5c0dbed406e",
+                "license": {
+                  "accept": true
+                },
+                "processorName": "eventprocessor-sample-200",
+                "restartPolicy": "Never",
+                "version": "2.0.0"
+              }
+            },
+            {
+              "apiVersion": "eventprocessing.automation.ibm.com/v1beta1",
+              "kind": "EventProcessor",
+              "metadata": {
+                "annotations": {
+                  "com.ibm.automation.cartridge": "iafdemo"
+                },
+                "name": "eventprocessor-sample-200"
+              },
+              "spec": {
+                "flink": {
+                  "authentication": {},
+                  "taskManager": {
+                    "replicas": 3
+                  },
+                  "tls": {}
+                },
+                "license": {
+                  "accept": true
+                },
+                "version": "2.0.0"
+              }
+            },
+            {
+              "apiVersion": "eventprocessing.automation.ibm.com/v1beta1",
+              "kind": "EventProcessor",
+              "metadata": {
+                "annotations": {
+                  "com.ibm.automation.cartridge": "iafdemo"
+                },
+                "name": "eventprocessor-sample-200-ha"
+              },
+              "spec": {
+                "flink": {
+                  "authentication": {},
+                  "jobManager": {
+                    "replicas": 3
+                  },
+                  "taskManager": {
+                    "replicas": 3
+                  },
+                  "tls": {}
+                },
+                "license": {
+                  "accept": true
+                },
+                "version": "2.0.0"
+              }
+            },
+            {
+              "apiVersion": "eventprocessing.automation.ibm.com/v1beta1",
+              "kind": "EventProcessor",
+              "metadata": {
+                "annotations": {
+                  "com.ibm.automation.cartridge": "iafdemo"
+                },
+                "name": "eventprocessor-sample-beta"
+              },
+              "spec": {
+                "flink": {
+                  "authentication": {},
+                  "taskManager": {
+                    "replicas": 3
+                  },
+                  "tls": {}
+                },
+                "license": {
+                  "accept": true
+                },
+                "version": "1.0.0"
+              }
+            }
+          ]
+        capabilities: Seamless Upgrades
+        olm.operatorNamespace: openshift-operators
+        containerImage: >-
+          icr.io/cpopen/iaf-eventprocessing-operator@sha256:d6b29443ea6700ef2354837f585444b00d3e434beabedf77c7495e914b49c0a0
+        operators.operatorframework.io/internal-objects: '["eventprocessingtasks.eventprocessing.automation.ibm.com"]'
+        createdAt: '2021-06-04T17:56:11+0000'
+        olmcahash: 8f191b12ac771c1f5703badc7356cbb3faf9b0810b1dffd903d054a211e4d876
+        categories: Automation
+        description: >-
+          An operator that installs and manages EventProcessors and
+          EventProcessingTasks
+        olm.operatorGroup: global-operators
+    spec:
+      restartPolicy: Always
+      serviceAccountName: iaf-eventprocessing-operator-default
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 10
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - resources:
+            limits:
+              cpu: 200m
+              memory: 300Mi
+            requests:
+              cpu: 150m
+              memory: 200Mi
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 5555
+              scheme: HTTP
+            initialDelaySeconds: 20
+            timeoutSeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: manager
+          command:
+            - /manager
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 5555
+              scheme: HTTP
+            initialDelaySeconds: 90
+            timeoutSeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: OPERATOR_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: 'metadata.annotations[''olm.targetNamespaces'']'
+            - name: TLS_PROXY_IMAGES
+              value: >
+                1.0.0=cp.icr.io/cp/iaf-eventprocessing-proxy@sha256:2975026b5ac4015d2efc2f22041408d885cde20ff9975f573d1397d62d465c84
+
+                2.0.0=cp.icr.io/cp/iaf-eventprocessing-proxy@sha256:6e8a6954b5ae6778b9ca7062108e2889692ce6954bbf4395b5c9f6ea644aa4b3
+            - name: FLINK_IMAGES
+              value: >
+                1.0.0=cp.icr.io/cp/iaf-flink@sha256:cbaccedbefaaeb3f9b49df15abe7acb7eb36a768959af90b2c5d413e560f91bc
+
+                2.0.0=cp.icr.io/cp/iaf-flink@sha256:b97f7994d94c03eee5c0242cf833ede7aaf013375f5260e29b97c5c0dbed406e
+            - name: OPERATOR_CONDITION_NAME
+              value: ibm-automation-eventprocessing.v1.1.0
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          ports:
+            - name: webhook-server
+              containerPort: 9443
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: webhook-cert
+              mountPath: /tmp/k8s-webhook-server/serving-certs
+            - name: apiservice-cert
+              mountPath: /apiserver.local.config/certificates
+          terminationMessagePolicy: File
+          image: >-
+            icr.io/cpopen/iaf-eventprocessing-operator@sha256:d6b29443ea6700ef2354837f585444b00d3e434beabedf77c7495e914b49c0a0
+          args:
+            - '--enable-leader-election'
+      serviceAccount: iaf-eventprocessing-operator-default
+      volumes:
+        - name: cert
+          secret:
+            secretName: iaf-eventprocessing-operator-controller-manager-service-cert
+            defaultMode: 420
+        - name: apiservice-cert
+          secret:
+            secretName: iaf-eventprocessing-operator-controller-manager-service-cert
+            items:
+              - key: tls.crt
+                path: apiserver.crt
+              - key: tls.key
+                path: apiserver.key
+            defaultMode: 420
+        - name: webhook-cert
+          secret:
+            secretName: iaf-eventprocessing-operator-controller-manager-service-cert
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+            defaultMode: 420
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 1
+  progressDeadlineSeconds: 600

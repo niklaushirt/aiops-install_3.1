@@ -1,0 +1,81 @@
+apiVersion: charts.helm.k8s.io/v1
+kind: Xl
+metadata:
+  name: xl-release
+spec:
+  global:
+    logtostdout: true
+    storageClassName: <STORAGE_CLASS_TURBO>
+    repository: turbonomic
+    tag: 8.3.0
+    externalArangoDBName: arango.turbo.svc.cluster.local
+  vcenter:
+    enabled: true
+  instana:
+    enabled: true
+  azure:
+    enabled: true
+  kubeturbo:
+    enabled: true
+  gcp:
+    enabled: true
+  aws:
+    enabled: true
+  nginxingress:
+    enabled: false
+  openshiftingress:
+    enabled: true
+  actionscript:
+    enabled: true
+  udt:
+    enabled: true
+  actionstream-kafka:
+    enabled: false
+  appdynamics:
+    enabled: true
+  appinsights:
+    enabled: true
+  dynatrace:
+    enabled: true
+  hpe3par:
+    enabled: true
+  horizon:
+    enabled: false
+  hyperflex:
+    enabled: false
+  hyperv:
+    enabled: true
+  netapp:
+    enabled: true
+  prometheus:
+    enabled: true
+  prometurbo:
+    enabled: true
+  servicenow:
+    enabled: false
+  ucs:
+    enabled: true
+  vmax:
+    enabled: true
+  vmm:
+    enabled: true
+  wmi:
+    enabled: true
+  snmp:
+    enabled: true
+  mssql:
+    enabled: true
+  mysql:
+    enabled: false
+  oracle:
+    enabled: false
+  tomcat:
+    enabled: false
+  jvm:
+    enabled: false
+  newrelic:
+    enabled: true
+  websphere:
+    enabled: false
+  weblogic:
+    enabled: false

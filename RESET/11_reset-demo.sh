@@ -1,4 +1,25 @@
-source ./01_config.sh
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# ADAPT VALUES
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+export APP_NAME=robot-shop  #robot-shop, elk
+export LOG_TYPE=humio   # humio, elk, splunk, ...
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# DO NOT EDIT BELOW
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+source ./00_config-secrets.sh
 
 banner
 
@@ -11,6 +32,87 @@ echo "    - Stories"
 echo "    - Netcool Events"
 echo "***************************************************************************************************************************************************"
 
+#--------------------------------------------------------------------------------------------------------------------------------------------
+#  Check Defaults
+#--------------------------------------------------------------------------------------------------------------------------------------------
+oc project $WAIOPS_NAMESPACE
+
+if [[ $APP_NAME == "" ]] ;
+then
+      echo "⚠️ AppName not defined. Launching this script directly?"
+      echo "   Falling back to $DEFAULT_APP_NAME"
+      export APP_NAME=$DEFAULT_APP_NAME
+fi
+
+if [[ $LOG_TYPE == "" ]] ;
+then
+      echo "⚠️ Log Type not defined. Launching this script directly?"
+      echo "   Falling back to $DEFAULT_LOG_TYPE"
+      export LOG_TYPE=$DEFAULT_LOG_TYPE
+fi
+
+
+
+echo "Get Connection Details for $LOG_TYPE"
+oc exec -it  -n $WAIOPS_NAMESPACE $(oc get po -n $WAIOPS_NAMESPACE |grep aimanager-aio-controller|awk '{print$1}') -- curl -k -X GET https://localhost:9443/v2/connections/application_groups/1000/applications/1000/ > tmp_connection.json
+echo "Get Connection ID"
+export CONNECTION_ID=$(jq ".[] | select(.connection_type==\"kafka\") | select(.mapping.codec==\"$LOG_TYPE\") | .connection_id" tmp_connection.json | tr -d '"')
+echo "Get Connection Password"
+export CONNECTION_NAME=$(jq ".[] | select(.connection_type==\"kafka\") | select(.mapping.codec==\"$LOG_TYPE\") | .connection_config.display_name" tmp_connection.json | tr -d '"') 
+echo "Get Logs Topic for $LOG_TYPE"
+export LOGS_TOPIC=$(oc get kafkatopics.kafka.strimzi.io -n $WAIOPS_NAMESPACE | grep logs-$LOG_TYPE| awk '{print $1;}')
+
+#--------------------------------------------------------------------------------------------------------------------------------------------
+#  Check Credentials
+#--------------------------------------------------------------------------------------------------------------------------------------------
+
+echo "***************************************************************************************************************************************************"
+echo "  🔗  Checking credentials"
+echo "***************************************************************************************************************************************************"
+
+if [[ $LOGS_TOPIC == "" ]] ;
+then
+      echo "❌ Please create the $LOG_TYPE Kafka Log Integration. Aborting..."
+      exit 1
+else
+      echo "      ✅ OK - Logs Topic"
+fi
+
+if [[ $CONNECTION_ID == "" ]] ;
+then
+      echo "❌ Cannot get DB credentials. Aborting..."
+      exit 1
+else
+      echo "      ✅ OK - Logs Topic"
+fi
+
+
+echo ""
+echo ""
+echo ""
+echo ""
+
+
+echo "***************************************************************************************************************************************************"
+echo "***************************************************************************************************************************************************"
+echo "  "
+echo "  🔎  Parameter for Incident Simulation for $APP_NAME"
+echo "  "
+echo "           📝 Log Type                    : $LOG_TYPE"
+echo "           🗂  Topic                       : $LOGS_TOPIC"
+echo "  "
+echo "           🌏 AIOPS DB ID                 : $CONNECTION_ID"
+echo "           🔐 AIOPS DB NAME               : $CONNECTION_NAME"
+echo "  "
+echo "  "
+echo "***************************************************************************************************************************************************"
+echo "***************************************************************************************************************************************************"
+echo ""
+
+rm -f tmp_connection.json
+
+
+
   read -p "❗ Are you really, really, REALLY sure you want to reset the demo? [y,N] " DO_COMM
   if [[ $DO_COMM == "y" ||  $DO_COMM == "Y" ]]; then
     echo "      🧞‍♂️ OK, as you wish...."
@@ -19,26 +121,27 @@ echo "**************************************************************************
     exit 1
   fi
   
+
+
+
+echo ""
+echo ""
+echo "--------------------------------------------------------------------------------------------------------------------------------"
+echo "Turn off Data Flow $CONNECTION_NAME"
+echo "--------------------------------------------------------------------------------------------------------------------------------"
+
+
+oc exec -it $(oc get po |grep aimanager-aio-controller|awk '{print$1}') -- curl -k -X PUT https://localhost:9443/v3/connections/$CONNECTION_ID/disable
+echo " ✅ OK"
+
+
+
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------
 # Reset Demo - Clean Up
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------------------------------
-oc project $WAIOPS_NAMESPACE >/dev/null 2>&1
-
-
-echo "--------------------------------------------------------------------------------------------------------------------------------"
-echo "Scale up RobotShop"
-echo "--------------------------------------------------------------------------------------------------------------------------------"
-
-robot_running=$(oc get deployment ratings -n robot-shop)
-if [[ $robot_running =~ "0/0" ]];
-then
-    oc scale --replicas=1 ratings -n robot-shop #>/dev/null 2>&1
-    echo " ✅ OK"
-else 
-    echo " ✅ RobotShop is OK. Skipping..."
-fi
+oc project $WAIOPS_NAMESPACE
 
 
 
@@ -52,7 +155,7 @@ echo "--------------------------------------------------------------------------
 oc get kafkatopic -n $WAIOPS_NAMESPACE| awk '{print $1}' # > all_topics_$(date +%s).yaml
 echo " ✅ OK"
 
-export LOGS_TOPIC=$(oc get KafkaTopic -n $WAIOPS_NAMESPACE | grep logs-humio| awk '{print $1;}')
+echo " ✅ OK"
 
 
 echo ""
@@ -70,8 +173,9 @@ echo " ✅ OK"
 oc get kafkatopic -n $WAIOPS_NAMESPACE| grep derived | awk '{print $1}'| xargs oc delete kafkatopic -n $WAIOPS_NAMESPACE
 echo " ✅ OK"
 
-oc get kafkatopic -n $WAIOPS_NAMESPACE| grep logs-humio | awk '{print $1}' | xargs oc delete kafkatopic -n $WAIOPS_NAMESPACE
+oc get kafkatopic -n $WAIOPS_NAMESPACE| grep logs-$LOG_TYPE | awk '{print $1}' | xargs oc delete kafkatopic -n $WAIOPS_NAMESPACE
 echo " ✅ OK"
+
 
 
 
@@ -177,7 +281,8 @@ echo "--------------------------------------------------------------------------
 oc get kafkatopic -n $WAIOPS_NAMESPACE
 echo " ✅ OK"
 
-#oc delete pod $(oc get pods | grep event-gateway-generic-evtmgrgw | awk '{print $1;}')
+
+
 
 echo ""
 echo ""
@@ -237,12 +342,12 @@ echo " ✅ OK"
 echo ""
 echo ""
 echo "--------------------------------------------------------------------------------------------------------------------------------"
-echo "Delete RobotShop NOI Events"
+echo "Delete NOI Events"
 echo "--------------------------------------------------------------------------------------------------------------------------------"
 
 password=$(oc get secrets | grep omni-secret | awk '{print $1;}' | xargs oc get secret -o jsonpath --template '{.data.OMNIBUS_ROOT_PASSWORD}' | base64 --decode)
 oc get pods | grep ncoprimary-0 | awk '{print $1;}' | xargs -I{} oc exec {} -- bash -c "/opt/IBM/tivoli/netcool/omnibus/bin/nco_sql -server AGG_P -user root -passwd ${password} << EOF
-delete from alerts.status where AlertGroup='robot-shop';
+delete from alerts.status where AlertGroup='$APP_NAME';
 go
 exit
 EOF"
@@ -250,7 +355,15 @@ echo " ✅ OK"
 
 
 
+echo ""
+echo ""
+echo "--------------------------------------------------------------------------------------------------------------------------------"
+echo "Turn on Data Flow $CONNECTION_NAME"
+echo "--------------------------------------------------------------------------------------------------------------------------------"
 
+
+oc exec -it $(oc get po |grep aimanager-aio-controller|awk '{print$1}') -- curl -k -X PUT https://localhost:9443/v3/connections/$CONNECTION_ID/enable
+echo " ✅ OK"
 
 
 
@@ -263,18 +376,18 @@ echo "--------------------------------------------------------------------------
 
 
 
-oc delete pod $(oc get pods | grep log-anomaly-detector | awk '{print $1;}') --force --grace-period=0
-oc delete pod $(oc get pods | grep aimanager-aio-event-grouping | awk '{print $1;}') --force --grace-period=0
-oc delete pod $(oc get pods | grep flink-task-manager-0 | awk '{print $1;}') --force --grace-period=0
+oc delete pod $(oc get pods | grep log-anomaly-detector | awk '{print $1;}') --force --grace-period=0|| true
+oc delete pod $(oc get pods | grep aimanager-aio-event-grouping | awk '{print $1;}') --force --grace-period=0|| true
+oc delete pod $(oc get pods | grep flink-task-manager-0 | awk '{print $1;}') --force --grace-period=0|| true
 
 #echo " ✅ OK"
 
 echo "      🔎 Check derived-stories KafkaTopic" 
 
-TOPIC_READY=$(oc get KafkaTopics -n $WAIOPS_NAMESPACE derived-stories -o jsonpath='{.status.conditions[0].status}' || true)
+TOPIC_READY=$(oc get kafkatopics.kafka.strimzi.io -n $WAIOPS_NAMESPACE derived-stories -o jsonpath='{.status.conditions[0].status}' || true)
 
 while  ([[ ! $TOPIC_READY =~ "True" ]] ); do 
-    TOPIC_READY=$(oc get KafkaTopics -n $WAIOPS_NAMESPACE derived-stories -o jsonpath='{.status.conditions[0].status}' || true)
+    TOPIC_READY=$(oc get kafkatopics.kafka.strimzi.io -n $WAIOPS_NAMESPACE derived-stories -o jsonpath='{.status.conditions[0].status}' || true)
     echo "      🕦 wait for derived-stories KafkaTopic" 
     sleep 3
 done
@@ -284,10 +397,10 @@ echo " ✅ OK"
 
 echo "      🔎 Check windowed-logs KafkaTopic" 
 
-TOPIC_READY=$(oc get KafkaTopics -n $WAIOPS_NAMESPACE windowed-logs-1000-1000 -o jsonpath='{.status.conditions[0].status}' || true)
+TOPIC_READY=$(oc get kafkatopics.kafka.strimzi.io -n $WAIOPS_NAMESPACE windowed-logs-1000-1000 -o jsonpath='{.status.conditions[0].status}' || true)
 
 while  ([[ ! $TOPIC_READY =~ "True" ]] ); do 
-    TOPIC_READY=$(oc get KafkaTopics -n $WAIOPS_NAMESPACE windowed-logs-1000-1000 -o jsonpath='{.status.conditions[0].status}' || true)
+    TOPIC_READY=$(oc get kafkatopics.kafka.strimzi.io -n $WAIOPS_NAMESPACE windowed-logs-1000-1000 -o jsonpath='{.status.conditions[0].status}' || true)
     echo "      🕦 wait for windowed-logs KafkaTopic" 
     sleep 3
 done
@@ -296,10 +409,10 @@ echo " ✅ OK"
 
 echo "      🔎 Check normalized-alerts KafkaTopic" 
 
-TOPIC_READY=$(oc get KafkaTopics -n $WAIOPS_NAMESPACE normalized-alerts-1000-1000 -o jsonpath='{.status.conditions[0].status}' || true)
+TOPIC_READY=$(oc get kafkatopics.kafka.strimzi.io -n $WAIOPS_NAMESPACE normalized-alerts-1000-1000 -o jsonpath='{.status.conditions[0].status}' || true)
 
 while  ([[ ! $TOPIC_READY =~ "True" ]] ); do 
-    TOPIC_READY=$(oc get KafkaTopics -n $WAIOPS_NAMESPACE normalized-alerts-1000-1000 -o jsonpath='{.status.conditions[0].status}' || true)
+    TOPIC_READY=$(oc get kafkatopics.kafka.strimzi.io -n $WAIOPS_NAMESPACE normalized-alerts-1000-1000 -o jsonpath='{.status.conditions[0].status}' || true)
     echo "      🕦 wait for normalized-alerts KafkaTopic" 
     sleep 3
 done
@@ -307,10 +420,10 @@ echo " ✅ OK"
 
 echo "      🔎 Check $LOGS_TOPIC KafkaTopic" 
 
-TOPIC_READY=$(oc get KafkaTopics -n $WAIOPS_NAMESPACE $LOGS_TOPIC -o jsonpath='{.status.conditions[0].status}' || true)
+TOPIC_READY=$(oc get kafkatopics.kafka.strimzi.io -n $WAIOPS_NAMESPACE $LOGS_TOPIC -o jsonpath='{.status.conditions[0].status}' || true)
 
 while  ([[ ! $TOPIC_READY =~ "True" ]] ); do 
-    TOPIC_READY=$(oc get KafkaTopics -n $WAIOPS_NAMESPACE $LOGS_TOPIC -o jsonpath='{.status.conditions[0].status}' || true)
+    TOPIC_READY=$(oc get kafkatopics.kafka.strimzi.io -n $WAIOPS_NAMESPACE $LOGS_TOPIC -o jsonpath='{.status.conditions[0].status}' || true)
     echo "      🕦 wait for $LOGS_TOPIC KafkaTopic" 
     sleep 3
 done
@@ -346,7 +459,7 @@ done
 echo " ✅ OK"
 
 
-echo "      🔎 Check for Task Manager" 
+echo "      🔎 Check for Task Manager Pod" 
 
 SUCCESFUL_RESTART=$(oc get pods | grep flink-task-manager-0 | grep 0/1 || true)
 

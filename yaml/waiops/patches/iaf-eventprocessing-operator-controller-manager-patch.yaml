@@ -1,0 +1,46 @@
+spec:
+  install:
+    spec:
+      deployments:
+      - name: iaf-eventprocessing-operator-controller-manager
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app.kubernetes.io/component: controller-manager
+              app.kubernetes.io/instance: iaf-eventprocessing-operator
+              app.kubernetes.io/managed-by: olm
+              app.kubernetes.io/name: eventprocessing-operator
+              name: iaf-eventprocessing-operator
+          template:
+            spec:
+              containers:
+                imagePullPolicy: IfNotPresent
+                livenessProbe:
+                  failureThreshold: 301
+                  httpGet:
+                    path: /healthz
+                    port: 5555
+                    scheme: HTTP
+                  initialDelaySeconds: 90
+                  periodSeconds: 30
+                  successThreshold: 1
+                  timeoutSeconds: 10
+                name: manager
+                readinessProbe:
+                  failureThreshold: 301
+                  httpGet:
+                    path: /readyz
+                    port: 5555
+                    scheme: HTTP
+                  initialDelaySeconds: 20
+                  periodSeconds: 30
+                  successThreshold: 1
+                  timeoutSeconds: 10
+                resources:
+                  limits:
+                    cpu: 200m
+                    memory: 250Mi
+                  requests:
+                    cpu: 100m
+                    memory: 150Mi

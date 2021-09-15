@@ -3,9 +3,9 @@
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # Installing Script for Rook/Ceph
 #
-# V2.0 
+# V3.1.1 
 #
-# ©2020 nikh@ch.ibm.com
+# ©2021 nikh@ch.ibm.com
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
 # ---------------------------------------------------------------------------------------------------------------------------------------------------"
@@ -22,7 +22,7 @@ export TEMP_PATH=~/aiops-install
 set -o errexit
 set -o pipefail
 #set -o xtrace
-source ./99_config-global.sh
+source ./tools/0_global/99_config-global.sh
 
 export SCRIPT_PATH=$(pwd)
 export LOG_PATH=""
@@ -106,8 +106,8 @@ header2Begin "Install Checks"
         getClusterFQDN
         
         #getHosts
-        check_and_install_kubectl
-        check_and_install_oc
+        check_kubectl
+        check_oc
         checkOpenshiftReachable
         checkKubeconfigIsSet
         

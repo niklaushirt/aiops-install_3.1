@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tool-pod
+  namespace: default
+  labels:
+      app: tool-pod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tool-pod
+  template:
+    metadata:
+      labels:
+        app: tool-pod
+    spec:
+      containers:
+      - image: niklaushirt/bastion-ssh:1.0.0
+        imagePullPolicy: IfNotPresent
+        name: bastion
+        command:
+        ports:
+        - containerPort: 22
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "50Mi"
+          limits:
+            cpu: "250m"
+            memory: "250Mi"
+        env:
+          - name: PORT
+            value : "22"
+          - name: SSH_KEY
+            value : "YOUR SSH PUBLIC KEY"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tool-pod-service
+  namespace: default
+spec:
+  selector:
+    app: tool-pod
+  ports:
+    - protocol: TCP
+      port: 22
+      targetPort: 22
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: tool-pod
+  namespace: default
+  labels:
+    app: tool-pod
+spec:
+  to:
+    kind: Service
+    name: tool-pod-service
+    weight: 100
+  port:
+    targetPort: 22
+  wildcardPolicy: None

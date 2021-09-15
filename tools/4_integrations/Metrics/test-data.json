@@ -1,0 +1,46 @@
+
+{
+    "groups": [
+      {
+          "timestamp": "1480982400000",
+          "resourceID": "ResourceId_5:Interface1",
+          "metrics": {
+              "Metric_1": 2.5292,
+              "Metric_2": 0.0110
+          },
+          "attributes": {
+              "group": "group_1",
+              "node": "ResourceId_5",
+              "interface": "Interface1"		
+                }
+      },
+      {
+          "timestamp": "1480982460000",
+          "resourceID": "ResourceId_5:Interface1",
+          "metrics": {
+              "Metric_1": 0.0110,
+              "Metric_2": 0.0110
+          },
+          "attributes": {
+              "group": "group_1",
+              "node": "ResourceId_5",
+              "interface": "Interface1"
+  
+          }
+      },
+      {
+          "timestamp": "1480982520000",
+          "resourceID": "ResourceId_5:Interface1",
+          "metrics": {
+              "Metric_1": 0.0110,
+              "Metric_2": 21.9515
+          },
+          "attributes": {
+              "group": "group_1",
+              "node": "ResourceId_5",
+              "interface": "Interface1"
+  
+          }
+      }
+    ]
+  }

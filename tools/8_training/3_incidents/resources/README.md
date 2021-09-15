@@ -1,3 +1,0 @@
-# pirsoscom.github.io
-
-## Welcome

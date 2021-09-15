@@ -50,14 +50,52 @@ Note that your instance will go to sleep after a few hours if not used and if yo
 
 ### Install the WAIOPS App in your ServiceNow Developer Instance
 
-Customers will typically install the WAIOPS app (or plug-in) from the official [ServiceNow App Store](https://store.servicenow.com/sn_appstore_store.do#!/store/application/632a6d81db102010253148703996197e/1.1.0). In our case, because we have a developer instance, we will have to install it from a GitHub repo. Follow step #1 in this document [repo](snow-install-plugin.md) to install the WAIOPS App in your ServiceNow Developer Instance. If you don't have access to this repo, contact the WAIOPS development team.
+Customers will typically install the WAIOPS app (or plug-in) from the official [ServiceNow App Store](https://store.servicenow.com/sn_appstore_store.do#!/store/application/632a6d81db102010253148703996197e/1.1.0). 
+
+In our case, because we have a developer instance, we will have to install it from a GitHub repo. 
+
+### Import app into ServiceNow instance
+
+#### Prepare GitHub access 
+
+Pre-req: Personal access token for Github. 
+
+If you don't have one, follow the instructions [https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) to create one (no elevated permissions needed for the token).
+
+1. Obtain a developer instance for ServiceNow following the instructions from [https://developer.servicenow.com/dev.do#!/guides/paris/now-platform/pdi-guide/obtaining-a-pdi](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) (this requires a ServiceNow account which can be created as part of the steps - just sign up for a new account). Note: development instances go into hibernation when not used and are decommissined if not used for 10 days.
+1. Log on to the development instance.
+1. Search for `Credentials`.
+![Credentials](./images/credentials1.png)
+1. Select `Credentials` under `Connections & Credentials`.
+![Credentials](./images/credentials2.png)
+1. Select `Basic Authentication`.
+![Credentials](./images/credentials3.png)
+1. Enter any name, provide your login email address for Github and as password provide your personal access token. Then click `Submit`.
+![Credentials](./images/credentials4.png)
+1. In the Search field, type in `Studio`. Select `Studio` under `System Applications`. This will open the Application Studio in a new tab.
+![Studio](./images/studio1.png)
+1. In the `Select Application` dialog, click `Import from Source Control`.
+![Studio](./images/studio2.png)
+
+#### Fork GitHub repository 
+
+1. Fork the following repository `https://github.ibm.com/jorgego/servicenow-integration-fork`
+1. Enter `https://github.ibm.com/<your-repo>/servicenow-integration-fork` as repository, `main` as the branch and in the `Credential` drop-down, select the entry with the credentials that were created in the previous steps.
+![Studio](./images/studio3.png)
+1. Click `Import` to import the source code.
+
+
 
 ---
 ## Configuring ServiceNow
 
-You can create stories in IBM Cloud Pak for Watson AIOps and issues in ServiceNow simultaneously. Both share information and can be tracked together. To ensure that this integration operates effectively, you must configure ServiceNow and ServiceNow integration in IBM Cloud Pak for Watson AIOps. After you configure ServiceNow and IBM Cloud Pak for Watson AIOps, the updates that you make in IBM Cloud Pak for Watson AIOps will flow into the Agent Workspace of ServiceNow. Updates to event data and the state of your story in IBM Cloud Pak for Watson AIOps appear in ServiceNow. Any updates that you make in Slack or Microsoft Teams to the description, short description, or severity after you create the story do not overwrite the existing values in ServiceNow. Also, edits that are made in ServiceNow (changing descriptions or incident names, for example) are not reflected in Slack, Microsoft Teams, or IBM Cloud Pak for Watson AIOps.
+You can create stories in IBM Cloud Pak for Watson AIOps and issues in ServiceNow simultaneously. Both share information and can be tracked together. To ensure that this integration operates effectively, you must configure ServiceNow and ServiceNow integration in IBM Cloud Pak for Watson AIOps. 
 
-### Create/Update Users in ServiceNow
+After you configure ServiceNow and IBM Cloud Pak for Watson AIOps, the updates that you make in IBM Cloud Pak for Watson AIOps will flow into the Agent Workspace of ServiceNow. 
+
+Updates to event data and the state of your story in IBM Cloud Pak for Watson AIOps appear in ServiceNow. Any updates that you make in Slack or Microsoft Teams to the description, short description, or severity after you create the story do not overwrite the existing values in ServiceNow. Also, edits that are made in ServiceNow (changing descriptions or incident names, for example) are not reflected in Slack, Microsoft Teams, or IBM Cloud Pak for Watson AIOps.
+
+### Update existing Users in ServiceNow
 
 Before you create your integration, you must assign IBM Cloud Pak for Watson AIOps roles to your users in ServiceNow.
 
@@ -70,45 +108,73 @@ Before you create your integration, you must assign IBM Cloud Pak for Watson AIO
 
     ![users](./images/user-list.png)
 
-4. Assign at least two created or existing users to the following roles. Assign at least one user to each role.
+4. You need two different users. Assign at least one user to each role.
 
       **Notes:** In both cases ensure that your IBM Cloud Pak for Watson AIOps users in ServiceNow are assigned the itil role in ServiceNow. The itil role enables them to have access to the Agent Workspace. If the user does not have access to the Agent Workspace, they cannot work on incidents in ServiceNow and receive a permissions error.
 
       **Important:** Ensure that the time zone of your Events user (the user value that is used to create your ServiceNow integration) matches your system time zone in ServiceNow. If the two values are not synchronized, the flow of your change request data from ServiceNow to IBM Cloud Pak for Watson AIOps is disrupted.
+      
+      
+#### User 1 (abraham.lincoln)
 
-    x_ibm_waiops.watson_aiops_admin: An administrative user who can configure instances, URLs, usernames, and passwords in ServiceNow. The admin user is the only user who can see the menu options to configure IBM Cloud Pak for Watson AIOps in ServiceNow. 
-    
-    In the following two slides, select the existing user abraham.lincoln, set the password and assign the following roles (click Roles Edit):
+1. Select user `abraham.lincoln`
 
-    * x_ibm_waiops.watson_aiops_admin 
-    * itil
-    
-     Make sure you Save the roles and click Update on the user page.
+2. Select `Roles` Tab
+3. Click `Edit`
+4. Assign the following roles
 
-    ![events user](./images/user-lincoln.png)
+	* `x_ibm_waiops.watson_aiops_admin `
+	* `itil`
 
-    ![events user](./images/user-lincoln-roles.png)
+	![events user](./images/user-lincoln-roles.png)
+		
+		
+	`x_ibm_waiops.watson_aiops_admin`: An administrative user who can configure instances, URLs, usernames, and passwords in ServiceNow. The admin user is the only user who can see the menu options to configure IBM Cloud Pak for Watson AIOps in ServiceNow. 
+	    
 
+4. Save	
+5. Set the password to P4ssw0rd!
+6. Click Update on the user page
 
-    x_ibm_waiops.watson_aiops_events_user: A non-administrative user who is required to insert IBM Cloud Pak for Watson AIOps data into ServiceNow and is configured as the connector between IBM Cloud Pak for Watson AIOps and ServiceNow. **Important:** Ensure that you select Internal Integration User when you create or edit your Events user (the user that is used in your ServiceNow integration). Your integration user exists to exchange data between ServiceNow and IBM Cloud Pak for Watson AIOps and does not require access to the ServiceNow interface.
-
-    In the following two slides, select the existing user abel.tuter, set the password, check Internal Integration User and assign the following roles (click Roles Edit) 
-
-    * x_ibm_waiops.watson_aiops_events_user
-    * itil
-    * cmdb_read
-    * rest_api_explorer
-    * service_viewer
-    * web_service_admin
-
-    Make sure you Save the roles and click Update on the user page.
-
-    ![events user](./images/user-abel.png)
-
-    ![events user](./images/user-abel-roles.png)
+	![events user](./images/user-lincoln.png)
+	
 
 
-Your two ServiceNow roles correlate to different functions within IBM Cloud Pak for Watson AIOps. The user assigned to the Events user role in ServiceNow is the user ID that you create the integration with in IBM Cloud Pak for Watson AIOps. That role is responsible for inserting data into ServiceNow. The Admin user maintains visibility into IBM Cloud Pak for Watson AIOps settings in ServiceNow (like configuring the information that is needed to integrate similar incidents).
+
+
+
+#### User 2 (abel.tuter)
+
+1. Select user `abel.tuter`
+
+2. Select `Roles` Tab
+3. Click `Edit`
+4. Assign the following roles
+
+	* `x_ibm_waiops.watson_aiops_events_user`
+	* `itil`
+	* `cmdb_read`
+	* `rest_api_explorer`
+	* `service_viewer`
+	* `web_service_admin`
+
+	![events user](./images/user-abel-roles.png)
+	
+	
+	`x_ibm_waiops.watson_aiops_events_user`: A non-administrative user who is required to insert IBM Cloud Pak for Watson AIOps data into ServiceNow and is configured as the connector between IBM Cloud Pak for Watson AIOps and ServiceNow. 
+	**Important:** Ensure that you select Internal Integration User when you create or edit your Events user (the user that is used in your ServiceNow integration). Your integration user exists to exchange data between ServiceNow and IBM Cloud Pak for Watson AIOps and does not require access to the ServiceNow interface.
+
+
+4. Save	
+5. Set the password to P4ssw0rd!
+6. Click Update on the user page
+
+	![events user](./images/user-abel.png)
+	
+
+
+
+
 
 
 ### ServiceNow Service Management configuration
@@ -125,11 +191,11 @@ Your two ServiceNow roles correlate to different functions within IBM Cloud Pak 
 
       **Note:** If you use a tunnel to expose the server for the ServiceNow connection, you must replace the URL with the forwarding address of the tunnel.
 
-    * Name of the Watson AIOps instance: The name of your instance in IBM Cloud Pak for Watson AIOps. You can identify your instance name by logging in to the IBM Cloud Pak for Watson AIOps console and getting the value in the My instances pane.
+    * Name of the Watson AIOps instance: `aimanager` (As of CP4WAIOPS V3.1.1this is a fixed value.)
 
-    * User name for AIOps connection: The username for the IBM Cloud Pak for Watson AIOps instance.
+    * User name for AIOps connection: `admin` (The username for the IBM Cloud Pak for Watson AIOps instance.)
 
-    * Password for AIOps connection: The password for the IBM Cloud Pak for Watson AIOps instance.
+    * Password for AIOps connection: `Your password for admin`. (The password for the IBM Cloud Pak for Watson AIOps instance.)
 
     ![configuration](./images/configuration.png)
 
@@ -143,18 +209,20 @@ While not necessary, configuring similar incident search in ServiceNow facilitat
 **Important:** To complete this task, you must be assigned the admin role in ServiceNow, otherwise you cannot configure Search contexts.
 
 1. Log in to your ServiceNow developer instance.
-2. In the filter field, search for Search contexts as shown below:
+2. In the filter field, search for `Search contexts` as shown below:
 
     ![configuration](./images/search-context.png)
 
-3. Click Incident Deflection to open the Incident Deflection record.
-4. Click the Additional Resource Configurations tab, then click Edit as shown below. 
+3. Click `Incident Deflection` to open the Incident Deflection record.
+4. Click the `Additional Resource Configurations` tab, then click `Edit` as shown below. 
 
     **Note:** You may see a this message: "This record is in the Global application, but IBM Watson AIOps is the current application. To edit this record click here". Click on here to go to the Global application and switch to the Global application.
+    
+    **Note:** If you don't see the `Edit` button, go to `Settings` (cog in the top right corner), select `Developer` and under `Applications` select `Global` from the drop-down.
 
     ![configuration](./images/additional-resources.png)
 
-5. Select Watson AIOps Similar Incidents from the Collection column and add it to the Additional Resource Configurations List, then click Save.
+5. Select `Watson AIOps Similar Incidents` from the Collection column and add it to the Additional Resource Configurations List, then click Save.
 
     ![config-list](./images/config-list.png)
 
@@ -173,11 +241,11 @@ Now that we have created users and configured ServiceNow, we need to configure C
 To create a ServiceNow integration, complete the following steps:
 
 1. Log in to IBM Cloud Pak for Watson AIOps.
-2. From the console, click the navigation menu (four horizontal bars), then click Define > Data and tool integrations as shown below:
+2. From the console, click the navigation menu (four horizontal bars), then click `Define` > `Data and tool integrations` as shown below:
 
     ![config-list](./images/define-data-integration.png)
 
-3. On the ServiceNow tile, click Add integration.
+3. On the ServiceNow tile, click `Add integration`.
 
     **Note:** If you do not immediately see the integration that you want to create, you can filter the tiles by type of integration. Click the type of integration that you want in the Category section.
 
@@ -189,53 +257,23 @@ To create a ServiceNow integration, complete the following steps:
     * URL: The URL of your ServiceNow developer instance.
     * User ID: the ServiceNow Events user username.
 
-      **Important:** You must create a new, unique user in ServiceNow specifically for your ServiceNow integration before you create your integration. Make sure that you are using the correct user role, the Events user, for your integration. You must also make sure that the time zone set for this user matches your system time zone in ServiceNow. For more information about ServiceNow users, see Create users.
+      **Important:** You must Make sure that you are using the correct user (abel.tuter), the Events user, for your integration. You must also make sure that the time zone set for this user matches your system time zone in ServiceNow. For more information about ServiceNow users, see Create users.
 
-    * Password: the ServiceNow Events user password.
+    * Password: Here this would be `P4ssw0rd!` (if you followed the steps above - the ServiceNow Events user password).
 
-    * Encrypted password: the ServiceNow Events user encrypted password.
+    * Encrypted password: Here this would be `g4W3L7/eFsUjV0eMncBkbg==` (if you followed the steps above - the ServiceNow Events user encrypted password).
 
-      **Important:** You must specify an IBM Cloud Pak for Watson AIOps encrypted version of your ServiceNow password to collect inventory and topology data from ServiceNow. To encrypt your ServiceNow password, complete the following steps:
 
-      * Make sure that you have oc installed on your local system. For more information about these requirements, see Preparing to install IBM Cloud Pak for Watson AIOps. Log in to your Red Hat OpenShift Container Platform cluster by using the oc login command. You can identify your specific oc login by clicking the user name dropdown menu in the Red Hat OpenShift Container Platform console, then clicking Copy Login Command.
+6. Test your integration connection by clicking `Test connection`.
 
-      * Switch your project to where the Cloud Pak for Watson AIOps is installed (e.g. cp4waiops) using the following command (use your own project name):
-      ```
-      oc project cp4waiops
-      ```
-      * Identify the full name for the evtmanager-topology-topology pod:
-      ```
-      oc get pods | grep evtmanager-topology-topology
-      ```
-      * Enter the following command to encrypt your password. The content of <your_password> is your unencrypted ServiceNow password.
-      ```
-      oc exec -ti evtmanager-topology-topology-<xxxxxxxxx-xxxxx> -- java -jar /opt/ibm/topology-service/topology-service.jar encrypt_password -p '<your_password>'
-      ```
-      * Copy and paste the results of the preceding command (your encrypted ServiceNow password) in this field.
+5. (Optional) You can improve search performance by mapping the fields from your implementation fields to IBM Cloud Pak for Watson AIOps's standard fields. Enter the values that you want to map, then click Format to ensure that you entered a valid JSON configuration.
 
-    * Connection timeout: The amount of time before a connection times out in milliseconds. The default value is 5000 milliseconds.
+6. Click the Data flow toggle to turn on data collection
+7. Select **Historical data for initial AI training:** A single set of training data used to define your AI model. You must also specify the parallelism of your source data. Historical data is harvested from existing logs in your integration over a specified time period in the past.
 
-    * Read timeout: The amount of time before a read operation times out in milliseconds. The default value is 5000 milliseconds.
-    * Proxy host: The proxy host for your ServiceNow instance.
-    * Proxy port: The proxy port for your ServiceNow instance. The default value is 8080.
+8. Set the start date to 01/01/2019
+9. Set the end date to the current date
 
-    You can test your integration connection by clicking Test connection.
-
-5. You can improve search performance by mapping the fields from your implementation fields to IBM Cloud Pak for Watson AIOps's standard fields. Enter the values that you want to map, then click Format to ensure that you entered a valid JSON configuration.
-
-6. Select how you want to manage collecting data for use in AI training and change risk scoring. Click the Data flow toggle to turn on data collection then select how you want to collect data:
-
-    * **Live data for continuous AI training:** A continuous flow of data from your integration is used to both train AI models and analyze your data for anomalous behavior.
-
-      **Note:** Before selecting this option, you must first set **Mode** to **Historical data for initial AI training** to collect a minimum amount of data, and then run AI training on that data. For more information, see Planning data loading and training.
-
-    * **Live data for initial AI training**: A single set of training data used to define your AI model. Data collection takes place over a specified time period that starts when you create your integration.
-
-      **Note:** If you select this option, you must disable your integration when you have collected enough data for training. If you do not disable the integration, it continues to collect data. For more information about AI model training, including minimum and ideal data quantities, see Configuring AI training. For more information about disabling and enabling integrations, see Enabling and disabling ServiceNow integrations.
-
-    * **Historical data for initial AI training:** A single set of training data used to define your AI model. You must also specify the parallelism of your source data. Historical data is harvested from existing logs in your integration over a specified time period in the past.
-
-    **Important:** Different types of AI models have different requirements to properly train a model. Make sure that your settings satisfy minimum data requirements. For more information about how much data you need to train different AI models, see Configuring AI training.
 
 7. Select whether you want to collect inventory and topology data from your ServiceNow instance. Click the Collect inventory and topology data toggle to turn on inventory and data collection.
 
@@ -312,7 +350,7 @@ We will enable the incident data flow now.
 
 Now incident data is being loaded into WAIOPS. **Wait for an hour.** 
 
-**Note:** this is a limitation of the v3.1 product in the sense that there is no feedback in the UI regarding how the data is being loaded or what data has been loaded already.
+**Note:** this is a limitation of the vV3.1.1product in the sense that there is no feedback in the UI regarding how the data is being loaded or what data has been loaded already.
 
 After an hour wait, we will verify that now there is indeed incident data loaded by running the same command:
 
@@ -391,7 +429,7 @@ For example, on the *CI Classes* column, click on *Hardware*, select the CI List
 
 #### ServiceNow Observer Job
 
-In WAIOPS v3.1 there are two ways to enable a ServiceNow observer job: the first way is inside the ServiceNow main integration form and the second way is as a regular observer job. In this cookbook, we will follow the second option. 
+In WAIOPS vV3.1.1there are two ways to enable a ServiceNow observer job: the first way is inside the ServiceNow main integration form and the second way is as a regular observer job. In this cookbook, we will follow the second option. 
 
 From the WAIOPS home page, click on *Data and tool integrations*, then click on the *Advanced* tab and finally select *Manage observer jobs*. You will see the list of available observers after you click on the *Add a new job* card as shown below (note that the number of observer cards will vary depending on what observers are enabled in your WAIOPS instance)
 
@@ -441,3 +479,22 @@ Finally, lets verify the ServiceNow inventory and topology data in the Topology 
 
   ![lenovo-topology](./images/lenovo-topology.png)
 
+### Encrypting the Service Now Password
+
+  **Important:** You must specify an IBM Cloud Pak for Watson AIOps encrypted version of your ServiceNow password to collect inventory and topology data from ServiceNow. To encrypt your ServiceNow password, complete the following steps:
+
+      * Make sure that you have oc installed on your local system. For more information about these requirements, see Preparing to install IBM Cloud Pak for Watson AIOps. Log in to your Red Hat OpenShift Container Platform cluster by using the oc login command. You can identify your specific oc login by clicking the user name dropdown menu in the Red Hat OpenShift Container Platform console, then clicking Copy Login Command.
+
+      * Switch your project to where the Cloud Pak for Watson AIOps is installed (e.g. cp4waiops) using the following command (use your own project name):
+      ```
+      oc project cp4waiops
+      ```
+      * Identify the full name for the evtmanager-topology-topology pod:
+      ```
+      oc get pods | grep evtmanager-topology-topology
+      ```
+      * Enter the following command to encrypt your password. The content of <your_password> is your unencrypted ServiceNow password.
+      ```
+      oc exec -ti evtmanager-topology-topology-<xxxxxxxxx-xxxxx> -- java -jar /opt/ibm/topology-service/topology-service.jar encrypt_password -p '<your_password>'
+      ```
+      * Copy and paste the results of the preceding command (your encrypted ServiceNow password) in this field.

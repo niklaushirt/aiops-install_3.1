@@ -1,4 +1,4 @@
-source ./01_config.sh
+source ./00_config-secrets.sh
 
 banner
 
@@ -35,7 +35,7 @@ echo "Empty Slack Channel $SLACK_REACTIVE"
 echo "--------------------------------------------------------------------------------------------------------------------------------"
 
   export SLACK_CHANNEL=$SLACK_REACTIVE
-  python3 ./slack-cleaner.py
+  python3 ./reset/slack-cleaner.py
 echo " ✅ OK"
 
 
@@ -48,7 +48,7 @@ echo "Empty Slack Channel $SLACK_PROACTIVE"
 echo "--------------------------------------------------------------------------------------------------------------------------------"
 
   export SLACK_CHANNEL=$SLACK_PROACTIVE
-  python3 ./slack-cleaner.py
+  python3 ./reset/slack-cleaner.py
 echo " ✅ OK"
 
 
@@ -62,6 +62,6 @@ echo "Empty Slack Channel $SLACK_ROBOT"
 echo "--------------------------------------------------------------------------------------------------------------------------------"
 
   export SLACK_CHANNEL=$SLACK_ROBOT
-  python3 ./slack-cleaner.py
+  python3 ./reset/slack-cleaner.py
 echo " ✅ OK"
 

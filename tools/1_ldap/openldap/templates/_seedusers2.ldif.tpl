@@ -116,6 +116,61 @@ mail: sre2@ibm.com
 userpassword: P4ssw0rd!
 
 
+
+dn: uid=icpuser,ou=People,dc=ibm,dc=com
+changetype: add
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+uid: icpuser
+displayname: icpuser
+sn: icpuser
+cn: icpuser
+mail: icpuser@ibm.com
+userpassword: P4ssw0rd!
+
+dn: uid=icpadmin,ou=People,dc=ibm,dc=com
+changetype: add
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+uid: icpadmin
+displayname: icpadmin
+sn: icpadmin
+cn: icpadmin
+mail: icpadmin@ibm.com
+userpassword: P4ssw0rd!
+
+dn: uid=unityadmin,ou=People,dc=ibm,dc=com
+changetype: add
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+uid: unityadmin
+displayname: unityadmin
+sn: unityadmin
+cn: unityadmin
+mail: unityadmin@ibm.com
+userpassword: P4ssw0rd!
+
+dn: uid=impactadmin,ou=People,dc=ibm,dc=com
+changetype: add
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+objectclass: person
+objectclass: top
+uid: impactadmin
+displayname: impactadmin
+sn: impactadmin
+cn: impactadmin
+mail: impactadmin@ibm.com
+userpassword: P4ssw0rd!
+
+
+
 # Create user group
 dn: cn=demo,ou=Groups,dc=ibm,dc=com
 changetype: add
@@ -158,6 +213,32 @@ owner: cn=admin,dc=ibm,dc=com
 uniquemember: uid=prod,ou=People,dc=ibm,dc=com
 
 
+dn: cn=icpadmins,ou=Groups,dc=ibm,dc=com
+changetype: add
+cn: icpadmins
+owner: uid=icpadmin,ou=People,dc=ibm,dc=com
+description: ICP Admins group
+objectclass: groupOfUniqueNames
+objectclass: top
+uniquemember: uid=icpadmin,ou=People,dc=ibm,dc=com
 
+dn: cn=icpusers,ou=Groups,dc=ibm,dc=com
+changetype: add
+cn: icpusers
+owner: uid=icpuser,ou=People,dc=ibm,dc=com
+description: ICP Users group
+objectclass: groupOfUniqueNames
+objectclass: top
+uniquemember: uid=icpuser,ou=People,dc=ibm,dc=com
+uniquemember: uid=icpadmin,ou=People,dc=ibm,dc=com
+
+dn: cn=unityadmins,ou=Groups,dc=ibm,dc=com
+changetype: add
+cn: unityadmins
+owner: uid=unityadmin,ou=People,dc=ibm,dc=com
+description: Unity Admins group
+objectclass: groupOfUniqueNames
+objectclass: top
+uniquemember: uid=unityadmin,ou=People,dc=ibm,dc=com
 
 

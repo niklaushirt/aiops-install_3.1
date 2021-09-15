@@ -7,16 +7,9 @@
 # cleanup resources created by the product.  Please configure what you want to uninstall
 # in the uninstall-cp4waiops-props.sh file first before running this script.
 
-. ./tools/99_uninstall/uninstall-cp4waiops-props.sh
-. ./tools/99_uninstall/uninstall-cp4waiops-helper.sh
-. ./tools/99_uninstall/uninstall-cp4waiops-resource-groups.sh
-. ./99_config-global.sh
-export SCRIPT_PATH=$(pwd)
-export LOG_PATH=""
-__getClusterFQDN
-__getInstallPath
-
-
+. ./uninstall-cp4waiops-props.sh
+. ./uninstall-cp4waiops-helper.sh
+. ./uninstall-cp4waiops-resource-groups.sh
 
 HELP="false"
 SKIP_CONFIRM="false"
@@ -40,7 +33,6 @@ if [[ $HELP == "true" ]]; then
 fi 
 
 analyze_script_properties
-banner 
 
 # Confirm we really want to uninstall 
 if [[ $SKIP_CONFIRM != "true" ]]; then
@@ -55,13 +47,7 @@ if [[ $SKIP_CONFIRM != "true" ]]; then
   log $INFO "Cluster context: $(oc config current-context)"
   log $INFO ""
   display_script_properties
-  read -p "Please confirm you have reviewed and configured uninstall-cp4waiops-props.sh and would like to proceed with uninstall. Y or y to continue: " -n 1 -r
-  log $INFO
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    log $INFO "Cancelling uninstall of IBM Cloud Pak for AIOps."
-    exit 0
-  fi
-   read -p "Are you REALLY, REALLY, REALLY sure that you would like to proceed with uninstall. Y or y to continue: " -n 1 -r
+  read -p "Please confirm you have reviewed and configured uninstall-cp4waiops-props.sh and would like to proceed with install. Y or y to continue: " -n 1 -r
   log $INFO
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     log $INFO "Cancelling uninstall of IBM Cloud Pak for AIOps."
@@ -73,11 +59,6 @@ else
   display_script_properties
   log $INFO ""
 fi 
-
-
-
-
-
 
 # Verify prereqs: oc is installed & we are logged into the cluster already
 if ! [ -x "$(command -v oc)" ]; then
@@ -98,18 +79,18 @@ echo
 # Check if the project configured in the props file exists
 if [[ ! -z "$AIOPS_PROJECT"  ]]; then 
    # Delete the installation CR
-	log $INFO "(1/21) - Deleting the installation CR..."
+	log $INFO "Deleting the installation CR..."
 	delete_installation_instance $INSTALLATION_CR_NAME $AIOPS_PROJECT
 	check_additional_installation_exists
 
    # Then delete the CP4AIOps CRDs
-   log $INFO "(2/21) - Deleting the CP4WAIops CRDs..."
+   log $INFO "Deleting the CP4WAIops CRDs..."
    delete_crd_group "CP4WAIOPS_CRDS"
 
    # If user configred to delete Kong, then delete those CRDs.
    # The operator & CRs will be deleted automatically by deletion of installation CR
    if [[ $DELETE_KONG_CRDS == "true" ]]; then   
-      log $INFO "(3/XXXXX)Deleting the Kong CRDs..."
+      log $INFO "Deleting the Kong CRDs..."
       delete_crd_group "KONG_CRDS"
    else
       log $INFO "Skipping delete of Kong CRDs based on configuration in uninstall-cp4waiops-props.sh"
@@ -118,55 +99,48 @@ if [[ ! -z "$AIOPS_PROJECT"  ]]; then
    # If user configred to delete Camel K, then delete those CRDs.
    # The operator & CRs will be deleted automatically by deletion of installation CR
    if [[ $DELETE_CAMELK_CRDS == "true" ]]; then   
-      log $INFO "(4/21) - Deleting the Camel K CRDs..."
+      log $INFO "Deleting the Camel K CRDs..."
       delete_crd_group "CAMELK_CRDS"
    else
       log $INFO "Skipping delete of Camel K CRDs based on configuration in uninstall-cp4waiops-props.sh"
    fi
 
    # Finally uninstall the CP4WAIOps operator by deleting the subscription & CSV
-   log $INFO "(5/21) - Uninstalling the CP4WAIOps operator..."
+   log $INFO "Uninstalling the CP4WAIOps operator..."
 	unsubscribe "ibm-aiops-orchestrator" $OPERATORS_NAMESPACE ""
 
    # Now verify from user input that there are no other cloud paks in this project
    # If there aren't and user confirms they want to delete zenservice, start that process
    if [[ $DELETE_ZENSERVICE == "true" ]]; then
     #First delete the AutomationUIConfig / AutomationBase if present, that were created by users.
-    log $INFO "(6/21) - Deleting the AutomationUIConfig if present"
+    log $INFO "Deleting the AutomationUIConfig if present"
     oc delete AutomationUIConfig --all -n $AIOPS_PROJECT --ignore-not-found
-    log $INFO "(7/21) - Deleting the AutomationBase if present"
+    log $INFO "Deleting the AutomationBase if present"
     oc delete AutomationBase --all -n $AIOPS_PROJECT --ignore-not-found
     
     # Then delete the zenservice instance
-   	log $INFO "(8/21) - Deleting the zenservice CR..."
+   	log $INFO "Deleting the zenservice CR..."
    	delete_zenservice_instance $ZENSERVICE_CR_NAME $AIOPS_PROJECT
 
-      # Then go cleanup the rest of the leftover pieces related to zen & IAF in the project
-      log $INFO "(9/21) - Deleting IAF PVCs in $AIOPS_PROJECT"
-      for PVC in ${IAF_PVCS[@]}; do
-            log $INFO "Deleting PVC $PVC.."
-            oc delete $PVC -n $AIOPS_PROJECT --ignore-not-found
-      done
-
-      log $INFO "(10/21) - Deleting IAF configmaps in $AIOPS_PROJECT"
+      log $INFO "Deleting IAF configmaps in $AIOPS_PROJECT"
       for CONFIGMAP in ${IAF_CONFIGMAPS[@]}; do
             log $INFO "Deleting configmap $CONFIGMAP.."
             oc delete $CONFIGMAP -n $AIOPS_PROJECT --ignore-not-found
       done
 
-      log $INFO "(11/21) - Deleting IAF secrets in $AIOPS_PROJECT"
+      log $INFO "Deleting IAF secrets in $AIOPS_PROJECT"
       for SECRET in ${IAF_SECRETS[@]}; do
             log $INFO "Deleting secret $SECRET.."
             oc delete $SECRET -n $AIOPS_PROJECT --ignore-not-found
       done
 
-      log $INFO "(12/21) - Deleting IAF certs in $AIOPS_PROJECT"
+      log $INFO "Deleting IAF certs in $AIOPS_PROJECT"
       for CERT in ${IAF_CERTMANAGER[@]}; do
             log $INFO "Deleting cert $CERT.."
             oc delete $CERT -n $AIOPS_PROJECT --ignore-not-found
       done
 
-      log $INFO "(13/21) - Deleting leftover IAF resources in $AIOPS_PROJECT"
+      log $INFO "Deleting leftover IAF resources in $AIOPS_PROJECT"
       for RESOURCE in ${IAF_MISC[@]}; do
             log $INFO "Deleting $RESOURCE.."
             oc delete $RESOURCE -n $AIOPS_PROJECT --ignore-not-found
@@ -177,13 +151,13 @@ if [[ ! -z "$AIOPS_PROJECT"  ]]; then
 
    # Start cleaning up remaining resources in the project that CP4WAIOps created 
    # and are not automatically deleted when CR is deleted
-   log $INFO "(14/21) - Deleting kafkatopics in $AIOPS_PROJECT"
+   log $INFO "Deleting kafkatopics in $AIOPS_PROJECT"
    for KAFKATOPIC in ${CP4AIOPS_KAFKATOPICS[@]}; do
          log $INFO "Deleting kafkatopic $KAFKATOPIC..."
          oc delete $KAFKATOPIC -n $AIOPS_PROJECT --ignore-not-found
    done
 
-   log $INFO "(15/21) - Deleting lease in $AIOPS_PROJECT"
+   log $INFO "Deleting lease in $AIOPS_PROJECT"
    for LEASE in ${CP4AIOPS_LEASE[@]}; do
          log $INFO "Deleting lease $LEASE.."
          oc delete $LEASE -n $AIOPS_PROJECT --ignore-not-found
@@ -191,7 +165,7 @@ if [[ ! -z "$AIOPS_PROJECT"  ]]; then
 
    # Confirm with user we want to delete configmaps
    if [[ $DELETE_CONFIGMAPS == "true" ]]; then
-      log $INFO "(16/21) - Deleting leftover configmaps in $AIOPS_PROJECT"
+      log $INFO "Deleting leftover configmaps in $AIOPS_PROJECT"
       for CONFIGMAP in ${CP4AIOPS_CONFIGMAPS[@]}; do
             log $INFO "Deleting configmap $CONFIGMAP.."
             oc delete $CONFIGMAP -n $AIOPS_PROJECT --ignore-not-found
@@ -200,7 +174,7 @@ if [[ ! -z "$AIOPS_PROJECT"  ]]; then
 
    # Confirm with user we want to delete PVCs
    if [[ $DELETE_PVCS == "true" ]]; then
-      log $INFO "(17/21) - Deleting PVCs in $AIOPS_PROJECT"
+      log $INFO "Deleting PVCs in $AIOPS_PROJECT"
       for PVC in ${CP4AIOPS_PVC_LABEL[@]}; do
             log $INFO "Deleting PVCs with label $PVC.."
             oc delete pvc -l $PVC -n $AIOPS_PROJECT --ignore-not-found
@@ -209,7 +183,7 @@ if [[ ! -z "$AIOPS_PROJECT"  ]]; then
 
    # Confirm with user we want to delete secrets
    if [[ $DELETE_SECRETS == "true" ]]; then
-      log $INFO "(18/21) - Deleting secrets in $AIOPS_PROJECT"
+      log $INFO "Deleting secrets in $AIOPS_PROJECT"
       for SECRET in ${CP4AIOPS_SECRETS[@]}; do
             log $INFO "Deleting secret $SECRET.."
             oc delete $SECRET -n $AIOPS_PROJECT --ignore-not-found
@@ -218,7 +192,7 @@ if [[ ! -z "$AIOPS_PROJECT"  ]]; then
 
    # If both DELETE_PVCS=true and DELETE_SECRETS=true then only delete these secrets category
    if [[ ( $DELETE_SECRETS == "true" ) && ( $DELETE_PVCS == "true" ) ]]; then
-       log $INFO "(19/21) - Deleting secrets from group CP4AIOPS_PVC_SECRETS in $AIOPS_PROJECT"
+       log $INFO "Deleting secrets from group CP4AIOPS_PVC_SECRETS in $AIOPS_PROJECT"
        for SECRET in ${CP4AIOPS_PVC_SECRETS[@]}; do
             log $INFO "Deleting secret $SECRET.."
             oc delete $SECRET -n $AIOPS_PROJECT --ignore-not-found
@@ -229,7 +203,7 @@ if [[ ! -z "$AIOPS_PROJECT"  ]]; then
 
    # If user wants to delete the project, do that now
    if [[ $DELETE_AIOPS_PROJECT == "true" ]]; then
-      log $INFO "(20/21) - Deleting project $AIOPS_PROJECT"
+      log $INFO "Deleting project $AIOPS_PROJECT"
       delete_project $AIOPS_PROJECT
    else
       log $INFO "Skipping delete of $AIOPS_PROJECT project based on configuration in uninstall-cp4waiops-props.sh"
@@ -238,8 +212,15 @@ if [[ ! -z "$AIOPS_PROJECT"  ]]; then
    # Finally uninstall & cleanup resources created at cluster scope & other projects 
    # if user confirms they have no other cloud paks on the cluster and want to do a full uninstall
    if [[ $DELETE_IAF == "true" ]]; then
-      log $INFO "(21/21) - Deleting IAF"
+      log $INFO "Deleting IAF"
       delete_iaf_bedrock
+
+      log $INFO "Deleting IAF PVCs in $AIOPS_PROJECT"
+      for PVC in ${IAF_PVCS[@]}; do
+            log $INFO "Deleting PVC $PVC.."
+            oc delete $PVC -n $AIOPS_PROJECT --ignore-not-found
+      done
+
    else
       log $INFO "Skipping delete of IAF based on configuration in uninstall-cp4waiops-props.sh"
    fi

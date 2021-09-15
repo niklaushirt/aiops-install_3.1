@@ -28,8 +28,24 @@ spec:
         image: robotshop/rs-load:latest
         resources:
           limits:
-            cpu: 200m
-            memory: 200Mi
+            cpu: 500m
+            memory: 500Mi
           requests:
             cpu: 100m
             memory: 100Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: load
+  namespace: robot-shop
+spec:
+  ports:
+    - name: load
+      protocol: TCP
+      port: 80
+      targetPort: 80
+  selector:
+    service: load
+  type: ClusterIP
+  sessionAffinity: None

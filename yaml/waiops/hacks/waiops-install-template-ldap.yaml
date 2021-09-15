@@ -1,0 +1,78 @@
+apiVersion: orchestrator.aiops.ibm.com/v1alpha1
+kind: Installation
+metadata:
+  name: <NAME>
+  namespace: <NAMESPACE>
+spec:
+  imagePullSecret: ibm-entitlement-key
+  license:
+    accept: true
+  pakModules:
+    - enabled: true
+      name: aiManager
+      config:
+        - name: aimanager-operator
+          spec:
+            aimanager:
+              aimanagerValues:
+                postgres:
+                  keeper:
+                    resources:
+                      limits:
+                        cpu: 500m
+                        memory: 512Mi
+                      requests:
+                        cpu: 100m
+                        memory: 256Mi
+                  livenessProbe:
+                    failureThreshold: 5
+                    initialDelaySeconds: 300
+                    periodSeconds: 15
+                    successThreshold: 1
+                    timeoutSeconds: 15
+                  persistence:
+                    enabled: true
+                    size: 20Gi
+                    storageClass: <STORAGE_CLASS>
+                  readinessProbe:
+                    failureThreshold: 5
+                    initialDelaySeconds: 300
+                    periodSeconds: 15
+                    successThreshold: 1
+                    timeoutSeconds: 15
+                  sentinel:
+                    resources:
+                      limits:
+                        cpu: 500m
+                        memory: 512Mi
+                      requests:
+                        cpu: 100m
+                        memory: 256Mi
+                  serviceAccount:
+                    name: aimanager-operator
+    - enabled: true
+      name: aiopsFoundation
+    - enabled: true
+      name: applicationManager
+      config:
+        - name: noi-operator
+          spec:
+            noi:
+              persistence:
+                storageClassDB2: <STORAGE_CLASS>
+              ldap:
+                port: '389'
+                mode: ldap
+                userFilter: '(&(uid=%v)(objectclass=Person))'
+                bindDN: 'cn=admin,dc=ibm,dc=com'
+                sslPort: '636'
+                url: 'ldap://openldap.default:389'
+                suffix: 'dc=ibm,dc=com'
+                groupFilter: '(&(cn=%v)(objectclass=groupOfUniqueNames))'
+                baseDN: 'dc=ibm,dc=com'
+                storageSize: 1Gi
+                serverType: CUSTOM
+                storageClass: ibmc-file-gold-gid
+  size: <ENV_SIZE>
+  storageClass: '<STORAGE_CLASS>'
+  storageClassLargeBlock: '<STORAGE_CLASS_LB>'

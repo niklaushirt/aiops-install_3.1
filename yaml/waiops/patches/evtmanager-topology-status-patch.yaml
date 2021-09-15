@@ -1,0 +1,27 @@
+spec:
+  template:
+    spec:
+      containers:
+        - name: evtmanager-topology-status
+          readinessProbe:                 
+            failureThreshold: 9           
+            httpGet:                      
+              path: /healthcheck          
+              port: 9085                  
+              scheme: HTTPS               
+            initialDelaySeconds: 60       
+            periodSeconds: 10             
+            successThreshold: 1           
+            timeoutSeconds: 3
+          livenessProbe:                  
+            failureThreshold: 9       
+            httpGet:                      
+              path: /healthcheck          
+              port: 9085                  
+              scheme: HTTPS               
+            initialDelaySeconds: 120      
+            periodSeconds: 10             
+            successThreshold: 1           
+            timeoutSeconds: 3
+
+

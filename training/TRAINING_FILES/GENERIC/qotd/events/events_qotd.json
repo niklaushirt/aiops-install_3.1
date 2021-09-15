@@ -1,0 +1,12 @@
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","nodename": "qotd-web-deployment","alertgroup": "qotd","summary": "[Instana] QOTD call rate is too high - QOTD call rate stays at a high level for an extended period of time","url": "https://pirsoscom.github.io/INSTANA_SUMMARY_NOK_QOTD.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Warning","nodename": "qotd-ratings-deployment","alertgroup": "qotd", "summary": "[Instana] QOTD change detected - The value **resources/limits** has changed","url": "https://pirsoscom.github.io/INSTANA_CHANGE_QOTD.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","nodename": "qotd-ratings-deployment","alertgroup": "qotd", "summary": "[Instana] QOTD available replicas is less than desired replicas - Check conditions and error events","url": "https://pirsoscom.github.io/INSTANA_SUMMARY_NOK_QOTD.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Warning","nodename": "qotd","alertgroup": "qotd","summary": "[Security] QOTD K8s Deployment Modified","url": "none"}
+{"timestamp": "MY_TIMESTAMP","severity": "Warning","nodename": "qotd","alertgroup": "qotd","summary": "[Security] QOTD K8s Pod Created","url": "none"}
+{"timestamp": "MY_TIMESTAMP","severity": "Warning","nodename": "github","alertgroup": "qotd","summary": "[Git] Commit in repository qotd by Niklaus Hirt on file qotd.yaml - New Memory Limits","url": "https://pirsoscom.github.io/git-commit-qotd.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Major","nodename": "qotd-ratings-deployment","alertgroup": "qotd","summary": "[Alert] QOTD Ratings Problem - Alert Description: resource.name=ratings (Error: unable to contact http://ratings:9080/ratings got status of 503)","url": "https://pirsoscom.github.io/HUM_QOTD_reviews_error.html"}
+{"timestamp": "MY_TIMESTAMP","severity": "Critical","nodename": "qotd-db-deployment","alertgroup": "qotd","summary": "[Alert] QOTD MySQL Problem - Alert Description: resource.name=mysql  (Error: unable to contact db)","url": "https://pirsoscom.github.io/HUM_QOTD_reviews_error.html"}
+
+
+
+

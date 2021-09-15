@@ -1,4 +1,4 @@
-# Get the Integration URL (Private Cloud - Secure Gateway)
+# Get the Integration URL (Private Cloud (Fyre, TEE, ...) - Secure Gateway)
 
 
 As the Slack integration requires a two-way communication and for Slack to communicate with the WAIOps server, you need to configure a proxy. Here, you will use IBM Secure Gateway as the proxy. 
@@ -82,7 +82,7 @@ The Gateway URL : `sgmanager.us-south.securegateway.cloud.ibm.com`
 
 6. Input `ibm-nginx-svc.aiops.svc.cluster.local` and `443`
 	
-	❗ Replace `aiops` with the name of your CP4WAIOPS namespace if you have changed it in `01_config-modules.sh`.
+	❗ Replace `aiops` with the name of your CP4WAIOPS namespace if you have changed it in `01_config-install.sh`.
 
 
 	![secure_gw_search](pics/slack07.png)

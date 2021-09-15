@@ -89,6 +89,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
+    app: robot-shop
     service: catalogue
   name: catalogue
 spec:
@@ -107,6 +108,7 @@ kind: Service
 metadata:
   name: dispatch
   labels:
+    app: robot-shop
     service: dispatch
 spec:
   clusterIP: None
@@ -122,6 +124,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
+    app: robot-shop
     service: mongodb
   name: mongodb
 spec:
@@ -137,6 +140,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
+    app: robot-shop
     service: mysql
   name: mysql
 spec:
@@ -153,6 +157,7 @@ kind: Service
 metadata:
   name: payment
   labels:
+    app: robot-shop
     service: payment
 spec:
   ports:
@@ -168,6 +173,7 @@ kind: Service
 metadata:
   name: rabbitmq
   labels:
+    app: robot-shop
     service: rabbitmq
 spec:
   ports:
@@ -189,6 +195,7 @@ kind: Service
 metadata:
   name: ratings
   labels:
+    app: robot-shop
     service: ratings
 spec:
   ports:
@@ -203,6 +210,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
+    app: robot-shop
     service: redis
   name: redis
 spec:
@@ -219,6 +227,7 @@ kind: Service
 metadata:
   name: shipping
   labels:
+    app: robot-shop
     service: shipping
 spec:
   ports:
@@ -234,6 +243,7 @@ kind: Service
 metadata:
   name: user
   labels:
+    app: robot-shop
     service: user
 spec:
   ports:
@@ -249,6 +259,7 @@ kind: Service
 metadata:
   name: web
   labels:
+    app: robot-shop
     service: web
 spec:
   ports:
@@ -266,6 +277,7 @@ kind: Deployment
 metadata:
   name: cart
   labels:
+    app: robot-shop
     service: cart
 spec:
   replicas: 1
@@ -304,6 +316,7 @@ kind: Deployment
 metadata:
   name: catalogue
   labels:
+    app: robot-shop
     service: catalogue
 spec:
   replicas: 1
@@ -342,6 +355,7 @@ kind: Deployment
 metadata:
   name: dispatch
   labels:
+    app: robot-shop
     service: dispatch
 spec:
   replicas: 1
@@ -379,6 +393,7 @@ kind: Deployment
 metadata:
   name: mongodb
   labels:
+    app: robot-shop
     service: mongodb
 spec:
   replicas: 1
@@ -412,6 +427,7 @@ kind: Deployment
 metadata:
   name: mysql
   labels:
+    app: robot-shop
     service: mysql
 spec:
   replicas: 1
@@ -449,6 +465,7 @@ kind: Deployment
 metadata:
   name: payment
   labels:
+    app: robot-shop
     service: payment
     stage: prod
 spec:
@@ -491,6 +508,7 @@ kind: Deployment
 metadata:
   name: rabbitmq
   labels:
+    app: robot-shop
     service: rabbitmq
 spec:
   replicas: 1
@@ -525,6 +543,7 @@ kind: Deployment
 metadata:
   name: ratings
   labels:
+    app: robot-shop
     service: ratings
 spec:
   replicas: 1
@@ -566,6 +585,7 @@ kind: Deployment
 metadata:
   name: shipping
   labels:
+    app: robot-shop
     service: shipping
 spec:
   replicas: 1
@@ -587,10 +607,10 @@ spec:
         # it's Java it needs lots of memory
         resources:
           limits:
-            cpu: 200m
-            memory: 1000Mi
+            cpu: 600m
+            memory: 6000Mi
           requests:
-            cpu: 100m
+            cpu: 200m
             memory: 500Mi
         readinessProbe:
           httpGet:
@@ -598,7 +618,7 @@ spec:
             port: 8080
           initialDelaySeconds: 5
           periodSeconds: 5
-          failureThreshold: 30
+          failureThreshold: 300
           successThreshold: 1
       restartPolicy: Always
 ---
@@ -608,6 +628,7 @@ kind: Deployment
 metadata:
   name: user
   labels:
+    app: robot-shop
     service: user
 spec:
   replicas: 1
@@ -647,6 +668,7 @@ kind: Deployment
 metadata:
   name: web
   labels:
+    app: robot-shop
     service: web
 spec:
   replicas: 1
@@ -679,6 +701,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
+    app: robot-shop
     service: redis
   name: redis
 spec:

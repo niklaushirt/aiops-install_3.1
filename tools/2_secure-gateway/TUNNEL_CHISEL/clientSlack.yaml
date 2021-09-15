@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tunnel-slack-deployment
+  namespace: default
+  labels:
+    app: tunnel-slack-app
+spec:
+    selector:
+      matchLabels:
+        app: tunnel-slack
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: tunnel-slack
+      spec:
+        containers:
+        - name: tunnel-slack
+          image: docker.io/niklaushirt/tunnel:1.0
+          imagePullPolicy: IfNotPresent
+          args:
+          - 'client'
+          - '-v'
+          # ⬇️ Use username `foo` and password `bar` to authenticate with Chisel server.
+          - '--auth=admin:P4ssw0rd'
+          - '-v'
+          # ⬇️ Domain & port of Chisel server. Port defaults to 8080 on server, but must be manually set on client.
+            - 'https://ns343373.ip-91-121-xxx.eu:8080'
+          # ⬇️ Reverse tunnel-slack traffic from the chisel server to the web server container, identified in Docker using DNS by its service name `webserver`.
+          - 'R:7443:ibm-nginx-svc.cp4waiops.svc.cluster.local:443'
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "128m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"

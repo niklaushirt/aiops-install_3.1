@@ -3,7 +3,7 @@
 # Copyright 2020- IBM Inc. All rights reserved
 # SPDX-License-Identifier: Apache2.0
 #
-. ./tools/99_uninstall/uninstall-cp4waiops-props.sh
+. ./uninstall-cp4waiops-props.sh
 
 export OPERATORS_NAMESPACE=openshift-operators
 export IBM_COMMON_SERVICES_NAMESPACE=ibm-common-services
@@ -28,26 +28,26 @@ log () {
    local log_options=$3
     
    if [[ ! -z $log_options ]]; then
-      __output $log_options "$log_tracing_prefix $log_message"
+      echo $log_options "$log_tracing_prefix $log_message"
    else
-      __output "$log_tracing_prefix $log_message" 
+      echo "$log_tracing_prefix $log_message" 
    fi
 }
 
 display_help() {
-   __output "**************************************** Usage ********************************************"
-   __output ""
-   __output " This script is used to uninstall Cloud Pak for Watson AIOps."
-   __output " The following prereqs are required before you run this script: "
-   __output " - oc CLI is installed and you have logged into the cluster using oc login"
-   __output " - Update uninstall-cp4waiops-props.sh with components that you want to uninstall"
-   __output ""
-   __output " Usage:"
-   __output " ./uninstall-cp4waiops.sh -h -s"
-   __output "  -h Prints out the help message"
-   __output "  -s Skip asking for confirmations"   
-   __output ""
-   __output "*******************************************************************************************"
+   echo "**************************************** Usage ********************************************"
+   echo ""
+   echo " This script is used to uninstall Cloud Pak for Watson AIOps."
+   echo " The following prereqs are required before you run this script: "
+   echo " - oc CLI is installed and you have logged into the cluster using oc login"
+   echo " - Update uninstall-cp4waiops-props.sh with components that you want to uninstall"
+   echo ""
+   echo " Usage:"
+   echo " ./uninstall-cp4waiops.sh -h -s"
+   echo "  -h Prints out the help message"
+   echo "  -s Skip asking for confirmations"   
+   echo ""
+   echo "*******************************************************************************************"
 }
 
 check_oc_resource_exists() {
@@ -61,7 +61,7 @@ check_oc_resource_exists() {
      resource_exists="false"
   fi
 
-  __output "$resource_exists"
+  echo "$resource_exists"
 }
 
 unsubscribe () {
@@ -131,14 +131,14 @@ delete_installation_instance () {
     local installation_name=$1
     local project=$2
 
-    if  [ `oc get installation $installation_name -n $project --ignore-not-found | wc -l` -gt 0 ] ; then
+    if  [ `oc get installations.orchestrator.aiops.ibm.com $installation_name -n $project --ignore-not-found | wc -l` -gt 0 ] ; then
         log $INFO "Found installation CR $installation_name to delete."
         log $INFO "Waiting for $resource instances to be deleted.  This will take a while...."
 
-        oc delete installation $installation_name -n $project --ignore-not-found;
+        oc delete installations.orchestrator.aiops.ibm.com $installation_name -n $project --ignore-not-found;
     
         LOOP_COUNT=0
-        while [ `oc get installation $installation_name -n $project --ignore-not-found | wc -l` -gt 0 ]
+        while [ `oc get installations.orchestrator.aiops.ibm.com $installation_name -n $project --ignore-not-found | wc -l` -gt 0 ]
         do
         sleep $SLEEP_EXTRA_LONG_LOOP
         LOOP_COUNT=`expr $LOOP_COUNT + 1`
@@ -163,7 +163,8 @@ delete_installation_instance () {
             log $ERROR "Timed out waiting for operandrequests to be deleted"
             exit 1
         else
-            log $INFO "Found following operandrequests in the project: $(oc get operandrequests -n $project --no-headers)"
+            log $INFO "Found following operandrequests in the project: "
+            log $INFO "$(oc get operandrequests -n $project --no-headers)"
             log $INFO "Waiting for operandrequests instances to get deleted... Checking again in $SLEEP_LONG_LOOP seconds"
         fi
         done
@@ -213,7 +214,8 @@ delete_zenservice_instance () {
             log $ERROR "Timed out waiting for operandrequests to be deleted"
             exit 1
         else
-            log $INFO "Found following operandrequests in the project: $(oc get operandrequests -n ibm-common-services --no-headers)"
+            log $INFO "Found following operandrequests in the project: "
+            log $INFO "$(oc get operandrequests -n ibm-common-services --no-headers)"
             log $INFO "Waiting for zenservice related operandrequests instances to get deleted... Checking again in $SLEEP_LONG_LOOP seconds"
         fi
         done
@@ -301,6 +303,8 @@ delete_iaf_bedrock () {
 
     oc delete namespacescopes common-service -n ibm-common-services --ignore-not-found
     oc delete namespacescopes nss-managedby-odlm -n ibm-common-services --ignore-not-found
+    oc delete namespacescopes odlm-scope-managedby-odlm -n ibm-common-services --ignore-not-found
+    oc delete namespacescopes nss-odlm-scope -n ibm-common-services --ignore-not-found
 
     unsubscribe "ibm-cert-manager-operator" $IBM_COMMON_SERVICES_NAMESPACE ""
     unsubscribe "ibm-namespace-scope-operator" $IBM_COMMON_SERVICES_NAMESPACE ""
@@ -408,11 +412,11 @@ log $INFO "##### Properties in uninstall-cp4waiops-props.sh #####"
 check_additional_installation_exists(){
 
   log $INFO "Checking if any additional installation resources found in the cluster."
-  installation_returned_value=$(oc get installation -A)
+  installation_returned_value=$(oc get installations.orchestrator.aiops.ibm.com -A)
   if [[ ! -z $installation_returned_value  ]] ; then
      log $ERROR "Some additional installation cr found in the cluster, please delete the installation cr's and try again."
      log $ERROR "Remaining installation cr found : "
-     oc get installation -A
+     oc get installations.orchestrator.aiops.ibm.com -A
      exit 1
   else
      log $INFO "No additional installation resources found in the cluster."

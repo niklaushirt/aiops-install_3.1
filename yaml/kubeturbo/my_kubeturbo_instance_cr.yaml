@@ -1,0 +1,52 @@
+apiVersion: charts.helm.k8s.io/v1
+kind: Kubeturbo
+metadata:
+  name: kubeturbo-release
+spec:
+  # Default values copied from <project_dir>/helm-charts/kubeturbo/values.yaml
+  
+  # Default values for kubeturbo.
+  # This is a YAML-formatted file.
+  # Declare variables to be passed into your templates.
+
+  # Turbo server version and address
+  serverMeta:
+    version: "8.2.3"
+    turboServer: https://topology-processor-turbonomic.cp4waiops-953327-a376efc1170b9b8ace6422196c51e491-0000.eu-de.containers.appdomain.cloud
+
+  # Turbo server user and password can be provided via an opaque type secret created separately 
+  # or optionally specify username and password below
+  # The opsManagerUserName requires Turbo administrator or site administrator role
+  restAPIConfig:
+  #  turbonomicCredentialsSecretName: "turbonomic-credentials"
+    opsManagerUserName: administrator
+    opsManagerPassword: <MY_PASSWORD>
+
+  # Uncomment out lines to configure HA Node to ESX policies by node role. Default is master
+  # Add more roles using format "\"foo\"\,\"bar\""
+  #HANodeConfig:
+  #  nodeRoles: "\"master\""
+
+  # Supply a targetName for user friendly identification of the k8s cluster
+  targetConfig:
+    targetName: CP4WAIOps-Demo-Prod
+
+  # Uncomment next lines to specify a repository and image tag for kubeturbo
+  #image:
+  #  repository: registry.connect.redhat.com
+  #  tag: 8.1.3
+  # Uncomment to use an image from RHCC for cpu-frequency getter job - predefined in OCP Operator Hub version
+  #  busyboxRepository: registry.access.redhat.com/ubi8/ubi-minimal
+
+  # Uncomment out to allow execution in OCP environments
+  #args:
+  #  sccsupport: "*"
+
+  # Uncomment out to specify kubeturbo container specifications when needed (quotas set on ns)
+  #resources:
+  #  limits:
+  #    memory: 4Gi
+  #    cpu: "2"
+  #  requests:
+  #    memory: 512Mi
+  #    cpu: "1"

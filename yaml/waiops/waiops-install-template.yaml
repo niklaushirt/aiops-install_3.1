@@ -15,6 +15,10 @@ spec:
           spec:
             aimanager:
               aimanagerValues:
+                flink:
+                  ha:
+                    enabled: false
+                    storageClassName: <STORAGE_CLASS>
                 postgres:
                   keeper:
                     resources:
@@ -58,6 +62,8 @@ spec:
         - name: noi-operator
           spec:
             noi:
+              helmValuesASM:
+                global.enableAllRoutes: true
               persistence:
                 storageClassDB2: <STORAGE_CLASS>
   size: <ENV_SIZE>

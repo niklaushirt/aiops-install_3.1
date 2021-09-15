@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookinfo-create-load
+  namespace: default
+  labels:
+      app: bookinfo-create-load
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookinfo-create-load
+  template:
+    metadata:
+      labels:
+        app: bookinfo-create-load
+    spec:
+      containers:
+      - image: curlimages/curl
+        imagePullPolicy: IfNotPresent
+        name: alpine
+        command:
+          - sh
+          - '-c'
+          - >-
+            while true; do curl -s "http://productpage.bookinfo.svc:9080/productpage"; echo "."; sleep 1; done
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "50Mi"
+          limits:
+            cpu: "50m"
+            memory: "50Mi"
+        env:
+          - name: PORT
+            value : "3000"

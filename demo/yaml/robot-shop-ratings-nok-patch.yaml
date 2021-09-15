@@ -1,0 +1,19 @@
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: ratings
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: ratings
+    spec:
+      containers:
+        - resources:
+            limits:
+              cpu: 50m
+              memory: 100Mi
+            requests:
+              cpu: 100m
+              memory: 50Mi

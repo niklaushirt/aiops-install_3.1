@@ -1,4 +1,4 @@
-# Get the Integration URL (Public Cloud)
+# Get the Integration URL (Public Cloud (ROKS, ...))
 
 
 # Create the Integration URL
