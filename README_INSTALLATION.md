@@ -44,7 +44,9 @@ Please drop me a note on Slack or by mail nikh@ch.ibm.com if you find glitches o
 |  09 September 2021 | Changes to enforce oc 4.7 or greater | Thanks Leon Carvajal |
 |  10 September 2021 | Corrected issues with IAF 1.2 |  |
 |  13 September 2021 | Corrected issues with kafkacat/kcat | Thanks Eva Ramon |
-
+|  22 September 2021 | Corrected some bugs in the debug script | Thanks Henning Sternkicker |
+|  24 September 2021 | Corrected some bugs in the debug script | Thanks Philippe Thomas |
+|  24 September 2021 | First beta release of Ansible version in the new repository | [https://github.ibm.com/NIKH/aiops-install-ansible](https://github.ibm.com/NIKH/aiops-install-ansible) |
 |   |   |   | 
 
 > ❗This demo supports pre-canned events and logs, so you don't need to install and configure Humio.
@@ -91,6 +93,11 @@ Please drop me a note on Slack or by mail nikh@ch.ibm.com if you find glitches o
 ## Introduction
 ---------------------------------------------------------------
 
+### ❗ I'm in the process of porting the scripts to Ansible in the following repo [https://github.ibm.com/NIKH/aiops-install-ansible](https://github.ibm.com/NIKH/aiops-install-ansible).
+
+### ❗ In the near future I will stop updating the shell scripts in this repository and only be updating the Ansible scripts going forward.
+
+
 This repository documents the progress of me learning to build a Watson AIOps demo environment.
 
 This is provided `as-is`:
@@ -132,7 +139,13 @@ You might get away with less if you don't install some components (Humio, Turbon
 We learnt this the hard way...
 
 ```bash
-oc get secret -n openshift-config pull-secret -oyaml > pull-secret-backup.yaml
+oc get secret -n openshift-config pull-secret -oyaml > pull-secret_backup.yaml
+```
+
+or more elegant
+
+```bash
+oc get Secret -n openshift-config pull-secret -ojson | jq 'del(.metadata.annotations, .metadata.creationTimestamp, .metadata.generation, .metadata.managedFields, .metadata.resourceVersion , .metadata.selfLink , .metadata.uid, .status)' > pull-secret_backup.json
 ```
 
 In order to avoid errors with Docker Registry pull rate limits, you should add your Docker credentials to the Cluster.

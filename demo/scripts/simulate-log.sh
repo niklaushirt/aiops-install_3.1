@@ -88,7 +88,8 @@ do
         if [[ $FILE =~ "x"  ]]; then
             ACT_COUNT=`expr $ACT_COUNT + 1`
             echo "Injecting file ($ACT_COUNT/$(($NUM_FILES-1))) - $FILE"
-            ${KAFKACAT_EXE} -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512  -X sasl.username=token -X sasl.password=$KAFKA_PASSWORD -b $KAFKA_BROKER -P -t $LOGS_TOPIC -l $FILE   >$log_output_path 2>&1  || true
+            echo "            ${KAFKACAT_EXE} -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512  -X sasl.username=token -X sasl.password=$KAFKA_PASSWORD -b $KAFKA_BROKER -P -t $LOGS_TOPIC -l $FILE"
+            ${KAFKACAT_EXE} -v -X security.protocol=SSL -X ssl.ca.location=./ca.crt -X sasl.mechanisms=SCRAM-SHA-512  -X sasl.username=token -X sasl.password=$KAFKA_PASSWORD -b $KAFKA_BROKER -P -t $LOGS_TOPIC -l $FILE
             echo "      ✅ OK"
         fi
     done

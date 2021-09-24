@@ -685,6 +685,11 @@ spec:
       - name: web
         image: robotshop/rs-web:latest
         imagePullPolicy: IfNotPresent
+        env:
+        - name: INSTANA_EUM_KEY
+          value: xxxxxxxxx
+        - name: INSTANA_EUM_REPORTING_URL
+          value: https://eum-eu-west-1.instana.io        
         ports:
         - containerPort: 8080
         resources:

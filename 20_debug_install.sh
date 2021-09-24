@@ -116,7 +116,6 @@ menu_check_install () {
       echo "--------------------------------------------------------------------------------------------"
 
       CP4AIOPS_CHECK_LIST=(
-      "iaf-ai-operator-controller-manager"
       "iaf-core-operator-controller-manager"
       "iaf-eventprocessing-operator-controller-manager"
       "iaf-flink-operator-controller-manager"
@@ -128,7 +127,7 @@ menu_check_install () {
             if  ([[ ! $ELEMENT_OK =~ "1/1" ]]); 
             then 
                   echo "      ⭕ Pod $ELEMENT not runing successfully"; 
-                  echo "      ⭕ (You may want to run option: 14  - Patch IAF)"; 
+                  echo "      ⭕ (You may want to run option: 21  - Patch IAF)"; 
                   echo ""
             else
                   echo "      ✅ OK: Pod $ELEMENT"; 
@@ -154,7 +153,7 @@ menu_check_install () {
             if  ([[ ! $ELEMENT_OK =~ "1/1" ]]); 
             then 
                   echo "      ⭕ Pod $ELEMENT not runing successfully"; 
-                  echo "      ⭕ (You may want to run option: 15  - Patch evtmanager topology pods)";  
+                  echo "      ⭕ (You may want to run option: 22  - Patch evtmanager topology pods)";  
                   echo ""
             else
                   echo "      ✅ OK: Pod $ELEMENT"; 
@@ -181,7 +180,7 @@ menu_check_install () {
             if  ([[ ! $ELEMENT_OK =~ "kind: Secret" ]]); 
             then 
                   echo "      ⭕ Secret $ELEMENT does not exist"; 
-                  echo "      ⭕ (You may want to run option: 19  - Delete aio-create-secrets Job)";  
+                  echo "      ⭕ (You may want to run option: 24  - Patch evtmanager topology pods)";  
                   echo ""
             else
                   echo "      ✅ OK: Secret $ELEMENT"; 
@@ -222,7 +221,7 @@ menu_check_install () {
 
 
 
-                  echo "      ⭕ (You may want to run option: 19  - Delete aio-create-secrets Job)";  
+                  echo "      ⭕ (You may want to run option: 24  - Patch evtmanager topology pods)";  
                   echo ""
             else
                   echo "      ✅ OK: Secret $ELEMENT"; 
@@ -249,7 +248,7 @@ menu_check_install () {
             if  ([[ ! $ELEMENT_OK =~ "1/1" ]]); 
             then 
                   echo "      ⭕ Job $ELEMENT not run successfully"; 
-                  echo "      ⭕ (You may want to run option: 19  - Delete aio-create-secrets Job)";  
+                  echo "      ⭕ (You may want to run option: 24  - Patch evtmanager topology pods)";  
                   echo ""
             else
                   echo "      ✅ OK: Job $ELEMENT"; 
@@ -281,7 +280,7 @@ menu_check_install () {
             if  ([[ ! $ELEMENT_OK =~ "kind: Secret" ]]); 
             then 
                   echo "      ⭕ Secret $ELEMENT does not exist"; 
-                  echo "      ⭕ (You may want to run option: 19  - Delete aio-create-secrets Job)";  
+                  echo "      ⭕ (You may want to run option: 24  - Patch evtmanager topology pods)";  
                   echo ""
             else
                   echo "      ✅ OK: Secret $ELEMENT"; 
@@ -304,7 +303,7 @@ menu_check_install () {
       if  ([[ ! $INGRESS_OK =~ "ingress" ]]); 
       then 
             echo "      ⭕ Ingress Not Patched"; 
-            echo "      ⭕ (You may want to run option: 16  - Patch/enable ZEN route traffic)";  
+            echo "      ⭕ (You may want to run option: 23  - Patch/enable ZEN route traffic)";  
             echo ""
       else
             echo "      ✅ OK: Ingress Patched"; 
@@ -316,7 +315,7 @@ menu_check_install () {
       if  ([[ ! $PATCH_OK =~ "failureThreshold: 30" ]]); 
       then 
             echo "      ⭕ evtmanager-ibm-hdm-analytics-dev-inferenceservice Not Patched"; 
-            echo "      ⭕ (You may want to run option: 15  - Patch evtmanager topology pods)";  
+            echo "      ⭕ (You may want to run option: 22  - Patch evtmanager topology pods)";  
             echo ""
       else
             echo "      ✅ OK: evtmanager-ibm-hdm-analytics-dev-inferenceservice Patched"; 
@@ -326,7 +325,7 @@ menu_check_install () {
       if  ([[ ! $PATCH_OK =~ "failureThreshold: 61" ]]); 
       then 
             echo "      ⭕ evtmanager-topology-merge Not Patched"; 
-            echo "      ⭕ (You may want to run option: 15  - Patch evtmanager topology pods)";  
+            echo "      ⭕ (You may want to run option: 22  - Patch evtmanager topology pods)";  
             echo ""
       else
             echo "      ✅ OK: evtmanager-topology-merge Patched"; 
@@ -935,7 +934,7 @@ menu_patch_secrets() {
             done
 
             echo "Increase activeDeadlineSeconds"
-            oc patch Job aimanager-aio-create-secrets -n cp4waiops --patch '{"spec":{"activeDeadlineSeconds":1000}}' --type=merge
+            oc patch Job aimanager-aio-create-secrets -n $WAIOPS_NAMESPACE --patch '{"spec":{"activeDeadlineSeconds":1000}}' --type=merge
 
 
             SECRETS_JOB_READY=$(oc get job -n $WAIOPS_NAMESPACE aimanager-aio-create-secrets -oyaml | grep "type: Complete" || true) 
@@ -1206,7 +1205,7 @@ until [ "$selection" = "0" ]; do
 #    17 ) clear ; menu_stuck_107 ;;
 #    17 ) clear ; menu_patch_iaf_ai_operator   ;;
 #    18 ) clear ; menu_patch_iaf_eventprocessing ;;
-    34 ) clear ; menu_patch_secrets  ;;
+    24 ) clear ; menu_patch_secrets  ;;
     91 ) clear ;menu_restart_operators ;;
     92 ) clear ; menu_restart_namespace  ;;
 

@@ -100,6 +100,10 @@ echo "" ;
 echo "" ; 
 echo "" ; 
 
+
+#oc create clusterrolebinding logcollector-admin --clusterrole=cluster-admin --serviceaccount=openshift-logging:logcollector
+
+
 echo "***************************************************************************************************************************************************"
 echo "***************************************************************************************************************************************************"
 echo "      🚀 Patching Fluentbit for robot-shop Namespace" ; 

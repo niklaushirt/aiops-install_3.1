@@ -176,6 +176,8 @@ echo "--------------------------------------------------------------------------
 sleep 5
 wait
 
+sleep 60
+./demo/scripts/simulate-log.sh &
 
 echo ""
 echo ""

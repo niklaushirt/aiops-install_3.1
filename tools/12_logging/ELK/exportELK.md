@@ -1,3 +1,31 @@
+
+{
+  "query": {
+    "match": {
+      "kubernetes.namespace_name": {
+        "query": "robot-shop",
+        "type": "phrase"
+      }
+    }
+  }
+}
+
+
+{
+  "codec": "elk",
+  "message_field": "message",
+  "log_entity_types": "hostname, kubernetes.container_image, kubernetes.namespace_name, kubernetes.host,  kubernetes.container_name, kubernetes.pod_name",
+  "instance_id_field": " kubernetes.container_name",
+  "rolling_time": 10,
+  "timestamp_field": "@timestamp"
+}
+
+
+
+
+
+
+
 kubernetes.pod_name:"fluentd-8kktl" AND kubernetes.namespace_name:"openshift-logging" AND kubernetes.container_name.raw:"fluentd"
 
 
@@ -24,18 +52,6 @@ cat new3.json > 1000-1000-20210906-logtrain_FINAL.json
 cat 1000-1000-20210906-logtrain_FINAL.json |jq '.["_source"]'|jq '.["entities"]' |jq '.["kubernetes.container_name"]' | sort | uniq -c
 
 
-
-
-
-
-{
-  "codec": "elk",
-  "message_field": "message",
-  "log_entity_types": "hostname, kubernetes.container_image, kubernetes.namespace_name, kubernetes.host,  kubernetes.container_name, kubernetes.pod_name",
-  "instance_id_field": " kubernetes.container_name",
-  "rolling_time": 10,
-  "timestamp_field": "@timestamp"
-}
 
 
 kubernetes.namespace_name:"robot-shop"
